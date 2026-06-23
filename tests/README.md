@@ -35,6 +35,21 @@ the foundation:
 | O7   | Directive-05 tables inherit tenant RLS + audit for free |
 | O8   | `tenant_setting` accessors return values and defaults |
 
+`quotation_test.sql` proves the DB-enforceable slice of directive `06` (the
+deterministic arithmetic engine is application-layer per `02`, so it is not
+tested here):
+
+| Tag  | Guarantee |
+|------|-----------|
+| Q1   | `angebot` numbered at issue (non-gapless), then frozen |
+| Q2   | The issue gate blocks an unpriced / in-review position |
+| Q3   | The issue gate blocks an unresolved hard `check_result` failure |
+| Q4   | Tax treatment is snapshotted at issue, immune to a later profile change |
+| Q5   | `new_angebot_version` chains the document group and supersedes the prior |
+| Q6   | `lv_position` match links and `rechnung_position` traceability are recorded |
+| Q7   | New `06` tables inherit tenant RLS + audit |
+| Q8   | `rechnung` billing path: gate + tax snapshot + e-invoice fields |
+
 ## Running
 
 Against a **fresh** database, with libpq env vars pointing at it:
@@ -43,9 +58,9 @@ Against a **fresh** database, with libpq env vars pointing at it:
 PGHOST=... PGPORT=... PGUSER=... PGDATABASE=aufmass_test tests/run.sh
 ```
 
-`run.sh` applies `migrations/*.sql` in order, then runs `foundation_test.sql`
-and `operations_test.sql`. Migrations create roles and `SECURITY DEFINER`
-functions, so connect as a superuser or `migration_role`.
+`run.sh` applies `migrations/*.sql` in order, then runs `foundation_test.sql`,
+`operations_test.sql`, and `quotation_test.sql`. Migrations create roles and
+`SECURITY DEFINER` functions, so connect as a superuser or `migration_role`.
 
 The suite was developed and verified on PostgreSQL 17. See
 `notes/ops/2026-06-23-migrations-and-test-tooling.md` for why the tooling is

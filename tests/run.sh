@@ -24,3 +24,6 @@ echo "== running foundation (02) guarantee suite =="
 
 echo "== running operational (05) guarantee suite =="
 "${PSQL[@]}" -f "$DIR/tests/operations_test.sql"
+
+echo "== running quotation (06) guarantee suite =="
+"${PSQL[@]}" -f "$DIR/tests/quotation_test.sql"

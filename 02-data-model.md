@@ -47,6 +47,15 @@ Audience: you (Claude Code) and any human contributor.
   (freeze-on-approval). Closed sets are still `text` + CHECK (consistent with
   the foundation), not enum types. Detail in
   `notes/operations/2026-06-23-operational-spine.md`.
+- 2026-06-23: Materialized the quotation/billing catalog (`06`) as migrations
+  `0015`–`0019`: `tenant_tax_profile`, `leistungskatalog`, `leistung`,
+  `gaeb_artifact`, `lv`, `lv_position`, `angebot` (financial doc), plus
+  `check_result` and `rechnung_position`; `rechnung` extended with the tax
+  snapshot and e-invoice columns. angebot/rechnung carry a tax-treatment
+  snapshot filled at issue; lv_position/rechnung_position carry the match and
+  traceability provenance. Honoring "no money math in the database": committed
+  values are stored, computed by the engine (`06`, app-layer). Detail in
+  `notes/quotation/2026-06-23-quotation-db-layer.md`.
 
 -----
 

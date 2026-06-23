@@ -18,6 +18,20 @@ Audience: you (Claude Code) and any human contributor.
 - 2026-06-22: Billing-quantity rule resolved (measured quantity governs under
   Einheitspreisvertrag, with Pauschal and VOB/B Section 2(3) qualifications);
   Nebenangebote and Bietergemeinschaft confirmed deferred.
+- 2026-06-23: Built the DB-enforceable layer as migrations `0015`–`0019` with a
+  test suite (`tests/quotation_test.sql`): tenant_tax_profile, leistungskatalog
+  /leistung, gaeb_artifact, lv, lv_position (with match provenance), angebot
+  (financial doc: freeze + version chain), check_result + the issue gate
+  (`core.assert_issuable`, `core.issue_angebot`, `core.new_angebot_version`),
+  and the completed rechnung billing path (tax snapshot, e-invoice fields,
+  rechnung_position with traceability + tendered/measured Mengen). Per 02 the
+  DB does no money math: committed values are stored, the gate refuses to issue
+  over an unresolved hard check or unpriced/in-review positions, and tax is
+  snapshotted at issue. DEFERRED to the application layer (blocked on the
+  app-stack decision): the deterministic pricing/sense-check engine, GAEB/PDF
+  ingestion, Leistungskatalog matching, and XRechnung/ZUGFeRD generation +
+  EN 16931 validation. Detail in
+  `notes/quotation/2026-06-23-quotation-db-layer.md`.
 
 -----
 
