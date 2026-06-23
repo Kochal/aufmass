@@ -19,5 +19,8 @@ for f in "$DIR"/migrations/*.sql; do
   "${PSQL[@]}" -f "$f" >/dev/null
 done
 
-echo "== running foundation guarantee suite =="
+echo "== running foundation (02) guarantee suite =="
 "${PSQL[@]}" -f "$DIR/tests/foundation_test.sql"
+
+echo "== running operational (05) guarantee suite =="
+"${PSQL[@]}" -f "$DIR/tests/operations_test.sql"

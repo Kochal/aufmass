@@ -20,6 +20,17 @@ Audience: you (Claude Code) and any human contributor.
   edit-lease behaviour referenced from `02`.
 - 2026-06-22: Abnahme resolved: structured Abnahmeprotokoll with Mängel list
   (default) plus an `abnahme_mode` toggle for simple date-plus-document.
+- 2026-06-23: Implemented as migrations `0008`–`0014` with a guarantee test
+  suite (`tests/operations_test.sql`). Decisions now true: project numbers
+  auto-allocate from the Nummernkreis on insert; projekt and bestellung
+  lifecycles are enforced by BEFORE-UPDATE triggers (forward free,
+  backward/cancel require `app.reason`, terminal states terminal, `abgenommen`
+  requires `abnahme_datum`, `pausiert` remembers/resumes via a new
+  `status_vor_pause` column); freeze-on-approval makes a `freigegeben`
+  arbeitszeit/fahrt immutable with corrections as new linked rows; the
+  Auftraggeber delete guard treats an invoice in `draft`/`issued` as
+  "unsettled" (payment state not yet modelled). Rationale in
+  `notes/operations/2026-06-23-operational-spine.md`.
 
 -----
 

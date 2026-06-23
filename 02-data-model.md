@@ -36,6 +36,17 @@ Audience: you (Claude Code) and any human contributor.
   `rechnung` and `auftraggeber` live in the foundation to carry/prove the
   freeze and numbering rules; full versions remain `06`. Rationale in
   `notes/schema/2026-06-23-cross-cutting-foundation.md`.
+- 2026-06-23: Materialized the operational catalog (`05`) as migrations
+  `0008`–`0014`: `tenant_setting`, `document`, `projekt`, `kontakt`,
+  `abnahmeprotokoll`, `mangel`, `gewaehrleistung`, `lieferant`, `material`,
+  `bestellung`, `bestellposition`, `fahrzeug`, `arbeitszeit`, `fahrt`. Columns
+  added beyond this catalog's prose, all via the standard registration pattern:
+  `projekt.status_vor_pause` (pause/resume), `gewaehrleistung.frist_jahre` +
+  computed `frist_ende`, `arbeitszeit.dauer` (generated) and
+  `arbeitszeit`/`fahrt` `freigabe_status`/`freigegeben_*`/`korrektur_von_id`
+  (freeze-on-approval). Closed sets are still `text` + CHECK (consistent with
+  the foundation), not enum types. Detail in
+  `notes/operations/2026-06-23-operational-spine.md`.
 
 -----
 

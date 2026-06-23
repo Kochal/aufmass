@@ -129,13 +129,16 @@ select _t_assert((:c_reissued)::bigint   = (:c0)::bigint + 1, 'G4: the next issu
 \echo '### G5: a hard DELETE on a business table is refused'
 -- ===========================================================================
 select set_config('app.tenant_id', :'t1', false);
-select set_config('test.r1',       :'a1', false);   -- reuse the GUC slot for a1
+-- a dependency-free client (a1 now carries invoices; deleting it is blocked by
+-- the directive-05 guard, which has its own test in operations_test.sql)
+insert into auftraggeber(tenant_id,name,typ) values (:'t1','Delete Probe','privat') returning id as adel \gset
+select set_config('test.adel', :'adel', false);
 
 do $$
 declare ok boolean := false;
 begin
   begin
-    delete from auftraggeber where id = current_setting('test.r1')::uuid;
+    delete from auftraggeber where id = current_setting('test.adel')::uuid;
   exception when others then ok := true;
   end;
   if not ok then raise exception 'ASSERTION FAILED: G5: hard DELETE on auftraggeber was not refused'; end if;
@@ -143,8 +146,8 @@ begin
 end $$;
 
 -- soft delete is the supported path and leaves the row in place
-select core.soft_delete('auftraggeber', :'a1'::uuid);
-select _t_assert((select deleted_at is not null from auftraggeber where id = :'a1'::uuid),
+select core.soft_delete('auftraggeber', :'adel'::uuid);
+select _t_assert((select deleted_at is not null from auftraggeber where id = :'adel'::uuid),
                  'G5: soft delete sets deleted_at (row preserved)');
 
 -- ===========================================================================
