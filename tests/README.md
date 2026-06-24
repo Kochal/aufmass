@@ -50,6 +50,21 @@ tested here):
 | Q7   | New `06` tables inherit tenant RLS + audit |
 | Q8   | `rechnung` billing path: gate + tax snapshot + e-invoice fields |
 
+`aufmass_test.sql` proves the DB-enforceable slice of directive `07` (the
+reconciliation engine — formula-as-checksum, magnitude bands, geometric
+cross-checks — is application-layer per `02`, so it is not tested here):
+
+| Tag  | Guarantee |
+|------|-----------|
+| AF1  | `aufmass` + `aufmass_entry` inherit tenant RLS + audit |
+| AF2  | Capture modes: foto/voice require an archived original, manual forbids one |
+| AF3  | Standalone Aufmaß: a null `lv_position` link, settable later; a foreign tenant's position is invisible |
+| AF4  | `aufmass` is a lockable aggregate (`edit_lock` resource_type `aufmass`) |
+| AF5  | A reviewer's correction to an entry is captured in `audit_log` |
+| AF6  | Optimistic concurrency: a stale `row_version` write affects 0 rows |
+| AF7  | No hard delete on `aufmass`/`aufmass_entry`; soft delete works |
+| AF8  | Prüfbarkeit floor: a confirmed, billing-linked measurement needs a result and (foto/voice) a source crop |
+
 ## Running
 
 Against a **fresh** database, with libpq env vars pointing at it:
@@ -59,8 +74,9 @@ PGHOST=... PGPORT=... PGUSER=... PGDATABASE=aufmass_test tests/run.sh
 ```
 
 `run.sh` applies `migrations/*.sql` in order, then runs `foundation_test.sql`,
-`operations_test.sql`, and `quotation_test.sql`. Migrations create roles and
-`SECURITY DEFINER` functions, so connect as a superuser or `migration_role`.
+`operations_test.sql`, `quotation_test.sql`, and `aufmass_test.sql`. Migrations
+create roles and `SECURITY DEFINER` functions, so connect as a superuser or
+`migration_role`.
 
 The suite was developed and verified on PostgreSQL 17. See
 `notes/ops/2026-06-23-migrations-and-test-tooling.md` for why the tooling is

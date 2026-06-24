@@ -17,6 +17,19 @@ Audience: you (Claude Code) and any human contributor.
 ## Changelog
 - 2026-06-22: Initial draft. Capture modes, expression-tree extraction,
   deterministic reconciliation, verification UX, linkage to billing.
+- 2026-06-24: Materialized the Aufmaß schema as migration `0020`
+  (`aufmass`, `aufmass_entry`) with a guarantee suite (`tests/aufmass_test.sql`).
+  Now true at the DB level: a sheet's `quelle` constrains the archived original
+  (foto/voice require one, manual forbids it; non-negotiable 4); `aufmass` is a
+  lockable aggregate under the `02` concurrency model (`edit_lock` resource_type
+  `aufmass`); the `lv_position` link is nullable so standalone Aufmaß is allowed
+  (open question 4); and a **prüfbarkeit floor** refuses to *commit* an
+  untraceable measured number — a confirmed, billing-linked entry must carry a
+  result and, for foto/voice, a `source_crop_ref` (manual is its own trace via
+  the audit actor). The reconciliation arithmetic itself stays app-layer, like
+  money math. Columns added beyond `02`'s prose: `einheit` (drives the magnitude
+  band) and `review_status` (`review`/`auto_accepted`/`confirmed`/`corrected`).
+  Detail in `notes/aufmass/2026-06-24-aufmass-db-layer.md`.
 
 -----
 

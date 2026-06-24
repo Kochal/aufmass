@@ -56,6 +56,16 @@ Audience: you (Claude Code) and any human contributor.
   traceability provenance. Honoring "no money math in the database": committed
   values are stored, computed by the engine (`06`, app-layer). Detail in
   `notes/quotation/2026-06-23-quotation-db-layer.md`.
+- 2026-06-24: Materialized the Aufmaß catalog (`07`) as migration `0020`:
+  `aufmass`, `aufmass_entry`. The reserved shape is now real, with the
+  expression-tree / candidate-readings / crop / confidence columns as jsonb +
+  typed quantities (`numeric(14,3)`). Columns added beyond this catalog's prose:
+  `aufmass_entry.einheit` (drives the magnitude band) and `review_status`. A
+  `quelle`-driven CHECK ties foto/voice captures to an archived `document`
+  (non-negotiable 4); a `core.check_aufmass_entry_pruefbar` trigger enforces the
+  traceability floor (non-negotiable 6) at confirm time. Honoring "no money math
+  — and no measurement math — in the database": reconciliation stays app-layer
+  (`07`). Detail in `notes/aufmass/2026-06-24-aufmass-db-layer.md`.
 
 -----
 
