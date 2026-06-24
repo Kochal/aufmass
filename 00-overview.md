@@ -15,6 +15,8 @@ invoicing. Then the directive named for the area you are touching.
 
 ## Changelog
 - 2026-06-22: Initial draft (bullet depth).
+- 2026-06-23: Added locked decision 6 (polyglot application stack) and the
+  `10-application-stack.md` map entry.
 
 -----
 
@@ -59,6 +61,11 @@ These are settled. Reopen only via a note plus a changelog line here.
    in chat.)*
 5. **Customer-defined fields: dropped for v1.** Everything with business or
    regulatory meaning is a typed core column.
+6. **Application stack: polyglot, each language in its lane.** Python /
+   FastAPI backend and deterministic engines, React + TypeScript browser PWA,
+   exactly one Java instance (the KoSIT e-invoice validator, as a sidecar),
+   Postgres as the calculation and integrity authority. See
+   `10-application-stack.md`.
 
 -----
 
@@ -138,6 +145,7 @@ validates.**
 | Aufmaß capture and OCR                            | `07-aufmass-ocr.md`                 |
 | Microsoft 365 integration                        | `08-m365-integration.md`            |
 | Security, identity, DSGVO operations             | `09-security-dsgvo.md`              |
+| The application stack and dev environment        | `10-application-stack.md`           |
 | Current status and open issues                   | `99-status.md`                      |
 | Why a method or choice was made                  | `notes/<area>/`                     |
 

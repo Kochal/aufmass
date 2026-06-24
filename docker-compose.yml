@@ -1,0 +1,108 @@
+# Development environment for the polyglot stack (see directives/10-application-stack.md).
+# One command: `docker compose up`. Brings up Postgres, the Python API, the
+# Java KoSIT validator (internal-only), and the React PWA dev server.
+#
+# This is a DEV compose. It does not run the GPU model server (that lives on
+# the German host per directive 03) and it does not do live M365 / e-invoice
+# egress (dev points at stubs). The KoSIT validator IS real and runs locally.
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: maler
+      POSTGRES_USER: maler
+      POSTGRES_PASSWORD: dev_only_change_me
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      # depends_on waits for start, not readiness; this gates dependents on
+      # Postgres actually accepting connections.
+      test: ["CMD-SHELL", "pg_isready -U maler -d maler"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Not published to the host by default; uncomment to inspect locally.
+    # ports:
+    #   - "5432:5432"
+
+  migrate:
+    # One-shot: runs the FULL migration set (including RLS policies and audit
+    # triggers, never a stripped schema) before the api serves traffic, so a
+    # fresh clone lands on the current schema. Exits 0 when done.
+    build:
+      context: ./api
+    command: ["python", "-m", "app.migrate"]   # adjust to the chosen migration runner
+    environment:
+      DATABASE_URL: postgresql://maler:dev_only_change_me@postgres:5432/maler
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  validator:
+    # The ONE Java instance: KoSIT e-invoice (EN 16931 / XRechnung) validator.
+    # Internal-network only: no published port. Pin by digest, not just a tag,
+    # so behaviour is reproducible. Build from ./validator (a small Dockerfile
+    # wrapping the released validator jar + the EN 16931 scenario config).
+    build:
+      context: ./validator
+    # image: ghcr.io/<vendored>/kosit-validator@sha256:<pin-the-digest-here>
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    # Python / FastAPI backend and deterministic engines. Source bind-mounted
+    # for hot reload. Talks to the validator over the internal network only.
+    build:
+      context: ./api
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./api:/app
+    environment:
+      DATABASE_URL: postgresql://maler:dev_only_change_me@postgres:5432/maler
+      VALIDATOR_URL: http://validator:8080
+      # Dev stubs, not live egress (no real Microsoft / model credentials).
+      MODEL_ENDPOINT: http://stubs:9000/model
+      M365_ENDPOINT: http://stubs:9000/m365
+      ENV: dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      validator:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8000:8000"
+
+  stubs:
+    # Lightweight fakes for the model server and M365 so the app runs with no
+    # real credentials. Replaced by real endpoints only in deployed envs.
+    build:
+      context: ./stubs
+    expose:
+      - "9000"
+
+  web:
+    # React + TypeScript PWA, Vite dev server with HMR. Source bind-mounted.
+    build:
+      context: ./web
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://localhost:8000
+    depends_on:
+      - api
+    ports:
+      - "5173:5173"
+
+volumes:
+  pg_data:
