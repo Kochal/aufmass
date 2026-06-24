@@ -1,0 +1,32 @@
+# Never commit anything under data/ (CLAUDE.md non-negotiable).
+/data/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / web
+node_modules/
+web/dist/
+web/dev-dist/
+*.local
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Build / scratch
+/scratch/
+*.log

@@ -1,0 +1,45 @@
+"""Runtime configuration, read from the environment (see docker-compose.yml).
+
+Nothing here is a secret default fit for production: the dev Compose supplies
+dev-only values. Real deployments inject their own (directive 03/09).
+"""
+from __future__ import annotations
+
+from functools import lru_cache
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    # The application connects as a NON-superuser login role that is a member of
+    # app_role (directive 02 / the migrations note's footgun): RLS only binds for
+    # a role that is not superuser, table owner, or BYPASSRLS. In dev this is the
+    # `app` role the migrate step bootstraps; the migrate step itself uses a
+    # separate superuser URL (DATABASE_URL on the migrate service).
+    database_url: str = Field(
+        default="postgresql://app:app_dev@postgres:5432/maler",
+        alias="DATABASE_URL",
+    )
+
+    # Internal-only sidecars / stubs (directive 10). The frontend never reaches
+    # any of these directly; only the backend does.
+    validator_url: str = Field(default="http://validator:8080", alias="VALIDATOR_URL")
+    model_endpoint: str = Field(default="http://stubs:9000/model", alias="MODEL_ENDPOINT")
+    m365_endpoint: str = Field(default="http://stubs:9000/m365", alias="M365_ENDPOINT")
+
+    env: str = Field(default="dev", alias="ENV")
+
+    @property
+    def is_dev(self) -> bool:
+        return self.env == "dev"
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()

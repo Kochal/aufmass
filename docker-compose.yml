@@ -30,11 +30,22 @@ services:
     # One-shot: runs the FULL migration set (including RLS policies and audit
     # triggers, never a stripped schema) before the api serves traffic, so a
     # fresh clone lands on the current schema. Exits 0 when done.
+    #
+    # Connects as the SUPERUSER (maler): the migrations CREATE ROLE and install
+    # SECURITY DEFINER functions. After migrating it bootstraps the dev `app`
+    # login role (member of app_role, NON-superuser) that the api uses, so RLS
+    # is exercised in dev exactly as in prod. (app/migrate.py)
     build:
       context: ./api
-    command: ["python", "-m", "app.migrate"]   # adjust to the chosen migration runner
+    command: ["python", "-m", "app.migrate"]
+    volumes:
+      - ./migrations:/migrations:ro
     environment:
       DATABASE_URL: postgresql://maler:dev_only_change_me@postgres:5432/maler
+      MIGRATIONS_DIR: /migrations
+      APP_DB_USER: app
+      APP_DB_PASSWORD: app_dev
+      ENV: dev
     depends_on:
       postgres:
         condition: service_healthy
@@ -65,7 +76,10 @@ services:
     volumes:
       - ./api:/app
     environment:
-      DATABASE_URL: postgresql://maler:dev_only_change_me@postgres:5432/maler
+      # Connects as the NON-superuser `app` role (bootstrapped by the migrate
+      # step), NOT the superuser: a superuser/BYPASSRLS connection would silently
+      # defeat tenant isolation. This is what makes "full RLS in dev" real.
+      DATABASE_URL: postgresql://app:app_dev@postgres:5432/maler
       VALIDATOR_URL: http://validator:8080
       # Dev stubs, not live egress (no real Microsoft / model credentials).
       MODEL_ENDPOINT: http://stubs:9000/model
