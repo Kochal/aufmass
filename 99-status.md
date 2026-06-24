@@ -8,17 +8,23 @@ Current phase and what is settled versus open. Updated in place.
 - 2026-06-24: Aufmaß DB layer landed (migration `0020`, `tests/aufmass_test.sql`).
   The DB layer is now complete across the foundation and every feature module
   (`02`, `05`, `06`, `07`); all four guarantee suites pass on PG17.
+- 2026-06-24: Scaffolded the `10` dev stack (`api`, `web`, `validator`, `stubs`)
+  so `docker compose up` is the entry point. The migration runner, the dev `app`
+  role bootstrap, and the per-request RLS session context are verified on PG17.
+  Docker builds and the KoSIT `validator` image are not yet built/run.
 
 -----
 
 ## Phase
 
-**Phase 1: data layer + stack.** The directive set is drafted (`00`–`10`) and
-the database layer is implemented as migrations with guarantee suites across the
-foundation (`02`) and every feature module (`05`, `06`, `07`). The application
-stack is decided (`10`) but not yet scaffolded. Next is the app-stack skeleton
-(making `docker compose up` real) and the `03` host for the `07` vision
-benchmark.
+**Phase 1: data layer + stack.** The directive set is drafted (`00`–`10`), the
+database layer is implemented as migrations with guarantee suites across the
+foundation (`02`) and every feature module (`05`, `06`, `07`), and the `10` dev
+stack is scaffolded (`api`/`web`/`validator`/`stubs`) with the DB-facing parts
+(migration runner, dev `app` role, RLS session context) verified on PG17. Next:
+build the actual API surface on the `05` spine, confirm `docker compose up` on a
+Docker host (incl. the KoSIT validator image), and stand up the `03` host for
+the `07` vision benchmark.
 
 ## Directive set
 
@@ -72,12 +78,12 @@ a sizing benchmark, not at the design stage.
 
 ## Next
 
-1. Scaffold the `10` dev stack so `docker compose up` actually comes up: the
-   `api` / `validator` / `stubs` / `web` service skeletons and a migration
-   runner that applies `migrations/*.sql` (the one-shot `migrate` step). This
-   settles the parked sub-decisions (React framework specifics, migration-runner
-   shape) in a `notes/ops/` note.
-2. Stand up `03` (a German GPU host) far enough to run the `07` vision
+1. Confirm `docker compose up` on a real Docker host: the image builds, the
+   health-gated startup, and especially the KoSIT `validator` image (artifact
+   versions, daemon HTTP/health path), then pin it by digest. See
+   `validator/README.md`.
+2. Build the first working API surface on the `05` spine over the migrated
+   schema (real endpoints + generated TS client), replacing the dev header-auth
+   stub as `09` auth lands.
+3. Stand up `03` (a German GPU host) far enough to run the `07` vision
    benchmark on real sheets.
-3. Build the first working API surface on the `05` spine over the migrated
-   schema.

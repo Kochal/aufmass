@@ -17,6 +17,17 @@ Audience: you (Claude Code) and any human contributor.
 ## Changelog
 - 2026-06-23: Initial draft. Lanes, app-layer non-negotiables, layer
   contract, dev Compose.
+- 2026-06-24: Scaffolded the four services (`api`, `web`, `validator`, `stubs`)
+  so `docker compose up` is the entry point. Decisions now true: the migration
+  runner is a thin `psql --single-transaction` wrapper over the plain SQL with
+  `schema_migrations` bookkeeping (open question 1 resolved: one-shot `migrate`
+  service); a non-superuser `app` DB login role is bootstrapped by the migrate
+  step in dev so RLS actually binds (the api connects as it, never as the
+  superuser); the per-request RLS context is transaction-local `set_config`;
+  stubs are one shared `stubs` service (open question 2 resolved). The DB layer
+  of all this was verified on PG17; the Docker builds and the KoSIT `validator`
+  image are not yet built/run here (see `validator/README.md`). Detail in
+  `notes/ops/2026-06-24-dev-stack-scaffold.md`.
 
 -----
 
@@ -138,12 +149,18 @@ directive.
 
 ## Open questions
 
-1. **Migrate step shape**: a dedicated one-shot `migrate` service vs an
-   entrypoint step on `api`. Drafted as a one-shot service for visibility;
-   either is fine.
-2. **Model/M365 stub form**: a shared lightweight stub service in Compose vs
-   per-test fakes. Drafted as a small stub service so the app runs without any
-   real credentials.
+1. ~~**Migrate step shape**~~ **Resolved (2026-06-24):** a dedicated one-shot
+   `migrate` service running `python -m app.migrate`, which tracks applied files
+   in `schema_migrations` and applies pending ones with `psql
+   --single-transaction`. In dev it also bootstraps the non-superuser `app` DB
+   role the api connects as.
+2. ~~**Model/M365 stub form**~~ **Resolved (2026-06-24):** one shared `stubs`
+   service in Compose (`/model`, `/m365`), so the app runs with no real
+   credentials.
 3. **Prod runtime topology**: the same Compose set on the German host vs a
    thin orchestration layer. Out of scope here; decide alongside `03` when
    standing up the host.
+4. **KoSIT `validator` image**: the Dockerfile is scaffolded but not yet built
+   against the real KoSIT artifacts; the daemon's HTTP request/health paths and
+   the pinned artifact versions need confirming on a Docker host, then the image
+   pinned by digest. See `validator/README.md`.
