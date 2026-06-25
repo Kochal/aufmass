@@ -53,10 +53,22 @@ aufmass-web-1         Up                   0.0.0.0:5173->5173/tcp
 - `GET /health` → `{"status":"ok","db":true,"env":"dev"}`
 - Web dev server (Vite / React) responding on :5173.
 
-## What is still open
+## Validator smoke test (same session)
 
-- KoSIT validator daemon health path (`/health`): the healthcheck passes but a
-  real XRechnung XML POST has not been tested yet.
+The daemon HTTP interface:
+- Correct call: `POST /` with raw XML body, `Content-Type: application/xml`.
+  The handler explicitly rejects `multipart/form-data`; use `--data-binary @file`,
+  not `-F file=@file`.
+- The test instances shipped in the config source repo are Ant build templates
+  (`@xrechnung.spec.id@` placeholder); they fail scenario matching as-is.
+- A correctly formed XRechnung 3.0 UBL Invoice (CustomizationID =
+  `urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0`)
+  returned `valid="true"`, scenario `EN16931 XRechnung (UBL Invoice)` matched,
+  all validation steps passed.
+
+The daemon is fully operational.
+
+## What is still open
 - Ports 8000 and 5173 are exposed on the public IP. For anything beyond
   local-only testing, lock them down (firewall / nginx reverse proxy, `09`).
 - The host has no GPU; the model server stub works for the dev stack but the

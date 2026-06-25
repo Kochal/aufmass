@@ -83,9 +83,9 @@ a sizing benchmark, not at the design stage.
 ## Next
 
 1. ~~Confirm `docker compose up` on a real Docker host~~ **Done** (2026-06-25,
-   Hetzner, `/root/aufmass/`). KoSIT validator fixed and confirmed healthy.
-   Pin validator image by digest once the daemon HTTP interface is smoke-tested
-   with a real XRechnung XML POST.
+   Hetzner, `/root/aufmass/`). KoSIT validator fixed (v1.6.2), smoke-tested:
+   `POST /` raw XML → `valid="true"`, scenario `EN16931 XRechnung (UBL Invoice)`
+   matched. Pin by digest before merging into any production path.
 2. Build the first working API surface on the `05` spine over the migrated
    schema (real endpoints + generated TS client), replacing the dev header-auth
    stub as `09` auth lands.
