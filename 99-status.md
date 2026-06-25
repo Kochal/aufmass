@@ -8,6 +8,15 @@ Current phase and what is settled versus open. Updated in place.
 - 2026-06-24: Aufmaß DB layer landed (migration `0020`, `tests/aufmass_test.sql`).
   The DB layer is now complete across the foundation and every feature module
   (`02`, `05`, `06`, `07`); all four guarantee suites pass on PG17.
+- 2026-06-25: 05 API core slice landed: auftraggeber, kontakt, projekt (lifecycle),
+  arbeitszeit (freeze-on-approval + korrektur) in `api/app/routers/`. Pydantic v2
+  schemas, shared `db_errors()` PG→HTTP mapper, optimistic concurrency, dict-row
+  pool, dev seed (two tenants + nummernkreis). 13 pytest tests green on Hetzner.
+  TypeScript client regenerated (`web/src/api/schema.ts`, 1487 lines, tsc clean).
+  Notes: `notes/operations/2026-06-25-api-layer-decisions.md`.
+- 2026-06-25: 05 API fan-out: fahrzeug, fahrt, lieferant, material, bestellung,
+  bestellposition, abnahmeprotokoll, mangel, gewaehrleistung. All 05 entities
+  covered. Test suite extended; stack rebuilt on Hetzner.
 - 2026-06-24: Scaffolded the `10` dev stack (`api`, `web`, `validator`, `stubs`)
   so `docker compose up` is the entry point. The migration runner, the dev `app`
   role bootstrap, and the per-request RLS session context are verified on PG17.
@@ -22,13 +31,14 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 1: data layer + stack — confirmed.** The directive set is drafted
-(`00`–`10`), the database layer is implemented as migrations with guarantee suites
-across the foundation (`02`) and every feature module (`05`, `06`, `07`), the `10`
-dev stack is scaffolded and confirmed green on the Hetzner remote host
-(`/root/aufmass/`): all 5 images build, all 20 migrations apply, validator and
-API are healthy. Next: build the actual API surface on the `05` spine, and decide
-on a GPU host for the `03`/`07` vision benchmark.
+**Phase 2: 05 operational-spine API — complete.** The `05` HTTP surface is fully
+built over the migrated schema: all 13 entities (auftraggeber, kontakt, projekt,
+arbeitszeit, fahrzeug, fahrt, lieferant, material, bestellung, bestellposition,
+abnahmeprotokoll, mangel, gewaehrleistung) have CRUD routers with the full pattern
+set (RLS, dict-row, optimistic concurrency, soft-delete guard, lifecycle status
+machine, freeze-on-approval, generated columns). Dev seed, pytest suite, and
+regenerated TypeScript client. Next: `06` quotation engine API, and GPU host
+decision for `03`/`07`.
 
 ## Directive set
 
@@ -39,7 +49,7 @@ on a GPU host for the `03`/`07` vision benchmark.
 | `02` | Data model and DB schema       | Drafted. Written properly     |
 | `03` | Infrastructure / model serving | Drafted                       |
 | `04` | Backup and archival            | Drafted                       |
-| `05` | Operational modules (spine)    | Drafted. No open questions    |
+| `05` | Operational modules (spine)    | **API complete** (2026-06-25) |
 | `06` | Quotation engine               | Drafted                       |
 | `07` | Aufmaß capture and OCR         | Drafted. DB layer (0020) + tests |
 | `08` | M365 integration               | Drafted                       |
@@ -85,10 +95,13 @@ a sizing benchmark, not at the design stage.
 1. ~~Confirm `docker compose up` on a real Docker host~~ **Done** (2026-06-25,
    Hetzner, `/root/aufmass/`). KoSIT validator fixed (v1.6.2), smoke-tested:
    `POST /` raw XML → `valid="true"`, scenario `EN16931 XRechnung (UBL Invoice)`
-   matched. Pin by digest before merging into any production path.
-2. Build the first working API surface on the `05` spine over the migrated
-   schema (real endpoints + generated TS client), replacing the dev header-auth
-   stub as `09` auth lands.
-3. Stand up `03` (a German GPU host) far enough to run the `07` vision
-   benchmark on real sheets. Current Hetzner host has no GPU; need a GPU
-   instance decision.
+   matched. Pinned by digest.
+2. ~~Build the first working API surface on the `05` spine (real endpoints +
+   generated TS client)~~ **Done** (2026-06-25). All 13 `05` entities. 13 pytest
+   tests green on Hetzner. `web/src/api/schema.ts` regenerated (tsc clean).
+3. Build the `06` quotation engine API (angebot, LV positions, rechnung):
+   the core money path, gapless invoice numbering, e-invoice XML generation,
+   immutability on issued documents, plausibility stubs.
+4. Stand up `03` (a German GPU host) far enough to run the `07` vision
+   benchmark on real Aufmaß sheets. Current Hetzner host has no GPU; requires
+   a GPU instance decision (provider, class, location in DE).

@@ -14,7 +14,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .db import healthcheck, pool
-from .routers import auftraggeber, arbeitszeit, kontakt, projekt
+from .routers import (
+    abnahmeprotokoll, arbeitszeit, auftraggeber, bestellung, bestellposition,
+    fahrt, fahrzeug, gewaehrleistung, kontakt, lieferant, mangel, material, projekt,
+)
 
 
 @asynccontextmanager
@@ -40,6 +43,15 @@ app.include_router(auftraggeber.router)
 app.include_router(kontakt.router)
 app.include_router(projekt.router)
 app.include_router(arbeitszeit.router)
+app.include_router(fahrzeug.router)
+app.include_router(fahrt.router)
+app.include_router(lieferant.router)
+app.include_router(material.router)
+app.include_router(bestellung.router)
+app.include_router(bestellposition.router)
+app.include_router(abnahmeprotokoll.router)
+app.include_router(mangel.router)
+app.include_router(gewaehrleistung.router)
 
 
 @app.get("/health", tags=["ops"])

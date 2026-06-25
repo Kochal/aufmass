@@ -21,7 +21,10 @@ Audience: you (Claude Code) and any human contributor.
 - 2026-06-22: Abnahme resolved: structured Abnahmeprotokoll with Mängel list
   (default) plus an `abnahme_mode` toggle for simple date-plus-document.
 - 2026-06-23: Implemented as migrations `0008`–`0014` with a guarantee test
-  suite (`tests/operations_test.sql`). Decisions now true: project numbers
+  suite (`tests/operations_test.sql`).
+- 2026-06-25: Full HTTP surface built in `api/app/routers/`. All 13 entities
+  covered (see `notes/operations/2026-06-25-api-layer-decisions.md`). Generated
+  TypeScript client at `web/src/api/schema.ts`. Decisions now true: project numbers
   auto-allocate from the Nummernkreis on insert; projekt and bestellung
   lifecycles are enforced by BEFORE-UPDATE triggers (forward free,
   backward/cancel require `app.reason`, terminal states terminal, `abgenommen`

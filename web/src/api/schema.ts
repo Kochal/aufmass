@@ -203,6 +203,390 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/fahrzeug": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Fahrzeug */
+        get: operations["list_fahrzeug_api_fahrzeug_get"];
+        put?: never;
+        /** Create Fahrzeug */
+        post: operations["create_fahrzeug_api_fahrzeug_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fahrzeug/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Fahrzeug */
+        get: operations["get_fahrzeug_api_fahrzeug__id__get"];
+        /** Update Fahrzeug */
+        put: operations["update_fahrzeug_api_fahrzeug__id__put"];
+        post?: never;
+        /** Delete Fahrzeug */
+        delete: operations["delete_fahrzeug_api_fahrzeug__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fahrt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Fahrt */
+        get: operations["list_fahrt_api_fahrt_get"];
+        put?: never;
+        /** Create Fahrt */
+        post: operations["create_fahrt_api_fahrt_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fahrt/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Fahrt */
+        get: operations["get_fahrt_api_fahrt__id__get"];
+        /** Update Fahrt */
+        put: operations["update_fahrt_api_fahrt__id__put"];
+        post?: never;
+        /** Delete Fahrt */
+        delete: operations["delete_fahrt_api_fahrt__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fahrt/{id}/freigabe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Approve Fahrt */
+        patch: operations["approve_fahrt_api_fahrt__id__freigabe_patch"];
+        trace?: never;
+    };
+    "/api/fahrt/{id}/korrektur": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Korrektur Fahrt */
+        post: operations["korrektur_fahrt_api_fahrt__id__korrektur_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lieferant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Lieferant */
+        get: operations["list_lieferant_api_lieferant_get"];
+        put?: never;
+        /** Create Lieferant */
+        post: operations["create_lieferant_api_lieferant_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lieferant/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Lieferant */
+        get: operations["get_lieferant_api_lieferant__id__get"];
+        /** Update Lieferant */
+        put: operations["update_lieferant_api_lieferant__id__put"];
+        post?: never;
+        /** Delete Lieferant */
+        delete: operations["delete_lieferant_api_lieferant__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/material": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Material */
+        get: operations["list_material_api_material_get"];
+        put?: never;
+        /** Create Material */
+        post: operations["create_material_api_material_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/material/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Material */
+        get: operations["get_material_api_material__id__get"];
+        /** Update Material */
+        put: operations["update_material_api_material__id__put"];
+        post?: never;
+        /** Delete Material */
+        delete: operations["delete_material_api_material__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bestellung": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Bestellung */
+        get: operations["list_bestellung_api_bestellung_get"];
+        put?: never;
+        /** Create Bestellung */
+        post: operations["create_bestellung_api_bestellung_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bestellung/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Bestellung */
+        get: operations["get_bestellung_api_bestellung__id__get"];
+        /** Update Bestellung */
+        put: operations["update_bestellung_api_bestellung__id__put"];
+        post?: never;
+        /** Delete Bestellung */
+        delete: operations["delete_bestellung_api_bestellung__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bestellung/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Bestellung Status */
+        patch: operations["patch_bestellung_status_api_bestellung__id__status_patch"];
+        trace?: never;
+    };
+    "/api/bestellposition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Bestellposition */
+        get: operations["list_bestellposition_api_bestellposition_get"];
+        put?: never;
+        /** Create Bestellposition */
+        post: operations["create_bestellposition_api_bestellposition_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bestellposition/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Bestellposition */
+        get: operations["get_bestellposition_api_bestellposition__id__get"];
+        /** Update Bestellposition */
+        put: operations["update_bestellposition_api_bestellposition__id__put"];
+        post?: never;
+        /** Delete Bestellposition */
+        delete: operations["delete_bestellposition_api_bestellposition__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/abnahmeprotokoll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Abnahmeprotokoll */
+        get: operations["list_abnahmeprotokoll_api_abnahmeprotokoll_get"];
+        put?: never;
+        /** Create Abnahmeprotokoll */
+        post: operations["create_abnahmeprotokoll_api_abnahmeprotokoll_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/abnahmeprotokoll/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Abnahmeprotokoll */
+        get: operations["get_abnahmeprotokoll_api_abnahmeprotokoll__id__get"];
+        /** Update Abnahmeprotokoll */
+        put: operations["update_abnahmeprotokoll_api_abnahmeprotokoll__id__put"];
+        post?: never;
+        /** Delete Abnahmeprotokoll */
+        delete: operations["delete_abnahmeprotokoll_api_abnahmeprotokoll__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mangel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Mangel */
+        get: operations["list_mangel_api_mangel_get"];
+        put?: never;
+        /** Create Mangel */
+        post: operations["create_mangel_api_mangel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mangel/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Mangel */
+        get: operations["get_mangel_api_mangel__id__get"];
+        /** Update Mangel */
+        put: operations["update_mangel_api_mangel__id__put"];
+        post?: never;
+        /** Delete Mangel */
+        delete: operations["delete_mangel_api_mangel__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gewaehrleistung": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Gewaehrleistung */
+        get: operations["list_gewaehrleistung_api_gewaehrleistung_get"];
+        put?: never;
+        /** Create Gewaehrleistung */
+        post: operations["create_gewaehrleistung_api_gewaehrleistung_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gewaehrleistung/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Gewaehrleistung */
+        get: operations["get_gewaehrleistung_api_gewaehrleistung__id__get"];
+        /** Update Gewaehrleistung */
+        put: operations["update_gewaehrleistung_api_gewaehrleistung__id__put"];
+        post?: never;
+        /** Delete Gewaehrleistung */
+        delete: operations["delete_gewaehrleistung_api_gewaehrleistung__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -227,6 +611,103 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AbnahmeprotokollCreate */
+        AbnahmeprotokollCreate: {
+            /**
+             * Projekt Id
+             * Format: uuid
+             */
+            projekt_id: string;
+            /**
+             * Abnahme Datum
+             * Format: date
+             */
+            abnahme_datum: string;
+            /**
+             * Art
+             * @enum {string}
+             */
+            art: "foermlich" | "fiktiv" | "konkludent" | "bgb";
+            /** Abnehmer */
+            abnehmer?: string | null;
+            /** Vorbehalte */
+            vorbehalte?: string | null;
+            /** Protokoll Document Id */
+            protokoll_document_id?: string | null;
+        };
+        /** AbnahmeprotokollRead */
+        AbnahmeprotokollRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Projekt Id
+             * Format: uuid
+             */
+            projekt_id: string;
+            /**
+             * Abnahme Datum
+             * Format: date
+             */
+            abnahme_datum: string;
+            /**
+             * Art
+             * @enum {string}
+             */
+            art: "foermlich" | "fiktiv" | "konkludent" | "bgb";
+            /** Abnehmer */
+            abnehmer?: string | null;
+            /** Vorbehalte */
+            vorbehalte?: string | null;
+            /** Protokoll Document Id */
+            protokoll_document_id?: string | null;
+        };
+        /** AbnahmeprotokollUpdate */
+        AbnahmeprotokollUpdate: {
+            /** Row Version */
+            row_version: number;
+            /**
+             * Abnahme Datum
+             * Format: date
+             */
+            abnahme_datum: string;
+            /**
+             * Art
+             * @enum {string}
+             */
+            art: "foermlich" | "fiktiv" | "konkludent" | "bgb";
+            /** Abnehmer */
+            abnehmer?: string | null;
+            /** Vorbehalte */
+            vorbehalte?: string | null;
+            /** Protokoll Document Id */
+            protokoll_document_id?: string | null;
+        };
         /** ArbeitszeitCreate */
         ArbeitszeitCreate: {
             /**
@@ -426,6 +907,472 @@ export interface components {
             /** Ust Idnr */
             ust_idnr?: string | null;
         };
+        /** BestellpositionCreate */
+        BestellpositionCreate: {
+            /**
+             * Bestellung Id
+             * Format: uuid
+             */
+            bestellung_id: string;
+            /** Bezeichnung */
+            bezeichnung: string;
+            /** Menge */
+            menge: number | string;
+            /** Einheit */
+            einheit: string;
+            /** Material Id */
+            material_id?: string | null;
+            /** Einzelpreis */
+            einzelpreis?: number | string | null;
+            /** Position Nr */
+            position_nr?: number | null;
+        };
+        /** BestellpositionRead */
+        BestellpositionRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Bestellung Id
+             * Format: uuid
+             */
+            bestellung_id: string;
+            /** Material Id */
+            material_id?: string | null;
+            /** Bezeichnung */
+            bezeichnung: string;
+            /** Menge */
+            menge: string;
+            /** Einheit */
+            einheit: string;
+            /** Einzelpreis */
+            einzelpreis?: string | null;
+            /** Position Nr */
+            position_nr?: number | null;
+        };
+        /** BestellpositionUpdate */
+        BestellpositionUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Bezeichnung */
+            bezeichnung: string;
+            /** Menge */
+            menge: number | string;
+            /** Einheit */
+            einheit: string;
+            /** Material Id */
+            material_id?: string | null;
+            /** Einzelpreis */
+            einzelpreis?: number | string | null;
+            /** Position Nr */
+            position_nr?: number | null;
+        };
+        /** BestellungCreate */
+        BestellungCreate: {
+            /**
+             * Lieferant Id
+             * Format: uuid
+             */
+            lieferant_id: string;
+            /** Projekt Id */
+            projekt_id?: string | null;
+            /** Bestelldatum */
+            bestelldatum?: string | null;
+            /** Summe */
+            summe?: number | string | null;
+            /** Auftragsbestaetigung Document Id */
+            auftragsbestaetigung_document_id?: string | null;
+        };
+        /** BestellungRead */
+        BestellungRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Lieferant Id
+             * Format: uuid
+             */
+            lieferant_id: string;
+            /** Projekt Id */
+            projekt_id?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "entwurf" | "bestellt" | "teilgeliefert" | "geliefert" | "storniert";
+            /** Bestelldatum */
+            bestelldatum?: string | null;
+            /** Summe */
+            summe?: string | null;
+            /** Auftragsbestaetigung Document Id */
+            auftragsbestaetigung_document_id?: string | null;
+        };
+        /** BestellungStatusPatch */
+        BestellungStatusPatch: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "entwurf" | "bestellt" | "teilgeliefert" | "geliefert" | "storniert";
+            /** Row Version */
+            row_version: number;
+            /** Reason */
+            reason?: string | null;
+        };
+        /** BestellungUpdate */
+        BestellungUpdate: {
+            /** Row Version */
+            row_version: number;
+            /**
+             * Lieferant Id
+             * Format: uuid
+             */
+            lieferant_id: string;
+            /** Projekt Id */
+            projekt_id?: string | null;
+            /** Bestelldatum */
+            bestelldatum?: string | null;
+            /** Summe */
+            summe?: number | string | null;
+            /** Auftragsbestaetigung Document Id */
+            auftragsbestaetigung_document_id?: string | null;
+        };
+        /** FahrtCreate */
+        FahrtCreate: {
+            /**
+             * App User Id
+             * Format: uuid
+             */
+            app_user_id: string;
+            /** Projekt Id */
+            projekt_id?: string | null;
+            /** Fahrzeug Id */
+            fahrzeug_id?: string | null;
+            /**
+             * Datum
+             * Format: date
+             */
+            datum: string;
+            /** Von */
+            von?: string | null;
+            /** Nach */
+            nach?: string | null;
+            /** Km */
+            km: number | string;
+            /** Zweck */
+            zweck?: string | null;
+        };
+        /** FahrtFreigabe */
+        FahrtFreigabe: {
+            /** Row Version */
+            row_version: number;
+        };
+        /**
+         * FahrtKorrektur
+         * @description Fields for a correcting row. app_user_id inherited from frozen source.
+         */
+        FahrtKorrektur: {
+            /** Projekt Id */
+            projekt_id?: string | null;
+            /** Fahrzeug Id */
+            fahrzeug_id?: string | null;
+            /**
+             * Datum
+             * Format: date
+             */
+            datum: string;
+            /** Von */
+            von?: string | null;
+            /** Nach */
+            nach?: string | null;
+            /** Km */
+            km: number | string;
+            /** Zweck */
+            zweck?: string | null;
+        };
+        /** FahrtRead */
+        FahrtRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * App User Id
+             * Format: uuid
+             */
+            app_user_id: string;
+            /** Projekt Id */
+            projekt_id?: string | null;
+            /** Fahrzeug Id */
+            fahrzeug_id?: string | null;
+            /**
+             * Datum
+             * Format: date
+             */
+            datum: string;
+            /** Von */
+            von?: string | null;
+            /** Nach */
+            nach?: string | null;
+            /** Km */
+            km: string;
+            /** Zweck */
+            zweck?: string | null;
+            /**
+             * Freigabe Status
+             * @enum {string}
+             */
+            freigabe_status: "offen" | "freigegeben";
+            /** Freigegeben Am */
+            freigegeben_am?: string | null;
+            /** Freigegeben Von */
+            freigegeben_von?: string | null;
+            /** Korrektur Von Id */
+            korrektur_von_id?: string | null;
+        };
+        /** FahrtUpdate */
+        FahrtUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Projekt Id */
+            projekt_id?: string | null;
+            /** Fahrzeug Id */
+            fahrzeug_id?: string | null;
+            /**
+             * Datum
+             * Format: date
+             */
+            datum: string;
+            /** Von */
+            von?: string | null;
+            /** Nach */
+            nach?: string | null;
+            /** Km */
+            km: number | string;
+            /** Zweck */
+            zweck?: string | null;
+        };
+        /** FahrzeugCreate */
+        FahrzeugCreate: {
+            /** Kennzeichen */
+            kennzeichen: string;
+            /** Typ */
+            typ?: string | null;
+            /**
+             * Privat Genutzt
+             * @default false
+             */
+            privat_genutzt: boolean;
+        };
+        /** FahrzeugRead */
+        FahrzeugRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Kennzeichen */
+            kennzeichen: string;
+            /** Typ */
+            typ?: string | null;
+            /** Privat Genutzt */
+            privat_genutzt: boolean;
+        };
+        /** FahrzeugUpdate */
+        FahrzeugUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Kennzeichen */
+            kennzeichen: string;
+            /** Typ */
+            typ?: string | null;
+            /**
+             * Privat Genutzt
+             * @default false
+             */
+            privat_genutzt: boolean;
+        };
+        /** GewaehrleistungCreate */
+        GewaehrleistungCreate: {
+            /**
+             * Projekt Id
+             * Format: uuid
+             */
+            projekt_id: string;
+            /**
+             * Regime
+             * @enum {string}
+             */
+            regime: "bgb" | "vob";
+            /** Start Datum */
+            start_datum?: string | null;
+            /** Frist Jahre */
+            frist_jahre?: number | null;
+        };
+        /** GewaehrleistungRead */
+        GewaehrleistungRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Projekt Id
+             * Format: uuid
+             */
+            projekt_id: string;
+            /**
+             * Regime
+             * @enum {string}
+             */
+            regime: "bgb" | "vob";
+            /** Start Datum */
+            start_datum?: string | null;
+            /** Frist Jahre */
+            frist_jahre?: number | null;
+            /** Frist Ende */
+            frist_ende?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "laufend" | "abgelaufen" | "beendet";
+        };
+        /** GewaehrleistungUpdate */
+        GewaehrleistungUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Frist Jahre */
+            frist_jahre?: number | null;
+            /** Start Datum */
+            start_datum?: string | null;
+            /**
+             * Status
+             * @default laufend
+             * @enum {string}
+             */
+            status: "laufend" | "abgelaufen" | "beendet";
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -503,6 +1450,214 @@ export interface components {
             email?: string | null;
             /** Telefon */
             telefon?: string | null;
+        };
+        /** LieferantCreate */
+        LieferantCreate: {
+            /** Name */
+            name: string;
+            /** Ust Idnr */
+            ust_idnr?: string | null;
+            /** Zahlungsziel Tage */
+            zahlungsziel_tage?: number | null;
+        };
+        /** LieferantRead */
+        LieferantRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Name */
+            name: string;
+            /** Ust Idnr */
+            ust_idnr?: string | null;
+            /** Zahlungsziel Tage */
+            zahlungsziel_tage?: number | null;
+        };
+        /** LieferantUpdate */
+        LieferantUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Name */
+            name: string;
+            /** Ust Idnr */
+            ust_idnr?: string | null;
+            /** Zahlungsziel Tage */
+            zahlungsziel_tage?: number | null;
+        };
+        /** MangelCreate */
+        MangelCreate: {
+            /**
+             * Abnahmeprotokoll Id
+             * Format: uuid
+             */
+            abnahmeprotokoll_id: string;
+            /** Beschreibung */
+            beschreibung: string;
+            /** Ort */
+            ort?: string | null;
+            /** Schwere */
+            schwere?: ("gering" | "mittel" | "schwer") | null;
+            /** Frist */
+            frist?: string | null;
+        };
+        /** MangelRead */
+        MangelRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Abnahmeprotokoll Id
+             * Format: uuid
+             */
+            abnahmeprotokoll_id: string;
+            /** Beschreibung */
+            beschreibung: string;
+            /** Ort */
+            ort?: string | null;
+            /** Schwere */
+            schwere?: ("gering" | "mittel" | "schwer") | null;
+            /** Frist */
+            frist?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "offen" | "behoben" | "abgelehnt";
+            /** Behoben Am */
+            behoben_am?: string | null;
+        };
+        /** MangelUpdate */
+        MangelUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Beschreibung */
+            beschreibung: string;
+            /** Ort */
+            ort?: string | null;
+            /** Schwere */
+            schwere?: ("gering" | "mittel" | "schwer") | null;
+            /** Frist */
+            frist?: string | null;
+            /**
+             * Status
+             * @default offen
+             * @enum {string}
+             */
+            status: "offen" | "behoben" | "abgelehnt";
+            /** Behoben Am */
+            behoben_am?: string | null;
+        };
+        /** MaterialCreate */
+        MaterialCreate: {
+            /** Bezeichnung */
+            bezeichnung: string;
+            /** Einheit */
+            einheit: string;
+            /** Standard Lieferant Id */
+            standard_lieferant_id?: string | null;
+            /** Standard Preis */
+            standard_preis?: number | string | null;
+        };
+        /** MaterialRead */
+        MaterialRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Bezeichnung */
+            bezeichnung: string;
+            /** Einheit */
+            einheit: string;
+            /** Standard Lieferant Id */
+            standard_lieferant_id?: string | null;
+            /** Standard Preis */
+            standard_preis?: string | null;
+        };
+        /** MaterialUpdate */
+        MaterialUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Bezeichnung */
+            bezeichnung: string;
+            /** Einheit */
+            einheit: string;
+            /** Standard Lieferant Id */
+            standard_lieferant_id?: string | null;
+            /** Standard Preis */
+            standard_preis?: number | string | null;
         };
         /** ProjektCreate */
         ProjektCreate: {
@@ -1450,6 +2605,1683 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ArbeitszeitRead"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_fahrzeug_api_fahrzeug_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FahrzeugRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_fahrzeug_api_fahrzeug_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FahrzeugCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FahrzeugRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_fahrzeug_api_fahrzeug__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FahrzeugRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_fahrzeug_api_fahrzeug__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FahrzeugUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FahrzeugRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_fahrzeug_api_fahrzeug__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_fahrt_api_fahrt_get: {
+        parameters: {
+            query?: {
+                projekt_id?: string | null;
+                app_user_id?: string | null;
+                freigabe_status?: ("offen" | "freigegeben") | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FahrtRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_fahrt_api_fahrt_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FahrtCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FahrtRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_fahrt_api_fahrt__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FahrtRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_fahrt_api_fahrt__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FahrtUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FahrtRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_fahrt_api_fahrt__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_fahrt_api_fahrt__id__freigabe_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FahrtFreigabe"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FahrtRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    korrektur_fahrt_api_fahrt__id__korrektur_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FahrtKorrektur"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FahrtRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_lieferant_api_lieferant_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LieferantRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_lieferant_api_lieferant_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LieferantCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LieferantRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_lieferant_api_lieferant__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LieferantRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_lieferant_api_lieferant__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LieferantUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LieferantRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_lieferant_api_lieferant__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_material_api_material_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_material_api_material_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaterialCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_material_api_material__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_material_api_material__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaterialUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_material_api_material__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_bestellung_api_bestellung_get: {
+        parameters: {
+            query?: {
+                projekt_id?: string | null;
+                status?: ("entwurf" | "bestellt" | "teilgeliefert" | "geliefert" | "storniert") | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BestellungRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_bestellung_api_bestellung_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BestellungCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BestellungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_bestellung_api_bestellung__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BestellungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_bestellung_api_bestellung__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BestellungUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BestellungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_bestellung_api_bestellung__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_bestellung_status_api_bestellung__id__status_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BestellungStatusPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BestellungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_bestellposition_api_bestellposition_get: {
+        parameters: {
+            query?: {
+                bestellung_id?: string | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BestellpositionRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_bestellposition_api_bestellposition_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BestellpositionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BestellpositionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_bestellposition_api_bestellposition__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BestellpositionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_bestellposition_api_bestellposition__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BestellpositionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BestellpositionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_bestellposition_api_bestellposition__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_abnahmeprotokoll_api_abnahmeprotokoll_get: {
+        parameters: {
+            query?: {
+                projekt_id?: string | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbnahmeprotokollRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_abnahmeprotokoll_api_abnahmeprotokoll_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AbnahmeprotokollCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbnahmeprotokollRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_abnahmeprotokoll_api_abnahmeprotokoll__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbnahmeprotokollRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_abnahmeprotokoll_api_abnahmeprotokoll__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AbnahmeprotokollUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AbnahmeprotokollRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_abnahmeprotokoll_api_abnahmeprotokoll__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_mangel_api_mangel_get: {
+        parameters: {
+            query?: {
+                abnahmeprotokoll_id?: string | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MangelRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_mangel_api_mangel_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MangelCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MangelRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_mangel_api_mangel__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MangelRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_mangel_api_mangel__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MangelUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MangelRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_mangel_api_mangel__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_gewaehrleistung_api_gewaehrleistung_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GewaehrleistungRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_gewaehrleistung_api_gewaehrleistung_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GewaehrleistungCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GewaehrleistungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_gewaehrleistung_api_gewaehrleistung__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GewaehrleistungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_gewaehrleistung_api_gewaehrleistung__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GewaehrleistungUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GewaehrleistungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_gewaehrleistung_api_gewaehrleistung__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
