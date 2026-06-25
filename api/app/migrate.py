@@ -114,6 +114,10 @@ def main() -> None:
     with psycopg.connect(DATABASE_URL, autocommit=False) as conn:
         _bootstrap_dev_app_role(conn)
 
+    if os.environ.get("ENV") == "dev":
+        from .seed import run as _seed_run
+        _seed_run()
+
     print("migrate: done")
 
 

@@ -1,0 +1,86 @@
+from __future__ import annotations
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Response
+from psycopg import Connection
+
+from ..deps import Principal, db_session, get_principal
+from ..errors import db_errors, require_row
+from ..schemas.kontakt import KontaktCreate, KontaktRead, KontaktUpdate
+
+router = APIRouter(prefix="/api/kontakt", tags=["Kontakt"])
+
+_SELECT_ALIVE = "select * from kontakt where deleted_at is null"
+
+
+@router.get("", response_model=list[KontaktRead])
+def list_kontakt(
+    auftraggeber_id: UUID | None = None,
+    conn: Connection = Depends(db_session),
+):
+    if auftraggeber_id is not None:
+        return conn.execute(
+            f"{_SELECT_ALIVE} and auftraggeber_id = %s order by name",
+            (str(auftraggeber_id),),
+        ).fetchall()
+    return conn.execute(f"{_SELECT_ALIVE} order by name").fetchall()
+
+
+@router.get("/{id}", response_model=KontaktRead)
+def get_kontakt(id: UUID, conn: Connection = Depends(db_session)):
+    row = conn.execute(f"{_SELECT_ALIVE} and id = %s", (str(id),)).fetchone()
+    if row is None:
+        raise HTTPException(404)
+    return row
+
+
+@router.post("", response_model=KontaktRead, status_code=201)
+def create_kontakt(
+    body: KontaktCreate,
+    principal: Principal = Depends(get_principal),
+    conn: Connection = Depends(db_session),
+):
+    with db_errors():
+        row = conn.execute(
+            "insert into kontakt(tenant_id, auftraggeber_id, name, rolle, email, telefon) "
+            "values (%s, %s, %s, %s, %s, %s) returning *",
+            (
+                str(principal.tenant_id),
+                str(body.auftraggeber_id),
+                body.name,
+                body.rolle,
+                body.email,
+                body.telefon,
+            ),
+        ).fetchone()
+    return row
+
+
+@router.put("/{id}", response_model=KontaktRead)
+def update_kontakt(
+    id: UUID,
+    body: KontaktUpdate,
+    conn: Connection = Depends(db_session),
+):
+    with db_errors():
+        row = conn.execute(
+            "update kontakt set name=%s, rolle=%s, email=%s, telefon=%s "
+            "where id=%s and deleted_at is null and row_version=%s returning *",
+            (body.name, body.rolle, body.email, body.telefon, str(id), body.row_version),
+        ).fetchone()
+    require_row(row, conn, "kontakt", id)
+    return row
+
+
+@router.delete("/{id}", status_code=204)
+def delete_kontakt(id: UUID, conn: Connection = Depends(db_session)):
+    with db_errors():
+        cur = conn.execute(
+            "update kontakt "
+            "set deleted_at = now(), deleted_by = core.current_actor() "
+            "where id = %s and deleted_at is null",
+            (str(id),),
+        )
+    if cur.rowcount == 0:
+        raise HTTPException(404)
+    return Response(status_code=204)

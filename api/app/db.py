@@ -24,16 +24,24 @@ from typing import Iterator
 from uuid import UUID
 
 from psycopg import Connection
+from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
 from .config import settings
 
+
+def _configure(conn: Connection) -> None:
+    conn.row_factory = dict_row
+
+
 # Opened in the FastAPI lifespan (main.py), not at import time.
-pool = ConnectionPool(settings.database_url, min_size=1, max_size=10, open=False)
+pool = ConnectionPool(
+    settings.database_url, min_size=1, max_size=10, open=False, configure=_configure
+)
 
 
 @contextmanager
-def tenant_connection(tenant_id: UUID, user_id: str) -> Iterator[Connection]:
+def tenant_connection(tenant_id: UUID, user_id: UUID) -> Iterator[Connection]:
     """Yield a connection bound to one tenant/user for the life of one
     transaction. Commits on clean exit, rolls back on exception."""
     with pool.connection() as conn:
@@ -47,7 +55,16 @@ def tenant_connection(tenant_id: UUID, user_id: str) -> Iterator[Connection]:
             yield conn
 
 
+def set_reason(conn: Connection, reason: str | None) -> None:
+    """Set app.reason transaction-locally. Required for backward/cancel status
+    transitions (directive 05). Pass None or '' to clear it."""
+    conn.execute(
+        "select set_config('app.reason', %s, true)", (reason or "",)
+    )
+
+
 def healthcheck() -> bool:
     """A tenant-less liveness probe: can we reach the DB at all?"""
     with pool.connection() as conn:
-        return conn.execute("select 1").fetchone() == (1,)
+        row = conn.execute("select 1 as alive").fetchone()
+        return row is not None and row["alive"] == 1
