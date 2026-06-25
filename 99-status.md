@@ -12,19 +12,23 @@ Current phase and what is settled versus open. Updated in place.
   so `docker compose up` is the entry point. The migration runner, the dev `app`
   role bootstrap, and the per-request RLS session context are verified on PG17.
   Docker builds and the KoSIT `validator` image are not yet built/run.
+- 2026-06-25: Remote instance stood up on Hetzner (`/root/aufmass/`). Fixed the
+  validator Dockerfile (wrong KoSIT jar prefix and config zip filename). All 5
+  images build; `docker compose up` confirmed green: all 20 migrations applied,
+  validator healthy, API `/health` returns `{"status":"ok","db":true,"env":"dev"}`,
+  React dev server responding.
 
 -----
 
 ## Phase
 
-**Phase 1: data layer + stack.** The directive set is drafted (`00`–`10`), the
-database layer is implemented as migrations with guarantee suites across the
-foundation (`02`) and every feature module (`05`, `06`, `07`), and the `10` dev
-stack is scaffolded (`api`/`web`/`validator`/`stubs`) with the DB-facing parts
-(migration runner, dev `app` role, RLS session context) verified on PG17. Next:
-build the actual API surface on the `05` spine, confirm `docker compose up` on a
-Docker host (incl. the KoSIT validator image), and stand up the `03` host for
-the `07` vision benchmark.
+**Phase 1: data layer + stack — confirmed.** The directive set is drafted
+(`00`–`10`), the database layer is implemented as migrations with guarantee suites
+across the foundation (`02`) and every feature module (`05`, `06`, `07`), the `10`
+dev stack is scaffolded and confirmed green on the Hetzner remote host
+(`/root/aufmass/`): all 5 images build, all 20 migrations apply, validator and
+API are healthy. Next: build the actual API surface on the `05` spine, and decide
+on a GPU host for the `03`/`07` vision benchmark.
 
 ## Directive set
 
@@ -78,12 +82,13 @@ a sizing benchmark, not at the design stage.
 
 ## Next
 
-1. Confirm `docker compose up` on a real Docker host: the image builds, the
-   health-gated startup, and especially the KoSIT `validator` image (artifact
-   versions, daemon HTTP/health path), then pin it by digest. See
-   `validator/README.md`.
+1. ~~Confirm `docker compose up` on a real Docker host~~ **Done** (2026-06-25,
+   Hetzner, `/root/aufmass/`). KoSIT validator fixed and confirmed healthy.
+   Pin validator image by digest once the daemon HTTP interface is smoke-tested
+   with a real XRechnung XML POST.
 2. Build the first working API surface on the `05` spine over the migrated
    schema (real endpoints + generated TS client), replacing the dev header-auth
    stub as `09` auth lands.
 3. Stand up `03` (a German GPU host) far enough to run the `07` vision
-   benchmark on real sheets.
+   benchmark on real sheets. Current Hetzner host has no GPU; need a GPU
+   instance decision.
