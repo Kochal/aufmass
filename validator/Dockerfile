@@ -2,10 +2,6 @@
 # e-invoice validator (EN 16931 / XRechnung), run as an internal-only HTTP
 # sidecar the backend calls. No other Java enters the system.
 #
-# NOTE: This is a faithful starting point that has NOT been built/run in this
-# environment (no Docker host here). Verify on the target host and pin the image
-# by digest in docker-compose.yml once confirmed. See README.md in this dir.
-#
 # Pinned versions (override at build time with --build-arg). Bump deliberately.
 # v1.6.2: jar prefix changed to "validator-" (was "validationtool-" before standalone existed)
 # CONFIG_ZIP: filename includes XRechnung version, so not composable from tag alone
@@ -13,7 +9,9 @@ ARG VALIDATOR_VERSION=1.6.2
 ARG CONFIG_TAG=release-2025-07-10
 ARG CONFIG_ZIP=validator-configuration-xrechnung_3.0.2_2025-07-10.zip
 
-FROM eclipse-temurin:17-jre-jammy
+# Digest pinned 2026-06-25 — confirmed on amd64 (Hetzner), smoke-tested valid=true.
+# To update: docker pull eclipse-temurin:17-jre-jammy && docker inspect --format '{{index .RepoDigests 0}}'
+FROM eclipse-temurin:17-jre-jammy@sha256:47c73dc23524b031bed0a5030410c722af6a8b49d4b25898ea8f4615895065f0
 
 ARG VALIDATOR_VERSION
 ARG CONFIG_TAG
