@@ -8,19 +8,20 @@ and validation.
 
 Audience: you (Claude Code) and any human contributor.
 
-This file is the entry point. Read `directives/00-overview.md` for what we
-are building and why, and `directives/01-compliance-baseline.md` for the
-regulatory constraints that bind almost everything. Then read the directive
-named for the area you are touching. Read the most recent files in
-`notes/<area>/` for current state and open issues. Both are mandatory before
-non-trivial changes.
+This file is the entry point. Read `00-overview.md` for what we are building
+and why, and `01-compliance-baseline.md` for the regulatory constraints that
+bind almost everything. Then read the directive named for the area you are
+touching. Read the most recent files in `notes/<area>/` for current state and
+open issues. Both are mandatory before non-trivial changes.
 
 -----
 
 ## How this repo is organized
 
-- **`directives/`**: the plans, decided. Numbered 00-09 plus 99, revised in
-  place, each with a changelog block at the top. Treat as input.
+- **Directive files** (`00-overview.md` … `10-application-stack.md`,
+  `99-status.md`): the plans, decided. Live at the **repo root** (not in a
+  subdirectory), numbered 00-10 plus 99, revised in place, each with a
+  changelog block at the top. Treat as input.
 - **`notes/`**: the journal. What was learned, assumed, decided in the
   moment, debugged. Append-only, dated, organized by area. Treat as output.
   Write here liberally. Areas mirror the directives: `compliance/`,
@@ -130,11 +131,11 @@ working-time record.
   local inference endpoints. (`03`)
 - **Originals are content-hashed** and stored write-once. (`04`)
 
-### Not yet decided (make the decision in a note before substantial code)
+### Stack decisions (resolved in `10-application-stack.md`)
 
-The application language and web framework are not fixed in the directives.
-Decide them in `notes/ops/` with reasoning before building the API or UI, and
-record the choice the same way any design decision is recorded.
+FastAPI + psycopg3 (Python 3.12) for the API; React + TypeScript (Vite) for the
+web; psycopg_pool for the connection pool. Make a decision note in `notes/ops/`
+before introducing a new framework or language.
 
 -----
 
@@ -155,17 +156,18 @@ local machine; treat local as a thin client.
 
 | You want to know...                          | Look in...                       |
 |----------------------------------------------|----------------------------------|
-| What we are building, the locked decisions   | `directives/00-overview.md`      |
-| The regulatory constraints                   | `directives/01-compliance-...`   |
-| The data model and schema                    | `directives/02-data-model.md`    |
-| Infra and model serving                      | `directives/03-infrastructure.md`|
-| Backup and archival                          | `directives/04-backup-archival...`|
-| Projects, orders, time, mileage, warranty    | `directives/05-operational-...`  |
-| RfP ingestion and quotation                  | `directives/06-quotation-...`    |
-| Aufmaß capture and OCR                        | `directives/07-aufmass-ocr.md`   |
-| M365 integration                             | `directives/08-m365-...`         |
-| Security and DSGVO                           | `directives/09-security-dsgvo.md`|
-| Current status and parked questions          | `directives/99-status.md`        |
+| What we are building, the locked decisions   | `00-overview.md`                 |
+| The regulatory constraints                   | `01-compliance-baseline.md`      |
+| The data model and schema                    | `02-data-model.md`               |
+| Infra and model serving                      | `03-infrastructure.md`           |
+| Backup and archival                          | `04-backup-archival.md`          |
+| Projects, orders, time, mileage, warranty    | `05-operational-modules.md`      |
+| RfP ingestion and quotation                  | `06-quotation-engine.md`         |
+| Aufmaß capture and OCR                        | `07-aufmass-ocr.md`              |
+| M365 integration                             | `08-m365-integration.md`         |
+| Security and DSGVO                           | `09-security-dsgvo.md`           |
+| Application stack / dev env                  | `10-application-stack.md`        |
+| Current status and parked questions          | `99-status.md`                   |
 | Why a method or choice was made              | `notes/<area>/`                  |
 
 When in doubt: directives for *what*, notes for *why*, code for *how*.

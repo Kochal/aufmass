@@ -74,6 +74,23 @@ so it no longer blocks issue.
 - **gaeb_roundtrip check**: needs the parsed GAEB source linked to the angebot. Not emitted.
 - **Percentage-based Nachlass/Zuschlag**: v1 uses absolute Beträge only.
 
+## Totals column asymmetry: angebot vs rechnung
+
+`angebot` uses `summe_netto` / `nachlass_betrag` / `zuschlag_betrag` / `summe_brutto`
+(added in migration 0017). `rechnung` uses `betrag_netto` / `betrag_brutto` (from the
+foundation migration 0006 — no discount/surcharge columns on rechnung v1).
+
+The check engine handles this transparently in `_check_arithmetic`:
+```python
+stored_netto = doc.get("summe_netto") or doc.get("betrag_netto")
+stored_brutto = doc.get("summe_brutto") or doc.get("betrag_brutto")
+```
+
+The `berechnen` routers write to different columns too: `angebot/berechnen` writes
+`summe_netto`/`summe_brutto`; `rechnung/berechnen` writes `betrag_netto`/`betrag_brutto`.
+If rechnung ever gains `nachlass_betrag`/`zuschlag_betrag` columns, both the router and
+the engine's `price_document` call need updating.
+
 ## For the firm's Steuerberater / Datenschutz review
 
 This implementation computes and issues angebot and rechnung numbers. Before using it
