@@ -127,7 +127,7 @@ working-time record.
   `angebot`, `lv_position`, `aufmass`, `rechnung`), English for technical and
   cross-cutting tables (`tenant`, `app_user`, `audit_log`, `document`,
   `edit_lock`). (`02`)
-- **Models are self-hosted** on the German server; the app talks only to
+- **Models are self-hosted** on the firm's own server in the EU/EEA; the app talks only to
   local inference endpoints. (`03`)
 - **Originals are content-hashed** and stored write-once. (`04`)
 
@@ -141,7 +141,7 @@ before introducing a new framework or language.
 
 ## Remote execution
 
-Compute and storage live on the self-hosted German server (`03`), not the
+Compute and storage live on the self-hosted EU/EEA server (`03`), not the
 local machine; treat local as a thin client.
 
 - One-off commands through `ssh` so output and errors return to the local

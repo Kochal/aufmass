@@ -3,6 +3,8 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-26: Residency widened from German server to EU/EEA (whole stack); directives
+  00, 03, 04, 06, 08, 09, 10 updated. See notes/infra/2026-06-26-eu-eea-residency.md.
 - 2026-06-26: 06 quotation engine API landed: deterministic pricing engine
   (`engine/pricing.py`), sense-check engine (`engine/checks.py`), REST over 9 new
   entities (tenant_tax_profile, leistungskatalog/leistung, angebot/lv/lv_position,
@@ -66,7 +68,7 @@ decision for `03`/`07`, then the XRechnung round.
 
 ## Locked decisions (from `00`)
 
-M365 for mail / calendar; B2G in scope; self-hosted LLM on a German server;
+M365 for mail / calendar; B2G in scope; self-hosted LLM on the firm's own EU/EEA server;
 single firm in v1 but multi-tenant from day one; customer-defined fields
 dropped for v1.
 
@@ -109,8 +111,8 @@ a sizing benchmark, not at the design stage.
 3. ~~Build the `06` quotation engine API~~ **Done** (2026-06-26). Deterministic
    core: pricing/check engine, 9 new entities, berechnen+pruefen+ausstellen+
    version endpoints, pytest green. Deferred: XRechnung+KoSIT, GAEB, PDF/matching.
-4. Stand up `03` (a German GPU host) far enough to run the `07` vision
+4. Stand up `03` (an EU/EEA GPU host) far enough to run the `07` vision
    benchmark on real Aufmaß sheets. Current Hetzner host has no GPU; requires
-   a GPU instance decision (provider, class, location in DE).
+   a GPU instance decision (provider, class, location in EU/EEA).
 5. XRechnung/ZUGFeRD round: EN 16931 XML generation + KoSIT validator integration
    on rechnung issue (validator container verified 2026-06-25).

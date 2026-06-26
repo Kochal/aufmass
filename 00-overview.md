@@ -17,6 +17,8 @@ invoicing. Then the directive named for the area you are touching.
 - 2026-06-22: Initial draft (bullet depth).
 - 2026-06-23: Added locked decision 6 (polyglot application stack) and the
   `10-application-stack.md` map entry.
+- 2026-06-26: Decision 3 widened: "German server" → "firm's own server in the EU/EEA".
+  Self-hosting and egress-deny rule unchanged. See notes/infra/2026-06-26-eu-eea-residency.md.
 
 -----
 
@@ -52,7 +54,7 @@ These are settled. Reopen only via a note plus a changelog line here.
 2. **Public-sector work (B2G) is in scope.** This forces XRechnung,
    prüfbare Aufmaße, and VOB-conform output from the start, not as a later
    bolt-on. See `01-compliance-baseline.md`.
-3. **The LLM is self-hosted on a German server.** No customer or RfP data
+3. **The LLM is self-hosted on the firm's own server in the EU/EEA.** No customer or RfP data
    leaves to a third-party model API. Chosen for DSGVO and client trust.
 4. **Single firm now, multi-tenant boundary from day one.** Every business
    row carries a tenant id; row-level security enforces isolation. v1

@@ -39,7 +39,7 @@ docker compose up
 
 Dev uses stubs for the model server and M365 (no real credentials needed); the
 KoSIT validator is real and runs locally. The GPU model server is not in Compose
-— it lives on the German host (`03`).
+— it lives on the EU/EEA host (`03`).
 
 > The `validator/` image has not yet been built against the real KoSIT artifacts
 > in this environment — see `validator/README.md` before first `up`.

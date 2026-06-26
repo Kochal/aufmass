@@ -24,6 +24,8 @@ Audience: you (Claude Code) and any human contributor.
   action endpoints (berechnen/pruefen/ausstellen/version), seed extension, pytest.
   Deferred: XRechnung/KoSIT, GAEB, PDF+matching, plausibility bands. See
   `notes/quotation/2026-06-26-quotation-engine-api.md`.
+- 2026-06-26: Residency widened from German server to EU/EEA; self-hosted rule unchanged.
+  See notes/infra/2026-06-26-eu-eea-residency.md.
 - 2026-06-23: Built the DB-enforceable layer as migrations `0015`–`0019` with a
   test suite (`tests/quotation_test.sql`): tenant_tax_profile, leistungskatalog
   /leistung, gaeb_artifact, lv, lv_position (with match provenance), angebot
@@ -204,7 +206,7 @@ On award and after delivery (and Aufmaß, `07`, for measured quantities):
 
 ## Self-hosted models (`03`)
 
-Extraction (PDF), embedding, and matching all run on the German server. No
+Extraction (PDF), embedding, and matching all run on the self-hosted EU/EEA server. No
 tender, customer, or price data is sent to a third-party model (`00`,
 decision 3). The deterministic stages depend on no external service.
 

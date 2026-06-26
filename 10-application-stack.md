@@ -28,6 +28,8 @@ Audience: you (Claude Code) and any human contributor.
   of all this was verified on PG17; the Docker builds and the KoSIT `validator`
   image are not yet built/run here (see `validator/README.md`). Detail in
   `notes/ops/2026-06-24-dev-stack-scaffold.md`.
+- 2026-06-26: Residency widened from German host to EU/EEA; self-hosting rule unchanged.
+  See notes/infra/2026-06-26-eu-eea-residency.md.
 
 -----
 
@@ -138,7 +140,7 @@ directive.
 
 ### Explicitly out of the dev Compose
 
-- **The GPU model server.** It lives on the German host (`03`), is heavy, and
+- **The GPU model server.** It lives on the EU/EEA host (`03`), is heavy, and
   dev points at a remote endpoint or a small stub rather than running vLLM in
   Compose.
 - **Live M365 / e-invoice egress.** Dev uses fakes (the KoSIT validator
@@ -157,7 +159,7 @@ directive.
 2. ~~**Model/M365 stub form**~~ **Resolved (2026-06-24):** one shared `stubs`
    service in Compose (`/model`, `/m365`), so the app runs with no real
    credentials.
-3. **Prod runtime topology**: the same Compose set on the German host vs a
+3. **Prod runtime topology**: the same Compose set on the EU/EEA host vs a
    thin orchestration layer. Out of scope here; decide alongside `03` when
    standing up the host.
 4. **KoSIT `validator` image**: the Dockerfile is scaffolded but not yet built

@@ -14,6 +14,8 @@ Audience: you (Claude Code) and any human contributor.
 > the firm's Datenschutz and legal advice.
 
 ## Changelog
+- 2026-06-26: Residency tightened to EU/EEA (was "EU residency"); no substantive change —
+  content was already correct. See notes/infra/2026-06-26-eu-eea-residency.md.
 - 2026-06-22: Initial draft. Identity, RBAC, inbound access, secrets,
   lawful basis, employee data / Betriebsrat, data-subject rights,
   processors / AVV, Verfahrensdokumentation.
@@ -112,8 +114,8 @@ care:
 ## Processors and AVV (resolving `01`, `03`, `08`)
 
 - **AVV** in place with each processor: the hosting provider (`03`) and
-  Microsoft for M365 mail / calendar (`08`). EU residency, with SCCs only if
-  any transfer leaves the EU (the design avoids that).
+  Microsoft for M365 mail / calendar (`08`). EU/EEA residency, with SCCs only if
+  any transfer leaves the EU/EEA (the design avoids that).
 - Microsoft is a named, deliberate processor for mail and calendar (the `03`
   exception), and only for the data inherently in M365; the system does not
   push extra customer data to Microsoft.

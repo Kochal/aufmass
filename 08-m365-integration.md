@@ -14,6 +14,8 @@ Audience: you (Claude Code) and any human contributor.
 ## Changelog
 - 2026-06-22: Initial draft. Graph connection, mail ingestion, calendar,
   the treat-email-as-data rule, degradation.
+- 2026-06-26: Residency widened from German server to EU/EEA; self-hosted rule unchanged.
+  See notes/infra/2026-06-26-eu-eea-residency.md.
 
 -----
 
@@ -66,7 +68,7 @@ Audience: you (Claude Code) and any human contributor.
   (the mailbox, the calendar) plus the system-managed calendar events the
   firm asks for. The system does not push extra customer or tender data into
   Microsoft beyond that (`09`).
-- Everything else stays on the self-hosted German server (`03`).
+- Everything else stays on the self-hosted EU/EEA server (`03`).
 
 -----
 

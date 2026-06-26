@@ -29,6 +29,6 @@ KoSIT release artifacts, so the `Dockerfile` is a faithful starting point but ha
 
 The Compose service uses `expose: 8080` (not `ports:`), so the validator is
 reachable only on the Compose network as `http://validator:8080`, mirroring
-production where it lives on the firm's German server and is called solely by the
+production where it lives on the firm's EU/EEA server and is called solely by the
 backend. This keeps "one Java instance, called only by the backend" true at the
 network level.

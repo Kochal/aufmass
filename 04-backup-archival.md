@@ -8,7 +8,7 @@ mechanisms `02` defines (soft-delete, the restricted retention role, the
 append-only audit log).
 
 DSGVO erasure mechanics and key custody detail are `09`; residency (all of
-this stays in Germany / the EU) is `03`. This file states backup, archival,
+this stays in the EU/EEA) is `03`. This file states backup, archival,
 retention enforcement, and disaster recovery.
 
 Audience: you (Claude Code) and any human contributor.
@@ -16,6 +16,8 @@ Audience: you (Claude Code) and any human contributor.
 ## Changelog
 - 2026-06-22: Initial draft. Backup vs archival, Postgres PITR, document
   archival (WORM), retention/deletion job, disaster recovery.
+- 2026-06-26: Residency widened from Germany / the EU to EU/EEA (whole stack);
+  self-hosting + egress-deny + AVV unchanged. See notes/infra/2026-06-26-eu-eea-residency.md.
 
 -----
 
@@ -40,7 +42,7 @@ not a fast restore path).
   backups. Recovery to any moment, which is what pairs with the `02`
   immutability model (no record silently vanishes between backups).
 - **3-2-1**: at least three copies, on two kinds of media, with one
-  geographically separate, all within Germany / the EU (`03`).
+  geographically separate, all within the EU/EEA (`03`).
 - **Encrypted** at rest and in transit.
 - **Tested restores on a schedule.** An untested backup is a guess. A
   periodic drill restores into a scratch environment and verifies integrity;
@@ -103,7 +105,7 @@ operational logging.
 - **Targets** (modest for a single firm, confirmed in the open questions):
   RPO on the order of minutes via WAL archiving; RTO on the order of hours
   via a documented restore.
-- **Offsite copy** in a second German / EU location, encrypted.
+- **Offsite copy** in a second EU/EEA location, encrypted.
 - **Runbook**: a written, tested restore procedure (this is also part of the
   Verfahrensdokumentation that `01` requires and `09` owns).
 - **Model weights**: fine-tuned Aufmaß weights (`03`) are backed up here;
@@ -124,8 +126,8 @@ directive only flags that backup integrity depends on it.
 
 1. **RPO / RTO targets**: confirm acceptable data-loss and downtime windows
    with the firm. Drafted as minutes / hours.
-2. **Offsite location and provider**: which second German / EU site holds the
-   geographically-separate copy. Drafted as unfixed, EU-bound.
+2. **Offsite location and provider**: which second EU/EEA site holds the
+   geographically-separate copy. Drafted as unfixed, EU/EEA-bound.
 3. **Backup retention window**: how long operational backups are kept (as
    distinct from statutory record retention). Drafted as unset; decide
    alongside RPO/RTO.

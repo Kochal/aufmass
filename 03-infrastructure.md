@@ -2,7 +2,7 @@
 
 Where compute, storage, and models live, and the rule that keeps customer
 and tender data off any third-party model. This is the technical form of
-`00` decision 3 (self-hosted LLM on a German server) and the residency half
+`00` decision 3 (self-hosted LLM on the firm's own EU/EEA server) and the residency half
 of the `01` DSGVO posture.
 
 Backup and archival are `04`; DSGVO operations and access control are `09`;
@@ -18,16 +18,18 @@ Audience: you (Claude Code) and any human contributor.
 - 2026-06-22: Split egress from inbound (client-server collaboration is
   inbound, secured access control owned by `09`); named M365 as a deliberate
   AVV-covered exception to the data-stays-in rule.
+- 2026-06-26: Residency widened from German server to EU/EEA (whole stack);
+  self-hosting + egress-deny + AVV unchanged. See notes/infra/2026-06-26-eu-eea-residency.md.
 
 -----
 
 ## Hosting and residency
 
-- **Everything runs in Germany / the EU.** The database (`02`), the
+- **Everything runs in the EU/EEA.** The database (`02`), the
   application, the document/object store (`04`), and the model servers all
-  sit in a German datacenter. Residency is a hard rule, not a preference.
-- **Realistic shape**: a firm-controlled dedicated GPU server in a German
-  datacenter (Hetzner is the obvious candidate and is already familiar).
+  sit in an EU/EEA datacenter. Residency is a hard rule, not a preference.
+- **Realistic shape**: a firm-controlled dedicated GPU server in an EU/EEA
+  datacenter (Hetzner remains a candidate and is already familiar).
   On-premise at the firm is an alternative if there is reason, but the ops
   burden is real for a small Betrieb, so hosted-dedicated is the default.
 - An **AVV** is in place with the hosting provider (`01`, `09`). The provider
