@@ -18,6 +18,12 @@ Audience: you (Claude Code) and any human contributor.
 - 2026-06-22: Billing-quantity rule resolved (measured quantity governs under
   Einheitspreisvertrag, with Pauschal and VOB/B Section 2(3) qualifications);
   Nebenangebote and Bietergemeinschaft confirmed deferred.
+- 2026-06-26: Application layer (deterministic core) built: `api/app/engine/`
+  (pricing + checks), REST over 9 entities (tenant_tax_profile, leistungskatalog/
+  leistung, angebot/lv/lv_position, rechnung/rechnung_position, check_result),
+  action endpoints (berechnen/pruefen/ausstellen/version), seed extension, pytest.
+  Deferred: XRechnung/KoSIT, GAEB, PDF+matching, plausibility bands. See
+  `notes/quotation/2026-06-26-quotation-engine-api.md`.
 - 2026-06-23: Built the DB-enforceable layer as migrations `0015`–`0019` with a
   test suite (`tests/quotation_test.sql`): tenant_tax_profile, leistungskatalog
   /leistung, gaeb_artifact, lv, lv_position (with match provenance), angebot

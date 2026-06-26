@@ -15,8 +15,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .db import healthcheck, pool
 from .routers import (
-    abnahmeprotokoll, arbeitszeit, auftraggeber, bestellung, bestellposition,
-    fahrt, fahrzeug, gewaehrleistung, kontakt, lieferant, mangel, material, projekt,
+    abnahmeprotokoll, angebot, arbeitszeit, auftraggeber, bestellung, bestellposition,
+    check_result, fahrt, fahrzeug, gewaehrleistung, kontakt, leistung, leistungskatalog,
+    lieferant, lv, lv_position, mangel, material, projekt, rechnung, rechnung_position,
+    tenant_tax_profile,
 )
 
 
@@ -52,6 +54,15 @@ app.include_router(bestellposition.router)
 app.include_router(abnahmeprotokoll.router)
 app.include_router(mangel.router)
 app.include_router(gewaehrleistung.router)
+app.include_router(tenant_tax_profile.router)
+app.include_router(leistungskatalog.router)
+app.include_router(leistung.router)
+app.include_router(angebot.router)
+app.include_router(lv.router)
+app.include_router(lv_position.router)
+app.include_router(rechnung.router)
+app.include_router(rechnung_position.router)
+app.include_router(check_result.router)
 
 
 @app.get("/health", tags=["ops"])

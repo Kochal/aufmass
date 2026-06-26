@@ -587,6 +587,485 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tenant-tax-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Tax Profile */
+        get: operations["get_tax_profile_api_tenant_tax_profile_get"];
+        /** Upsert Tax Profile */
+        put: operations["upsert_tax_profile_api_tenant_tax_profile_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/leistungskatalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Leistungskatalog */
+        get: operations["list_leistungskatalog_api_leistungskatalog_get"];
+        put?: never;
+        /** Create Leistungskatalog */
+        post: operations["create_leistungskatalog_api_leistungskatalog_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/leistungskatalog/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Leistungskatalog */
+        get: operations["get_leistungskatalog_api_leistungskatalog__id__get"];
+        /** Update Leistungskatalog */
+        put: operations["update_leistungskatalog_api_leistungskatalog__id__put"];
+        post?: never;
+        /** Delete Leistungskatalog */
+        delete: operations["delete_leistungskatalog_api_leistungskatalog__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/leistung": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Leistung */
+        get: operations["list_leistung_api_leistung_get"];
+        put?: never;
+        /** Create Leistung */
+        post: operations["create_leistung_api_leistung_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/leistung/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Leistung */
+        get: operations["get_leistung_api_leistung__id__get"];
+        /** Update Leistung */
+        put: operations["update_leistung_api_leistung__id__put"];
+        post?: never;
+        /** Delete Leistung */
+        delete: operations["delete_leistung_api_leistung__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/angebot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Angebot */
+        get: operations["list_angebot_api_angebot_get"];
+        put?: never;
+        /** Create Angebot */
+        post: operations["create_angebot_api_angebot_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/angebot/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Angebot */
+        get: operations["get_angebot_api_angebot__id__get"];
+        /** Update Angebot */
+        put: operations["update_angebot_api_angebot__id__put"];
+        post?: never;
+        /** Delete Angebot */
+        delete: operations["delete_angebot_api_angebot__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/angebot/{id}/berechnen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Berechnen Angebot
+         * @description Price all LV positions and compute document totals.
+         *
+         *     Fills einheitspreis from the matched leistung when the position has none.
+         *     Ordering contract: berechnen → pruefen → ausstellen.
+         */
+        post: operations["berechnen_angebot_api_angebot__id__berechnen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/angebot/{id}/pruefen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pruefen Angebot
+         * @description Run the deterministic sense-checks; store and return the results.
+         */
+        post: operations["pruefen_angebot_api_angebot__id__pruefen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/angebot/{id}/ausstellen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ausstellen Angebot
+         * @description Issue the angebot: enforce the gate, allocate the Angebotsnummer, snapshot tax, freeze.
+         */
+        post: operations["ausstellen_angebot_api_angebot__id__ausstellen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/angebot/{id}/version": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Neue Version Angebot
+         * @description Create the next version of an issued angebot (the prior becomes superseded).
+         */
+        post: operations["neue_version_angebot_api_angebot__id__version_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Lv */
+        get: operations["list_lv_api_lv_get"];
+        put?: never;
+        /** Create Lv */
+        post: operations["create_lv_api_lv_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lv/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Lv */
+        get: operations["get_lv_api_lv__id__get"];
+        /** Update Lv */
+        put: operations["update_lv_api_lv__id__put"];
+        post?: never;
+        /** Delete Lv */
+        delete: operations["delete_lv_api_lv__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lv-position": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Lv Position */
+        get: operations["list_lv_position_api_lv_position_get"];
+        put?: never;
+        /** Create Lv Position */
+        post: operations["create_lv_position_api_lv_position_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lv-position/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Lv Position */
+        get: operations["get_lv_position_api_lv_position__id__get"];
+        /** Update Lv Position */
+        put: operations["update_lv_position_api_lv_position__id__put"];
+        post?: never;
+        /** Delete Lv Position */
+        delete: operations["delete_lv_position_api_lv_position__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rechnung": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Rechnung */
+        get: operations["list_rechnung_api_rechnung_get"];
+        put?: never;
+        /** Create Rechnung */
+        post: operations["create_rechnung_api_rechnung_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rechnung/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Rechnung */
+        get: operations["get_rechnung_api_rechnung__id__get"];
+        /** Update Rechnung */
+        put: operations["update_rechnung_api_rechnung__id__put"];
+        post?: never;
+        /** Delete Rechnung */
+        delete: operations["delete_rechnung_api_rechnung__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rechnung/{id}/berechnen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Berechnen Rechnung
+         * @description Price all rechnung_positions and compute betrag_netto/betrag_brutto.
+         *
+         *     Ordering contract: berechnen → pruefen → ausstellen.
+         *     E-invoice generation/validation is deferred to a later round.
+         */
+        post: operations["berechnen_rechnung_api_rechnung__id__berechnen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rechnung/{id}/pruefen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pruefen Rechnung
+         * @description Run deterministic sense-checks; store and return the results.
+         */
+        post: operations["pruefen_rechnung_api_rechnung__id__pruefen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rechnung/{id}/ausstellen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ausstellen Rechnung
+         * @description Issue the rechnung: enforce the gate, allocate the gapless Rechnungsnummer, snapshot tax, freeze.
+         *
+         *     E-invoice generation is deferred; the issued rechnung has no einvoice_artifact_id yet.
+         */
+        post: operations["ausstellen_rechnung_api_rechnung__id__ausstellen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rechnung-position": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Rechnung Position */
+        get: operations["list_rechnung_position_api_rechnung_position_get"];
+        put?: never;
+        /** Create Rechnung Position */
+        post: operations["create_rechnung_position_api_rechnung_position_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rechnung-position/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Rechnung Position */
+        get: operations["get_rechnung_position_api_rechnung_position__id__get"];
+        /** Update Rechnung Position */
+        put: operations["update_rechnung_position_api_rechnung_position__id__put"];
+        post?: never;
+        /** Delete Rechnung Position */
+        delete: operations["delete_rechnung_position_api_rechnung_position__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/check-result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Check Result */
+        get: operations["list_check_result_api_check_result_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/check-result/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Check Result */
+        get: operations["get_check_result_api_check_result__id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/check-result/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Resolve Check Result
+         * @description Mark a soft/failed check as resolved by a reviewer.
+         */
+        patch: operations["resolve_check_result_api_check_result__id__resolve_patch"];
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -707,6 +1186,117 @@ export interface components {
             vorbehalte?: string | null;
             /** Protokoll Document Id */
             protokoll_document_id?: string | null;
+        };
+        /**
+         * AngebotBerechnen
+         * @description Body for the /berechnen action: supply the discount/surcharge adjustments.
+         */
+        AngebotBerechnen: {
+            /** Row Version */
+            row_version: number;
+            /** Nachlass Betrag */
+            nachlass_betrag?: number | string | null;
+            /** Zuschlag Betrag */
+            zuschlag_betrag?: number | string | null;
+        };
+        /** AngebotCreate */
+        AngebotCreate: {
+            /**
+             * Auftraggeber Id
+             * Format: uuid
+             */
+            auftraggeber_id: string;
+            /** Projekt Id */
+            projekt_id?: string | null;
+            /**
+             * Waehrung
+             * @default EUR
+             */
+            waehrung: string;
+        };
+        /** AngebotRead */
+        AngebotRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Auftraggeber Id
+             * Format: uuid
+             */
+            auftraggeber_id: string;
+            /** Projekt Id */
+            projekt_id?: string | null;
+            /** Angebotsnummer */
+            angebotsnummer?: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Document Group Id
+             * Format: uuid
+             */
+            document_group_id: string;
+            /** Version No */
+            version_no: number;
+            /** Supersedes Id */
+            supersedes_id?: string | null;
+            /** Steuer Behandlung */
+            steuer_behandlung?: string | null;
+            /** Ust Satz */
+            ust_satz?: string | null;
+            /** Kleinunternehmer */
+            kleinunternehmer?: boolean | null;
+            /** Summe Netto */
+            summe_netto?: string | null;
+            /** Nachlass Betrag */
+            nachlass_betrag?: string | null;
+            /** Zuschlag Betrag */
+            zuschlag_betrag?: string | null;
+            /** Summe Brutto */
+            summe_brutto?: string | null;
+            /** Waehrung */
+            waehrung: string;
+        };
+        /** AngebotUpdate */
+        AngebotUpdate: {
+            /** Row Version */
+            row_version: number;
+            /**
+             * Auftraggeber Id
+             * Format: uuid
+             */
+            auftraggeber_id: string;
+            /** Projekt Id */
+            projekt_id?: string | null;
+            /**
+             * Waehrung
+             * @default EUR
+             */
+            waehrung: string;
         };
         /** ArbeitszeitCreate */
         ArbeitszeitCreate: {
@@ -1087,6 +1677,59 @@ export interface components {
             /** Auftragsbestaetigung Document Id */
             auftragsbestaetigung_document_id?: string | null;
         };
+        /** CheckResultRead */
+        CheckResultRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Target Table */
+            target_table: string;
+            /**
+             * Target Id
+             * Format: uuid
+             */
+            target_id: string;
+            /** Rule */
+            rule: string;
+            /** Severity */
+            severity: string;
+            /** Passed */
+            passed: boolean;
+            /** Resolved */
+            resolved: boolean;
+            /** Detail */
+            detail?: unknown | null;
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+        };
         /** FahrtCreate */
         FahrtCreate: {
             /**
@@ -1451,6 +2094,152 @@ export interface components {
             /** Telefon */
             telefon?: string | null;
         };
+        /** LeistungCreate */
+        LeistungCreate: {
+            /**
+             * Leistungskatalog Id
+             * Format: uuid
+             */
+            leistungskatalog_id: string;
+            /** Code */
+            code: string;
+            /** Kurztext */
+            kurztext: string;
+            /** Langtext */
+            langtext?: string | null;
+            /** Einheit */
+            einheit: string;
+            /** Einheitspreis */
+            einheitspreis?: number | string | null;
+            /**
+             * Aktiv
+             * @default true
+             */
+            aktiv: boolean;
+        };
+        /** LeistungRead */
+        LeistungRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Leistungskatalog Id
+             * Format: uuid
+             */
+            leistungskatalog_id: string;
+            /** Code */
+            code: string;
+            /** Kurztext */
+            kurztext: string;
+            /** Langtext */
+            langtext?: string | null;
+            /** Einheit */
+            einheit: string;
+            /** Einheitspreis */
+            einheitspreis?: string | null;
+            /** Aktiv */
+            aktiv: boolean;
+        };
+        /** LeistungUpdate */
+        LeistungUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Kurztext */
+            kurztext: string;
+            /** Langtext */
+            langtext?: string | null;
+            /** Einheit */
+            einheit: string;
+            /** Einheitspreis */
+            einheitspreis?: number | string | null;
+            /**
+             * Aktiv
+             * @default true
+             */
+            aktiv: boolean;
+        };
+        /** LeistungskatalogCreate */
+        LeistungskatalogCreate: {
+            /** Name */
+            name: string;
+            /**
+             * Aktiv
+             * @default true
+             */
+            aktiv: boolean;
+        };
+        /** LeistungskatalogRead */
+        LeistungskatalogRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Name */
+            name: string;
+            /** Aktiv */
+            aktiv: boolean;
+        };
+        /** LeistungskatalogUpdate */
+        LeistungskatalogUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Name */
+            name: string;
+            /**
+             * Aktiv
+             * @default true
+             */
+            aktiv: boolean;
+        };
         /** LieferantCreate */
         LieferantCreate: {
             /** Name */
@@ -1507,6 +2296,188 @@ export interface components {
             ust_idnr?: string | null;
             /** Zahlungsziel Tage */
             zahlungsziel_tage?: number | null;
+        };
+        /** LvCreate */
+        LvCreate: {
+            /** Angebot Id */
+            angebot_id?: string | null;
+            /** Source */
+            source: string;
+            /** Gaeb Artifact Id */
+            gaeb_artifact_id?: string | null;
+        };
+        /** LvPositionCreate */
+        LvPositionCreate: {
+            /**
+             * Lv Id
+             * Format: uuid
+             */
+            lv_id: string;
+            /** Oz */
+            oz?: string | null;
+            /** Kurztext */
+            kurztext?: string | null;
+            /** Langtext */
+            langtext?: string | null;
+            /** Menge */
+            menge?: number | string | null;
+            /** Einheit */
+            einheit?: string | null;
+            /** Einheitspreis */
+            einheitspreis?: number | string | null;
+            /** Matched Leistung Id */
+            matched_leistung_id?: string | null;
+            /** Match Confidence */
+            match_confidence?: number | string | null;
+            /**
+             * Match Status
+             * @default review
+             */
+            match_status: string;
+            /** Source */
+            source?: string | null;
+            /** Position Nr */
+            position_nr?: number | null;
+        };
+        /** LvPositionRead */
+        LvPositionRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Lv Id
+             * Format: uuid
+             */
+            lv_id: string;
+            /** Oz */
+            oz?: string | null;
+            /** Kurztext */
+            kurztext?: string | null;
+            /** Langtext */
+            langtext?: string | null;
+            /** Menge */
+            menge?: string | null;
+            /** Einheit */
+            einheit?: string | null;
+            /** Einheitspreis */
+            einheitspreis?: string | null;
+            /** Gesamtpreis */
+            gesamtpreis?: string | null;
+            /** Matched Leistung Id */
+            matched_leistung_id?: string | null;
+            /** Match Confidence */
+            match_confidence?: string | null;
+            /** Match Status */
+            match_status: string;
+            /** Source */
+            source?: string | null;
+            /** Pricing Rule */
+            pricing_rule?: string | null;
+            /** Position Nr */
+            position_nr?: number | null;
+        };
+        /** LvPositionUpdate */
+        LvPositionUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Oz */
+            oz?: string | null;
+            /** Kurztext */
+            kurztext?: string | null;
+            /** Langtext */
+            langtext?: string | null;
+            /** Menge */
+            menge?: number | string | null;
+            /** Einheit */
+            einheit?: string | null;
+            /** Einheitspreis */
+            einheitspreis?: number | string | null;
+            /** Matched Leistung Id */
+            matched_leistung_id?: string | null;
+            /** Match Confidence */
+            match_confidence?: number | string | null;
+            /**
+             * Match Status
+             * @default review
+             */
+            match_status: string;
+            /** Source */
+            source?: string | null;
+            /** Position Nr */
+            position_nr?: number | null;
+        };
+        /** LvRead */
+        LvRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Angebot Id */
+            angebot_id?: string | null;
+            /** Source */
+            source: string;
+            /** Gaeb Artifact Id */
+            gaeb_artifact_id?: string | null;
+        };
+        /** LvUpdate */
+        LvUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Angebot Id */
+            angebot_id?: string | null;
+            /** Source */
+            source: string;
+            /** Gaeb Artifact Id */
+            gaeb_artifact_id?: string | null;
         };
         /** MangelCreate */
         MangelCreate: {
@@ -1783,6 +2754,294 @@ export interface components {
             abnahme_datum?: string | null;
             /** Abnahme Document Id */
             abnahme_document_id?: string | null;
+        };
+        /**
+         * RechnungBerechnen
+         * @description Body for the /berechnen action. No discount/surcharge columns on rechnung v1.
+         */
+        RechnungBerechnen: {
+            /** Row Version */
+            row_version: number;
+        };
+        /** RechnungCreate */
+        RechnungCreate: {
+            /** Auftraggeber Id */
+            auftraggeber_id?: string | null;
+            /** Projekt Id */
+            projekt_id?: string | null;
+            /**
+             * Waehrung
+             * @default EUR
+             */
+            waehrung: string;
+        };
+        /** RechnungPositionCreate */
+        RechnungPositionCreate: {
+            /**
+             * Rechnung Id
+             * Format: uuid
+             */
+            rechnung_id: string;
+            /** Position Nr */
+            position_nr?: number | null;
+            /** Bezeichnung */
+            bezeichnung: string;
+            /** Einheit */
+            einheit?: string | null;
+            /** Einheitspreis */
+            einheitspreis?: number | string | null;
+            /** Menge Tender */
+            menge_tender?: number | string | null;
+            /** Menge Aufmass */
+            menge_aufmass?: number | string | null;
+            /** Menge */
+            menge?: number | string | null;
+            /**
+             * Vob 2 3 Flag
+             * @default false
+             */
+            vob_2_3_flag: boolean;
+            /** Lv Position Id */
+            lv_position_id?: string | null;
+            /** Leistung Id */
+            leistung_id?: string | null;
+        };
+        /** RechnungPositionRead */
+        RechnungPositionRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Rechnung Id
+             * Format: uuid
+             */
+            rechnung_id: string;
+            /** Position Nr */
+            position_nr?: number | null;
+            /** Bezeichnung */
+            bezeichnung: string;
+            /** Einheit */
+            einheit?: string | null;
+            /** Einheitspreis */
+            einheitspreis?: string | null;
+            /** Menge Tender */
+            menge_tender?: string | null;
+            /** Menge Aufmass */
+            menge_aufmass?: string | null;
+            /** Menge */
+            menge?: string | null;
+            /** Gesamtpreis */
+            gesamtpreis?: string | null;
+            /** Vob 2 3 Flag */
+            vob_2_3_flag: boolean;
+            /** Lv Position Id */
+            lv_position_id?: string | null;
+            /** Aufmass Entry Id */
+            aufmass_entry_id?: string | null;
+            /** Leistung Id */
+            leistung_id?: string | null;
+        };
+        /** RechnungPositionUpdate */
+        RechnungPositionUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Position Nr */
+            position_nr?: number | null;
+            /** Bezeichnung */
+            bezeichnung: string;
+            /** Einheit */
+            einheit?: string | null;
+            /** Einheitspreis */
+            einheitspreis?: number | string | null;
+            /** Menge Tender */
+            menge_tender?: number | string | null;
+            /** Menge Aufmass */
+            menge_aufmass?: number | string | null;
+            /** Menge */
+            menge?: number | string | null;
+            /**
+             * Vob 2 3 Flag
+             * @default false
+             */
+            vob_2_3_flag: boolean;
+            /** Lv Position Id */
+            lv_position_id?: string | null;
+            /** Leistung Id */
+            leistung_id?: string | null;
+        };
+        /** RechnungRead */
+        RechnungRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Auftraggeber Id */
+            auftraggeber_id?: string | null;
+            /** Projekt Id */
+            projekt_id?: string | null;
+            /** Rechnungsnummer */
+            rechnungsnummer?: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Document Group Id
+             * Format: uuid
+             */
+            document_group_id: string;
+            /** Version No */
+            version_no: number;
+            /** Supersedes Id */
+            supersedes_id?: string | null;
+            /** Waehrung */
+            waehrung: string;
+            /** Betrag Netto */
+            betrag_netto?: string | null;
+            /** Betrag Brutto */
+            betrag_brutto?: string | null;
+            /** Steuer Behandlung */
+            steuer_behandlung?: string | null;
+            /** Ust Satz */
+            ust_satz?: string | null;
+            /** Kleinunternehmer */
+            kleinunternehmer?: boolean | null;
+            /** Einvoice Format */
+            einvoice_format?: string | null;
+            /** Einvoice Artifact Id */
+            einvoice_artifact_id?: string | null;
+        };
+        /** RechnungUpdate */
+        RechnungUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Auftraggeber Id */
+            auftraggeber_id?: string | null;
+            /** Projekt Id */
+            projekt_id?: string | null;
+            /**
+             * Waehrung
+             * @default EUR
+             */
+            waehrung: string;
+        };
+        /** TenantTaxProfileRead */
+        TenantTaxProfileRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Kleinunternehmer */
+            kleinunternehmer: boolean;
+            /** Ust Treatment */
+            ust_treatment: string;
+            /** Ust Satz */
+            ust_satz: string;
+            /** Ust Idnr */
+            ust_idnr?: string | null;
+            /** Steuernummer */
+            steuernummer?: string | null;
+            /** Turnover Band */
+            turnover_band?: string | null;
+            /** Einvoice Issue Required From */
+            einvoice_issue_required_from?: string | null;
+        };
+        /** TenantTaxProfileUpsert */
+        TenantTaxProfileUpsert: {
+            /**
+             * Kleinunternehmer
+             * @default false
+             */
+            kleinunternehmer: boolean;
+            /**
+             * Ust Treatment
+             * @default regelbesteuert
+             */
+            ust_treatment: string;
+            /**
+             * Ust Satz
+             * @default 19.00
+             */
+            ust_satz: number | string;
+            /** Ust Idnr */
+            ust_idnr?: string | null;
+            /** Steuernummer */
+            steuernummer?: string | null;
+            /** Turnover Band */
+            turnover_band?: string | null;
+            /** Einvoice Issue Required From */
+            einvoice_issue_required_from?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -4282,6 +5541,1645 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_tax_profile_api_tenant_tax_profile_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantTaxProfileRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upsert_tax_profile_api_tenant_tax_profile_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenantTaxProfileUpsert"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantTaxProfileRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_leistungskatalog_api_leistungskatalog_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeistungskatalogRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_leistungskatalog_api_leistungskatalog_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeistungskatalogCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeistungskatalogRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_leistungskatalog_api_leistungskatalog__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeistungskatalogRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_leistungskatalog_api_leistungskatalog__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeistungskatalogUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeistungskatalogRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_leistungskatalog_api_leistungskatalog__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_leistung_api_leistung_get: {
+        parameters: {
+            query?: {
+                leistungskatalog_id?: string | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeistungRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_leistung_api_leistung_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeistungCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeistungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_leistung_api_leistung__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeistungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_leistung_api_leistung__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeistungUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeistungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_leistung_api_leistung__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_angebot_api_angebot_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                auftraggeber_id?: string | null;
+                projekt_id?: string | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AngebotRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_angebot_api_angebot_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AngebotCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AngebotRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_angebot_api_angebot__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AngebotRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_angebot_api_angebot__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AngebotUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AngebotRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_angebot_api_angebot__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    berechnen_angebot_api_angebot__id__berechnen_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AngebotBerechnen"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AngebotRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pruefen_angebot_api_angebot__id__pruefen_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckResultRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ausstellen_angebot_api_angebot__id__ausstellen_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AngebotRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    neue_version_angebot_api_angebot__id__version_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AngebotRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_lv_api_lv_get: {
+        parameters: {
+            query?: {
+                angebot_id?: string | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LvRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_lv_api_lv_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LvCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LvRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_lv_api_lv__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LvRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_lv_api_lv__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LvUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LvRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_lv_api_lv__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_lv_position_api_lv_position_get: {
+        parameters: {
+            query?: {
+                lv_id?: string | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LvPositionRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_lv_position_api_lv_position_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LvPositionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LvPositionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_lv_position_api_lv_position__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LvPositionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_lv_position_api_lv_position__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LvPositionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LvPositionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_lv_position_api_lv_position__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_rechnung_api_rechnung_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                auftraggeber_id?: string | null;
+                projekt_id?: string | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RechnungRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_rechnung_api_rechnung_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RechnungCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RechnungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_rechnung_api_rechnung__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RechnungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_rechnung_api_rechnung__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RechnungUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RechnungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_rechnung_api_rechnung__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    berechnen_rechnung_api_rechnung__id__berechnen_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RechnungBerechnen"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RechnungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pruefen_rechnung_api_rechnung__id__pruefen_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckResultRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ausstellen_rechnung_api_rechnung__id__ausstellen_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RechnungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_rechnung_position_api_rechnung_position_get: {
+        parameters: {
+            query?: {
+                rechnung_id?: string | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RechnungPositionRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_rechnung_position_api_rechnung_position_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RechnungPositionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RechnungPositionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_rechnung_position_api_rechnung_position__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RechnungPositionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_rechnung_position_api_rechnung_position__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RechnungPositionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RechnungPositionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_rechnung_position_api_rechnung_position__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_check_result_api_check_result_get: {
+        parameters: {
+            query?: {
+                target_table?: string | null;
+                target_id?: string | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckResultRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_check_result_api_check_result__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckResultRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_check_result_api_check_result__id__resolve_patch: {
+        parameters: {
+            query: {
+                row_version: number;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckResultRead"];
+                };
             };
             /** @description Validation Error */
             422: {

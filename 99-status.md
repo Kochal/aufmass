@@ -3,6 +3,14 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-26: 06 quotation engine API landed: deterministic pricing engine
+  (`engine/pricing.py`), sense-check engine (`engine/checks.py`), REST over 9 new
+  entities (tenant_tax_profile, leistungskatalog/leistung, angebot/lv/lv_position,
+  rechnung/rechnung_position, check_result), action endpoints (berechnen/pruefen/
+  ausstellen/version). Seed extended (tax profile, catalog, angebot+rechnung
+  nummernkreis). Engine unit tests + integration flows. Deferred: XRechnung/KoSIT
+  (validator unbuilt as standalone round), GAEB import/export, PDF extraction +
+  matching (GPU-host blocked), plausibility bands.
 - 2026-06-22: Initial draft. Phase 0; directive set 00-09 drafted.
 - 2026-06-23: Added `10-application-stack.md`; polyglot stack fork resolved.
 - 2026-06-24: Aufmaß DB layer landed (migration `0020`, `tests/aufmass_test.sql`).
@@ -31,14 +39,13 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 2: 05 operational-spine API — complete.** The `05` HTTP surface is fully
-built over the migrated schema: all 13 entities (auftraggeber, kontakt, projekt,
-arbeitszeit, fahrzeug, fahrt, lieferant, material, bestellung, bestellposition,
-abnahmeprotokoll, mangel, gewaehrleistung) have CRUD routers with the full pattern
-set (RLS, dict-row, optimistic concurrency, soft-delete guard, lifecycle status
-machine, freeze-on-approval, generated columns). Dev seed, pytest suite, and
-regenerated TypeScript client. Next: `06` quotation engine API, and GPU host
-decision for `03`/`07`.
+**Phase 3: 06 quotation engine API — deterministic core complete.** The `06`
+deterministic application layer is built: pricing engine (`Decimal`/HALF_UP),
+sense-check engine (arithmetic/zero_guard/unit/completeness), REST over all 9
+quotation/billing entities, and the full issue flow (berechnen → pruefen →
+ausstellen → version). Deferred to dedicated rounds: XRechnung+KoSIT validation,
+GAEB import/export, PDF extraction+matching (GPU-host blocked). Next: GPU host
+decision for `03`/`07`, then the XRechnung round.
 
 ## Directive set
 
@@ -50,7 +57,7 @@ decision for `03`/`07`.
 | `03` | Infrastructure / model serving | Drafted                       |
 | `04` | Backup and archival            | Drafted                       |
 | `05` | Operational modules (spine)    | **API complete** (2026-06-25) |
-| `06` | Quotation engine               | Drafted                       |
+| `06` | Quotation engine               | **Deterministic core API complete** (2026-06-26) |
 | `07` | Aufmaß capture and OCR         | Drafted. DB layer (0020) + tests |
 | `08` | M365 integration               | Drafted                       |
 | `09` | Security and DSGVO             | Drafted                       |
@@ -99,9 +106,11 @@ a sizing benchmark, not at the design stage.
 2. ~~Build the first working API surface on the `05` spine (real endpoints +
    generated TS client)~~ **Done** (2026-06-25). All 13 `05` entities. 13 pytest
    tests green on Hetzner. `web/src/api/schema.ts` regenerated (tsc clean).
-3. Build the `06` quotation engine API (angebot, LV positions, rechnung):
-   the core money path, gapless invoice numbering, e-invoice XML generation,
-   immutability on issued documents, plausibility stubs.
+3. ~~Build the `06` quotation engine API~~ **Done** (2026-06-26). Deterministic
+   core: pricing/check engine, 9 new entities, berechnen+pruefen+ausstellen+
+   version endpoints, pytest green. Deferred: XRechnung+KoSIT, GAEB, PDF/matching.
 4. Stand up `03` (a German GPU host) far enough to run the `07` vision
    benchmark on real Aufmaß sheets. Current Hetzner host has no GPU; requires
    a GPU instance decision (provider, class, location in DE).
+5. XRechnung/ZUGFeRD round: EN 16931 XML generation + KoSIT validator integration
+   on rechnung issue (validator container verified 2026-06-25).
