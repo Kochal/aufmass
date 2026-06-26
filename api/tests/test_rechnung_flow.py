@@ -44,8 +44,8 @@ def test_rechnung_full_flow(client: TestClient, ag_id):
                     json={"row_version": rec["row_version"]}, headers=h)
     assert r.status_code == 200
     rec = r.json()
-    assert rec["betrag_netto"] == "170.00"         # 20 * 8.50
-    assert rec["betrag_brutto"] == "202.30"         # 170 * 1.19
+    assert rec["summe_netto"] == "170.00"            # 20 * 8.50
+    assert rec["summe_brutto"] == "202.30"           # 170 * 1.19
 
     # 4. pruefen — all checks pass.
     r = client.post(f"/api/rechnung/{rec_id}/pruefen", headers=h)

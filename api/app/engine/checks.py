@@ -1,7 +1,8 @@
 """Deterministic sense-check engine (directive 06 Stage 4).
 
 Runs DB-independently; each result is returned as a dict ready for INSERT into
-check_result. The router calls this, stores the rows, and returns them.
+check_result. Both angebot and rechnung use summe_netto/summe_brutto (standardised
+in migration 0021); no per-table column aliasing needed.
 
 Implemented:
   arithmetic  (hard) — re-derives every gesamtpreis and the document totals.
@@ -60,9 +61,8 @@ def _check_arithmetic(
         ust_satz,
         kleinunternehmer,
     )
-    # rechnung uses betrag_netto/betrag_brutto; angebot uses summe_netto/summe_brutto
-    stored_netto = doc.get("summe_netto") or doc.get("betrag_netto")
-    stored_brutto = doc.get("summe_brutto") or doc.get("betrag_brutto")
+    stored_netto = doc.get("summe_netto")
+    stored_brutto = doc.get("summe_brutto")
     if stored_netto is not None and Decimal(str(stored_netto)) != totals.summe_netto:
         mismatches.append({
             "field": "summe_netto",

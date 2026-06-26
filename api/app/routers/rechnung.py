@@ -104,7 +104,7 @@ def berechnen_rechnung(
     body: RechnungBerechnen,
     conn: Connection = Depends(db_session),
 ):
-    """Price all rechnung_positions and compute betrag_netto/betrag_brutto.
+    """Price all rechnung_positions and compute summe_netto/summe_brutto.
 
     Ordering contract: berechnen → pruefen → ausstellen.
     E-invoice generation/validation is deferred to a later round.
@@ -145,13 +145,23 @@ def berechnen_rechnung(
         for p in positions_updated
         if p.get("gesamtpreis") is not None
     ]
-    totals = pricing.price_document(gesamtpreise, None, None, ust_satz, kleinunternehmer)
+    totals = pricing.price_document(
+        gesamtpreise, body.nachlass_betrag, body.zuschlag_betrag, ust_satz, kleinunternehmer
+    )
 
     with db_errors():
         row = conn.execute(
-            "update rechnung set betrag_netto=%s, betrag_brutto=%s "
+            "update rechnung set summe_netto=%s, nachlass_betrag=%s, zuschlag_betrag=%s, "
+            "summe_brutto=%s "
             "where id=%s and deleted_at is null and row_version=%s returning *",
-            (totals.summe_netto, totals.summe_brutto, str(id), body.row_version),
+            (
+                totals.summe_netto,
+                totals.nachlass_betrag,
+                totals.zuschlag_betrag,
+                totals.summe_brutto,
+                str(id),
+                body.row_version,
+            ),
         ).fetchone()
     require_row(row, conn, "rechnung", id)
     return row

@@ -92,7 +92,7 @@ do $$
 declare ok boolean := false;
 begin
   begin
-    update rechnung set betrag_netto = 999.00 where id = current_setting('test.r1')::uuid;
+    update rechnung set summe_netto = 999.00 where id = current_setting('test.r1')::uuid;
   exception when others then ok := true;
   end;
   if not ok then raise exception 'ASSERTION FAILED: G3: issued rechnung accepted a content UPDATE'; end if;

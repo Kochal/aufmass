@@ -20,8 +20,10 @@ class RechnungUpdate(_Base):
 
 
 class RechnungBerechnen(_Base):
-    """Body for the /berechnen action. No discount/surcharge columns on rechnung v1."""
+    """Body for the /berechnen action."""
     row_version: int
+    nachlass_betrag: Decimal | None = None
+    zuschlag_betrag: Decimal | None = None
 
 
 class RechnungRead(ReadBase):
@@ -33,8 +35,10 @@ class RechnungRead(ReadBase):
     version_no: int
     supersedes_id: UUID | None = None
     waehrung: str
-    betrag_netto: Decimal | None = None
-    betrag_brutto: Decimal | None = None
+    summe_netto: Decimal | None = None
+    nachlass_betrag: Decimal | None = None
+    zuschlag_betrag: Decimal | None = None
+    summe_brutto: Decimal | None = None
     steuer_behandlung: str | None = None
     ust_satz: Decimal | None = None
     kleinunternehmer: bool | None = None
