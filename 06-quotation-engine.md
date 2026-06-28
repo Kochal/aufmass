@@ -24,6 +24,8 @@ Audience: you (Claude Code) and any human contributor.
   action endpoints (berechnen/pruefen/ausstellen/version), seed extension, pytest.
   Deferred: XRechnung/KoSIT, GAEB, PDF+matching, plausibility bands. See
   `notes/quotation/2026-06-26-quotation-engine-api.md`.
+- 2026-06-28: "Self-hosted models" section updated to cross-reference per-step routing (`03`);
+  RfP/PDF extraction routing TBD but not forbidden under the new decision 3.
 - 2026-06-26: Residency widened from German server to EU/EEA; self-hosted rule unchanged.
   See notes/infra/2026-06-26-eu-eea-residency.md.
 - 2026-06-23: Built the DB-enforceable layer as migrations `0015`–`0019` with a
@@ -103,8 +105,8 @@ Leistungskatalog (`02`).
 
 - **Method**: vector similarity over catalog Langtext embeddings (stored per
   Leistung), then a model rerank/confirm step, producing ranked candidates
-  with a `match_confidence`. Models are self-hosted (`03`); no tender data
-  leaves.
+  with a `match_confidence`. Embeddings and matching currently self-hosted
+  (`03`); routing TBD. No tender data leaves the EU/EEA.
 - **match_status**: `auto` (confidence above the tenant threshold), `review`
   (below), or `confirmed` (a human accepted it). The threshold is a
   per-tenant setting (`02` `tenant_setting`); start conservative and loosen
@@ -204,11 +206,13 @@ On award and after delivery (and Aufmaß, `07`, for measured quantities):
 
 -----
 
-## Self-hosted models (`03`)
+## Model routing for quotation steps (`03`)
 
-Extraction (PDF), embedding, and matching all run on the self-hosted EU/EEA server. No
-tender, customer, or price data is sent to a third-party model (`00`,
-decision 3). The deterministic stages depend on no external service.
+Embedding and matching currently run self-hosted on the EU/EEA server. PDF
+extraction routing is TBD — self-hosted text LLM or an EU-native model API
+are co-equal options under `00` decision 3; decide when the step is built and
+benchmark results are available. Deterministic stages (pricing, checks,
+Angebot/Rechnung issue) depend on no model endpoint.
 
 -----
 

@@ -60,9 +60,11 @@ skims still cannot miss them. Each links to where it is specified.
 6. **Every committed value is traceable to its source.** A price to an LV
    position and a catalog entry; a measurement to a formula and an image
    crop. No orphan numbers. (`00`, `06`, `07`)
-7. **Egress defaults to deny.** No tender, customer, measurement, or price
-   data goes to any third-party model service. M365 (mail / calendar) is the
-   one named, AVV-covered exception. (`03`, `08`)
+7. **Egress defaults to deny.** No data leaves the EU/EEA or reaches a
+   model processor without a named allowlist entry, a signed DPA/AVV, and a
+   confirmed no-training tier. Named processors: M365 (mail/calendar, AVV
+   in place), Mistral Document AI (Aufmaß extraction, DPA pending). Each
+   new processor requires individual justification. (`03`, `08`, `09`)
 8. **Legal figures are design constraints, not sign-off.** The retention
    periods, e-invoice dates, VOB Section 2(3) rule, and DPO / Betriebsrat
    thresholds in `01`, `06`, and `09` are what we design to. They do not
@@ -130,8 +132,10 @@ working-time record.
   `angebot`, `lv_position`, `aufmass`, `rechnung`), English for technical and
   cross-cutting tables (`tenant`, `app_user`, `audit_log`, `document`,
   `edit_lock`). (`02`)
-- **Models are self-hosted** on the firm's own server in the EU/EEA; the app talks only to
-  local inference endpoints. (`03`)
+- **Models are routed per step** behind an endpoint boundary (`03`). Aufmaß
+  extraction → Mistral Document AI (`mistral-ocr-4-0`). Embeddings / ASR →
+  self-hosted. RfP/PDF extraction routing TBD. Self-hosted and named
+  DPA-covered EU-native APIs are co-equal options per step.
 - **Originals are content-hashed** and stored write-once. (`04`)
 
 ### Stack decisions (resolved in `10-application-stack.md`)

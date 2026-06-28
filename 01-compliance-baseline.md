@@ -21,6 +21,9 @@ Audience: you (Claude Code) and any human contributor.
 - 2026-06-22: E-Rechnung and tax status made per-tenant; Kleinunternehmer
   (Section 19 UStG) path added. v1 tenant is over 800k and not a
   Kleinunternehmer. Tenant tax profile defined in `02`.
+- 2026-06-28: DSGVO section updated: self-hosting is one control, not the
+  only one; named DPA-covered EU-native processors (M365, Mistral) are bounded
+  exceptions. See notes/aufmass/2026-06-28-mistral-document-ai-pivot.md.
 
 -----
 
@@ -106,10 +109,13 @@ not assumed globally.
 
 ## DSGVO
 
-- **Self-hosting is the main control.** No customer or RfP data leaves to a
-  third-party model (`00`, decision 3), which removes the largest transfer
-  risk. Any remaining processor (e.g. M365 / Graph) needs an AVV and EU
-  data residency.
+- **EU-bounded processing is the control.** No customer or RfP data leaves
+  the EU/EEA or reaches a processor without a signed DPA/AVV (`00`,
+  decision 3). Self-hosting is one form of this control; named, DPA-covered
+  EU-native model APIs (M365 / Graph for mail; Mistral Document AI for
+  Aufmaß) are the bounded, individually justified exceptions. Each named
+  processor requires: EU residency confirmed, DPA/AVV in place, no-training
+  tier confirmed in writing. Full list in `03`.
 - **Data minimisation** across the board; personal data only where there is
   a legal basis.
 - **Employee data is sensitive.** Working-hour and mileage records, and

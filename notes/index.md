@@ -8,6 +8,7 @@ Organised by area, newest first within each area.
 ## aufmass
 | Date | File | Summary |
 |------|------|---------|
+| 2026-06-28 | [mistral-document-ai-pivot](aufmass/2026-06-28-mistral-document-ai-pivot.md) | Decision to pivot Aufmaß extraction to Mistral Document AI (`mistral-ocr-4-0`); decision 3 relaxed to co-equal per-step routing; DPA pending; compliance checklist; technical shape for code round |
 | 2026-06-27 | [vision-client-poc-benchmark](aufmass/2026-06-27-vision-client-poc-benchmark.md) | PoC result: pipeline works end-to-end; Qwen2.5-VL-7B/8k too small (hallucination, context overflow); 32B+ / 32k context needed; key client fixes documented (fence strip, salvage on truncation, RUNPOD_API_KEY alias) |
 | 2026-06-24 | [aufmass-db-layer](aufmass/2026-06-24-aufmass-db-layer.md) | Migration 0020: `aufmass` + `aufmass_entry` tables, guarantee suite AF1–AF8; engine/DB boundary decision; `quelle`-driven original constraint; prüfbarkeit floor trigger |
 
@@ -32,6 +33,11 @@ Organised by area, newest first within each area.
 | Date | File | Summary |
 |------|------|---------|
 | 2026-06-23 | [cross-cutting-foundation](schema/2026-06-23-cross-cutting-foundation.md) | Migrations 0001–0007: tenant RLS, audit_log, immutability triggers, edit_lock, row_version; honest cross-tenant FK limitation |
+
+## ui
+| Date | File | Summary |
+|------|------|---------|
+| 2026-06-28 | [design-system-and-surfaces](ui/2026-06-28-design-system-and-surfaces.md) | shadcn/ui on Tailwind v4; three surfaces one design system; confidence/trust colour tokens; react-router-dom v7 + react-query v5 + openapi-fetch; dev-auth seam; office quote-review slice live |
 
 ## ops (infrastructure / tooling)
 | Date | File | Summary |

@@ -1,80 +1,154 @@
 # 07a - Vision Extraction Client
 
 The client that turns one prepared Aufmaß image into the structured
-candidates of `07`, by calling the served vision model behind an
-OpenAI-compatible endpoint. Companion to `07` (which owns the reconciliation
-that consumes this client's output) and `03` / `10` (serving and lanes).
+candidates of `07`, by calling Mistral Document AI behind the endpoint-interface
+boundary. Companion to `07` (which owns the reconciliation that consumes this
+client's output) and `03` / `09` (named processor allowlist, DPA).
 
 Audience: you (Claude Code) and any human contributor.
 
 ## Changelog
-- 2026-06-23: Initial draft.
+- 2026-06-28: Pivoted from OpenAI-compatible self-hosted VLM (RunPod/Qwen2.5-VL-7B,
+  proven inadequate in the 2026-06-27 PoC benchmark) to Mistral Document AI OCR 4
+  (`mistral-ocr-4-0`). Interface boundary and output contract unchanged; bbox
+  normalisation dropped (native from Mistral); SDK changes from `openai` to
+  `mistralai`. See notes/aufmass/2026-06-28-mistral-document-ai-pivot.md.
+- 2026-06-23: Initial draft (OpenAI-compatible self-hosted VLM shape).
 
 -----
 
 ## What it is
 
-A Python module (lane per `10`) that sends an image plus the extraction
-prompt to the model and returns parsed candidates. It is part of the
-orchestration layer, not the model: it does no arithmetic and makes no final
-decision. Every number it returns is a candidate with a confidence and a
-source box, handed to the deterministic reconciler in `07`.
+A Python module (lane per `10`) that sends a prepared Aufmaß image to Mistral
+Document AI and returns structured candidates. It is part of the orchestration
+layer, not the model: it does no arithmetic and makes no final decision. Every
+number it returns is a candidate with a confidence and a source box, handed to
+the deterministic reconciler in `07`.
+
+## Endpoint choice (Mistral Document AI)
+
+Aufmaß extraction requires a model purpose-built for dense handwritten forms:
+native bounding boxes, word-level confidence, structured output without
+free-form parsing. The 2026-06-27 PoC showed the 7B self-hosted VLM was
+fundamentally inadequate (hallucination, print-vs-handwriting confusion,
+context overflow, pixel-coord bboxes). Mistral Document AI (`mistral-ocr-4-0`)
+is EU-native (residency + sovereignty for B2G), returns native 0..1 bboxes and
+word-level confidence, supports guided decoding via Pydantic annotation, and
+has a self-hosting escape hatch. Full rationale in
+`notes/aufmass/2026-06-28-mistral-document-ai-pivot.md`.
+
+**Fallback**: if Mistral is unavailable or a future benchmark favours a
+self-hosted VLM (e.g. Qwen2.5-VL-32B+), the endpoint-interface boundary means
+the swap is one module change, not a codebase change.
 
 ## Configuration (env only, never hardcoded)
 
-- `MODEL_ENDPOINT`: the OpenAI-compatible base URL (ends in `/openai/v1`).
-- `MODEL_API_KEY`: the bearer token (the RunPod key in the PoC; read from
-  `.env`, which is gitignored).
-- `MODEL_NAME`: the served model id (e.g. `Qwen/Qwen2.5-VL-7B-Instruct`).
+- `MISTRAL_API_KEY`: the Mistral API bearer token.
+- `MISTRAL_MODEL_ID`: pinned to `mistral-ocr-4-0` (change requires a note +
+  changelog line).
 
 ## Interface boundary (the reason this is a module)
 
-The client knows only an OpenAI-compatible base URL. No RunPod-specific
-calls. Swapping the PoC endpoint for the German host later (`03`) is one env
-change, not a code change. Use the OpenAI client pointed at `MODEL_ENDPOINT`.
+The client is the only place in the codebase that knows how to call Mistral
+Document AI. All callers receive the same `dict` of candidates — they do not
+know or care whether the extraction came from Mistral or a self-hosted fallback.
+Swapping the endpoint is one module change, not a codebase change.
 
-## Request
+## Request shape (Mistral SDK)
 
-- `chat.completions`, `model = MODEL_NAME`, `temperature = 0`.
-- One image as a base64 data URL plus the extraction prompt
-  (`aufmass-extraction-prompt.md`).
-- Force valid JSON with structured output (guided JSON / `response_format`
-  against the prompt's schema) so the reply parses deterministically.
+Use the official **`mistralai` Python SDK**, `client.ocr.process(...)`:
 
-## Timeout and retry (cold start is real)
+```python
+from mistralai import Mistral
 
-Serverless scales to zero and may download the model on a cold start, so the
-first call after idle is slow.
+response = client.ocr.process(
+    model="mistral-ocr-4-0",
+    document={"type": "image_url", "image_url": data_url},
+    document_annotation_format=AufmassExtractionResult,   # Pydantic model
+    document_annotation_prompt=ANNOTATION_PROMPT,
+    confidence_scores_granularity="word",
+    include_blocks=True,
+    extract_header=True,
+)
+```
 
-- Generous request timeout (start ~300s) so a warming worker is not read as a
-  failure.
-- Retry with backoff on timeout, connection error, and 5xx. The call is
-  idempotent (temperature 0, no side effects), so retry is safe.
-- Distinguish a cold-start delay from a real error in logs, so a slow first
-  call does not look like a bug.
+**`document_annotation_format`**: the `07` entry/expression-tree schema as a
+Pydantic model (`AufmassExtractionResult` with `entries: list[AufmassEntry]`).
+The SDK serialises this to a JSON schema for guided decoding — no free-form
+parsing or fence-stripping needed.
 
-## Output handling (candidate, not truth)
+**`document_annotation_prompt`**: instructs the model:
+> "Extract handwritten measurements only. Ignore all printed column headers
+> (Länge / Breite / Höhe / Stück and their variations). Do not compute any
+> arithmetic — emit operands and operators as separate fields."
 
-- Parse the JSON. On parse failure, one re-ask, then route the sheet to manual
-  review rather than guessing.
-- Never trust a value. The client returns the structure as-is; the
-  reconciler (`07`) does the math, the band checks, and the accept/queue
-  decision. The client must not compute, round, or "fix" anything.
-- Image preprocessing (deskew, orientation, downscale to the `max_pixels`
-  budget) happens before the call (`07`); the client receives a prepared
-  image.
+**`confidence_scores_granularity="word"`**: word-level confidence floats in
+[0, 1]. These seed the deterministic candidate-glyph reconciliation in `07`.
 
-## Provenance and failure
+**`include_blocks=True`, `extract_header=True`**: expose block-level structure
+for label (Bauteil) extraction and sheet-header identification.
 
-- Record `MODEL_NAME` and endpoint with the result (`03` traceability); store
-  the source image as an immutable `document` (`04`); keep each entry's bbox
-  and confidence (`07`).
-- If the model is down, the call fails cleanly and the sheet queues; manual
-  Aufmaß entry still works (`03` degradation).
+## Bboxes and confidence (native — no client-side normalisation)
+
+Mistral OCR 4 returns bboxes as 0..1 fractions of image width/height and
+word-level confidence as floats in [0, 1]. These are passed through directly
+to the reconciler. The pixel-coord normalisation workaround from the 7B PoC
+is dropped.
+
+## Output (candidate, not truth)
+
+The `extract()` function returns a `dict` matching the `07` entry schema, plus
+provenance keys:
+- `_model`: the `MISTRAL_MODEL_ID` used.
+- `_endpoint`: `api.mistral.ai` (or the override if a self-hosted fallback is
+  active).
+
+The reconciler (`07`) does all arithmetic, band checks, and the accept/queue
+decision. The client must not compute, round, or "fix" anything.
+
+## Two-step fallback (benchmark-gated, not pre-built)
+
+If `document_annotation_format` underperforms on real sheets (i.e. the
+structured annotation is worse than raw OCR + a text model), a two-step path
+can be added:
+1. Raw OCR with Mistral OCR 4 (`include_blocks=True`, no annotation).
+2. A cheap Mistral text model structures the raw OCR into the entry schema.
+
+This is not pre-built — benchmark the annotation path first. Only add the
+two-step variant if the annotation step underperforms.
+
+## Retry and error handling
+
+- Generous timeout (300s) for the API call.
+- Retry with exponential backoff (`[5s, 15s, 45s]`) on network errors and 5xx.
+- On persistent failure: raise `ExtractionError`; the sheet routes to manual
+  review. The firm is never blocked (per `03` degradation).
+
+## Provenance
+
+Record `MISTRAL_MODEL_ID` and `api.mistral.ai` with every result. Store the
+source image as an immutable `document` (`04`). Keep each entry's bbox and
+confidence (`07`).
+
+## Compliance
+
+Mistral Document AI is on the `03` named EU-native processor allowlist.
+A signed **DPA** and **no-training tier** are required before first production
+call. **Status: DPA pending sign-off** — see
+`notes/aufmass/2026-06-28-mistral-document-ai-pivot.md` and `09`.
+
+Handwritten Aufmaß images are submitted; no other customer data is sent.
+Images may contain spatial data (room dimensions, property layouts);
+minimise: submit only the image.
+
+-----
 
 ## Open questions
 
-1. **bbox convention**: confirm during benchmarking whether the model returns
-   boxes as 0..1 fractions as the prompt asks, or pixel coords; normalise in
-   the client if needed.
-2. **Timeout / retry numbers**: tune against observed cold-start times.
+1. **Annotation vs two-step quality**: benchmark `document_annotation_format`
+   against the raw-OCR + text-model path on real firm sheets before deciding
+   whether to pre-build the two-step fallback.
+2. **Timeout / retry numbers**: tune against observed Mistral API latency on
+   real calls.
+3. **Image size budget**: confirm Mistral OCR 4's max image dimensions/bytes
+   and whether downscaling preprocessing is needed for high-res photos.

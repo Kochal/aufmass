@@ -15,6 +15,11 @@ extraction-and-reconciliation pipeline, and where human review is pointed.
 Audience: you (Claude Code) and any human contributor.
 
 ## Changelog
+- 2026-06-28: Section 2 rewritten: extraction now via Mistral Document AI
+  (OCR 4, `mistral-ocr-4-0`) with document_annotation. Native bbox + word
+  confidence replaces client-side normalisation. Reconciliation (§3-5)
+  unchanged; word confidence seeds candidate-glyph search. Open question 1
+  (thresholds) updated — now seedable from word confidence.
 - 2026-06-22: Initial draft. Capture modes, expression-tree extraction,
   deterministic reconciliation, verification UX, linkage to billing.
 - 2026-06-24: Materialized the Aufmaß schema as migration `0020`
@@ -68,23 +73,31 @@ or audio is stored as an immutable `document` (`04`).
   sample was sideways). Normalise before extraction.
 - The original image is never modified; preprocessing operates on a copy.
 
-### 2. Vision-model extraction
+### 2. Vision-model extraction (Mistral Document AI)
 
-The model (self-hosted, `03`; benchmark Qwen3-VL and handwriting-tuned
-variants such as Chandra or olmOCR on the firm's own sheets, and fine-tune on
-their forms and crews' handwriting as labelled data accrues) emits, per
-measurement:
+Extraction uses **Mistral Document AI** (`mistral-ocr-4-0`) via
+`document_annotation_format` (the entry/expression-tree schema as a Pydantic
+model) and `document_annotation_prompt` (handwritten measurements only; ignore
+printed column headers; do not compute). Client detail is in `07a`.
+
+The model emits, per handwritten measurement:
 
 - the **expression** as a structured tree, not a string: operands, operator,
   any multiplier (the "x2"), and any **written result** the builder noted;
 - **candidate readings** for uncertain glyphs (a 7 that might be a 1, a comma
-  that might sit one place over), not a single guess;
+  that might sit one place over), with a **word-level confidence** score per
+  token (native from Mistral OCR 4, floats in [0, 1]);
 - an optional **label** (Bauteil) if legible;
-- the **source crop** coordinates for that entry.
+- the **source crop** as 0..1 bbox fractions (native from Mistral OCR 4 —
+  no client-side normalisation needed).
 
 These populate `aufmass_entry.expression`, `candidate_readings`,
 `written_result`, `source_crop_ref`, and `bauteil` (`02`). The model does no
 arithmetic and makes no final decision.
+
+Word confidence scores seed the deterministic candidate-glyph reconciliation
+(§3): when multiple glyph readings reconcile, the one with the highest total
+word confidence is preferred, reducing the surface that needs human review.
 
 ### 3. Deterministic reconciliation (math as checksum)
 
@@ -176,7 +189,8 @@ re-reading digits the math already locked.
 1. **Confidence-to-action thresholds**: the exact cutoffs for auto-accept vs
    review (reconciled-and-in-band, reconciled-but-out-of-band, lone result).
    Drafted as: auto-accept only reconciled-and-in-band; everything else to
-   review. Tune on real sheets.
+   review. Word-level confidence from Mistral OCR 4 provides a seed for
+   per-glyph weighting; tune the thresholds on real sheets.
 2. **Multi-candidate reconciliation**: when more than one glyph combination
    reconciles to the written result, do we surface all and force a choice, or
    pick the highest-prior reading and flag? Drafted as surface-and-choose.

@@ -3,6 +3,10 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-28: Model pivot — Aufmaß extraction moves from self-hosted VLM to Mistral Document
+  AI (OCR 4, `mistral-ocr-4-0`). Decision 3 revised to co-equal per-step routing. GPU host
+  unblocked from critical path. Directives 00, 01, 03, 06, 07, 07a, 09, CLAUDE.md updated.
+  See notes/aufmass/2026-06-28-mistral-document-ai-pivot.md.
 - 2026-06-26: Residency widened from German server to EU/EEA (whole stack); directives
   00, 03, 04, 06, 08, 09, 10 updated. See notes/infra/2026-06-26-eu-eea-residency.md.
 - 2026-06-26: 06 quotation engine API landed: deterministic pricing engine
@@ -41,13 +45,11 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 3: 06 quotation engine API — deterministic core complete.** The `06`
-deterministic application layer is built: pricing engine (`Decimal`/HALF_UP),
-sense-check engine (arithmetic/zero_guard/unit/completeness), REST over all 9
-quotation/billing entities, and the full issue flow (berechnen → pruefen →
-ausstellen → version). Deferred to dedicated rounds: XRechnung+KoSIT validation,
-GAEB import/export, PDF extraction+matching (GPU-host blocked). Next: GPU host
-decision for `03`/`07`, then the XRechnung round.
+**Phase 4: Mistral Document AI pivot — directives reconciled.** `07a` vision client
+directive re-specced for Mistral OCR 4 (`document_annotation_format` / Pydantic
+schema / word confidence). Decision 3 revised to co-equal per-step routing. GPU host
+no longer on the critical path. Code round (vision_client.py rewrite, schema.py,
+config, deps, benchmark) is the next `07` deliverable. Separately: XRechnung round.
 
 ## Directive set
 
@@ -68,7 +70,8 @@ decision for `03`/`07`, then the XRechnung round.
 
 ## Locked decisions (from `00`)
 
-M365 for mail / calendar; B2G in scope; self-hosted LLM on the firm's own EU/EEA server;
+M365 for mail / calendar; B2G in scope; models routed per step (self-hosted EU/EEA
+and named DPA-covered EU-native APIs are co-equal — Aufmaß → Mistral Document AI);
 single firm in v1 but multi-tenant from day one; customer-defined fields
 dropped for v1.
 
@@ -83,8 +86,9 @@ integration and control layer. The directive numbers track this order.
 
 By directive, none blocking the build:
 
-- `03`: provider / GPU class (benchmark), co-locate vs split, on-prem vs
-  hosted, fine-tune cadence.
+- `03`: GPU class / VLM fallback (parked — no longer critical path); co-locate
+  vs split; on-prem vs hosted; fine-tune cadence (moot until fallback live);
+  RfP/PDF extraction routing (deferred).
 - `04`: RPO / RTO targets, offsite location, backup retention window, WORM
   mechanism.
 - `06`: plausibility-band cold start (seed vs review-heavy).
@@ -111,8 +115,9 @@ a sizing benchmark, not at the design stage.
 3. ~~Build the `06` quotation engine API~~ **Done** (2026-06-26). Deterministic
    core: pricing/check engine, 9 new entities, berechnen+pruefen+ausstellen+
    version endpoints, pytest green. Deferred: XRechnung+KoSIT, GAEB, PDF/matching.
-4. Stand up `03` (an EU/EEA GPU host) far enough to run the `07` vision
-   benchmark on real Aufmaß sheets. Current Hetzner host has no GPU; requires
-   a GPU instance decision (provider, class, location in EU/EEA).
+4. ~~Stand up `03` GPU host for `07` vision benchmark~~ **Unblocked** (2026-06-28):
+   Aufmaß extraction now routes to Mistral Document AI; no GPU required on the
+   critical path. Next `07` deliverable: rewrite vision_client.py + schema.py,
+   config, deps, benchmark on real sheets. Needs Mistral DPA sign-off first.
 5. XRechnung/ZUGFeRD round: EN 16931 XML generation + KoSIT validator integration
    on rechnung issue (validator container verified 2026-06-25).

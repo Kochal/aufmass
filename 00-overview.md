@@ -19,6 +19,10 @@ invoicing. Then the directive named for the area you are touching.
   `10-application-stack.md` map entry.
 - 2026-06-26: Decision 3 widened: "German server" → "firm's own server in the EU/EEA".
   Self-hosting and egress-deny rule unchanged. See notes/infra/2026-06-26-eu-eea-residency.md.
+- 2026-06-28: Decision 3 revised from "self-hosted LLM only" to co-equal per-step routing:
+  self-hosted (EU/EEA) and named DPA-covered EU-native model APIs are first-class options.
+  Aufmaß extraction pivots to Mistral Document AI (OCR 4). See
+  notes/aufmass/2026-06-28-mistral-document-ai-pivot.md.
 
 -----
 
@@ -54,8 +58,12 @@ These are settled. Reopen only via a note plus a changelog line here.
 2. **Public-sector work (B2G) is in scope.** This forces XRechnung,
    prüfbare Aufmaße, and VOB-conform output from the start, not as a later
    bolt-on. See `01-compliance-baseline.md`.
-3. **The LLM is self-hosted on the firm's own server in the EU/EEA.** No customer or RfP data
-   leaves to a third-party model API. Chosen for DSGVO and client trust.
+3. **Models are routed per step behind an endpoint boundary.** Self-hosted
+   (EU/EEA server) and named, DPA-covered EU-native model APIs are co-equal
+   options, each chosen on its merits per step. Egress is deny-by-default;
+   named EU-native model processors are individually justified, DPA-covered,
+   and AVV-governed. Chosen for DSGVO, sovereignty, and cost-effectiveness
+   per workload.
 4. **Single firm now, multi-tenant boundary from day one.** Every business
    row carries a tenant id; row-level security enforces isolation. v1
    onboards one firm. Retrofitting tenancy later is the one change we

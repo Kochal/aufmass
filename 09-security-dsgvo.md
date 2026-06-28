@@ -14,6 +14,9 @@ Audience: you (Claude Code) and any human contributor.
 > the firm's Datenschutz and legal advice.
 
 ## Changelog
+- 2026-06-28: Mistral Document AI added as a named processor (Aufmaß extraction).
+  Processors section updated: DPA + no-training tier required per processor.
+  See notes/aufmass/2026-06-28-mistral-document-ai-pivot.md.
 - 2026-06-26: Residency tightened to EU/EEA (was "EU residency"); no substantive change —
   content was already correct. See notes/infra/2026-06-26-eu-eea-residency.md.
 - 2026-06-22: Initial draft. Identity, RBAC, inbound access, secrets,
@@ -113,15 +116,25 @@ care:
 
 ## Processors and AVV (resolving `01`, `03`, `08`)
 
-- **AVV** in place with each processor: the hosting provider (`03`) and
-  Microsoft for M365 mail / calendar (`08`). EU/EEA residency, with SCCs only if
-  any transfer leaves the EU/EEA (the design avoids that).
-- Microsoft is a named, deliberate processor for mail and calendar (the `03`
-  exception), and only for the data inherently in M365; the system does not
-  push extra customer data to Microsoft.
+A processor appears here only when: EU/EEA residency is confirmed in writing,
+a signed **DPA / AVV** is in place, and a **no-training tier** (data is not
+used to train the provider's models) is confirmed in writing. The processor
+must not appear on the `03` egress allowlist without all three.
+
+- **Hosting provider** (Hetzner or equivalent): AVV in place. Hosts hardware
+  only; does not perform model inference.
+- **Microsoft / M365** — mail and calendar (`08`): AVV in place, EU/EEA
+  residency, no-training tier confirmed. Microsoft does not receive extra
+  customer data beyond what is inherent in M365.
+- **Mistral AI** — Aufmaß extraction (`07`, `07a`): DPA + no-training tier
+  required before first production call. EU-headquartered (no CLOUD Act
+  exposure). Handwritten Aufmaß images are submitted; no other customer data
+  is sent. **Status: DPA pending sign-off** — see
+  `notes/aufmass/2026-06-28-mistral-document-ai-pivot.md`.
 - A **Verzeichnis von Verarbeitungstätigkeiten** (record of processing
   activities, Art. 30) and the technical/organisational measures (TOMs) are
-  maintained as part of the documentation set below.
+  maintained as part of the documentation set below. Each named processor
+  above must appear in the Verzeichnis once its DPA is in place.
 
 ## Verfahrensdokumentation (resolving `01`)
 
