@@ -30,6 +30,12 @@ Audience: you (Claude Code) and any human contributor.
   `notes/ops/2026-06-24-dev-stack-scaffold.md`.
 - 2026-06-26: Residency widened from German host to EU/EEA; self-hosting rule unchanged.
   See notes/infra/2026-06-26-eu-eea-residency.md.
+- 2026-06-28: Within-React library choices now fixed: shadcn/ui on Tailwind v4
+  (`@tailwindcss/vite`), react-router-dom v7 (library mode), @tanstack/react-query
+  v5, openapi-fetch (typed runtime client over the generated schema.ts). Three-surface
+  app shell wired; office quote-matching review complete; field + dashboard deferred.
+  Dev auth stub (X-Tenant-Id / X-User-Id headers) is the seam for Entra SSO (09).
+  See notes/ui/2026-06-28-design-system-and-surfaces.md.
 
 -----
 

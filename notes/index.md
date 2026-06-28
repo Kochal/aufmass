@@ -37,6 +37,7 @@ Organised by area, newest first within each area.
 ## ui
 | Date | File | Summary |
 |------|------|---------|
+| 2026-06-28 | [e2e-browser-test](ui/2026-06-28-e2e-browser-test.md) | E2E browser walkthrough complete; two bugs fixed (ausstellenMutation cache, nummernkreis format); immutability trigger confirmed; nummernkreis seed requirement documented |
 | 2026-06-28 | [design-system-and-surfaces](ui/2026-06-28-design-system-and-surfaces.md) | shadcn/ui on Tailwind v4; three surfaces one design system; confidence/trust colour tokens; react-router-dom v7 + react-query v5 + openapi-fetch; dev-auth seam; office quote-review slice live |
 
 ## ops (infrastructure / tooling)

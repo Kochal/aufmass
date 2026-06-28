@@ -3,6 +3,13 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-28: Phase A+B frontend complete. shadcn/ui on Tailwind v4, react-router-dom v7,
+  react-query v5, openapi-fetch typed client, dev-auth stub (X-Tenant-Id/X-User-Id), role-aware
+  three-surface app shell, office quote-matching review screen (two-pane, risk-first, keyboard
+  shortcuts, CatalogPicker, berechnen→prüfen→ausstellen gate). Full E2E browser test passed on
+  Hetzner dev stack. Bug fixed: `ausstellenMutation.onError` now invalidates angebot cache.
+  Vite proxy wired for remote browser access. `nummernkreis` seed requirement documented.
+  See notes/ui/2026-06-28-design-system-and-surfaces.md, notes/ui/2026-06-28-e2e-browser-test.md.
 - 2026-06-28: Model pivot — Aufmaß extraction moves from self-hosted VLM to Mistral Document
   AI (OCR 4, `mistral-ocr-4-0`). Decision 3 revised to co-equal per-step routing. GPU host
   unblocked from critical path. Directives 00, 01, 03, 06, 07, 07a, 09, CLAUDE.md updated.
@@ -45,11 +52,11 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 4: Mistral Document AI pivot — directives reconciled.** `07a` vision client
-directive re-specced for Mistral OCR 4 (`document_annotation_format` / Pydantic
-schema / word confidence). Decision 3 revised to co-equal per-step routing. GPU host
-no longer on the critical path. Code round (vision_client.py rewrite, schema.py,
-config, deps, benchmark) is the next `07` deliverable. Separately: XRechnung round.
+**Phase 5: Frontend foundation + office review slice live; E2E verified.** Phase A+B
+complete: three-surface PWA with the office quote-matching review screen running on
+Hetzner. The full berechnen→prüfen→ausstellen flow tested and passing. Next: Mistral
+vision_client.py rewrite (07), XRechnung/KoSIT round (06), field Aufmaß UI (07 backend
+first), Rechnungen UI, real Entra SSO (09).
 
 ## Directive set
 
@@ -65,7 +72,7 @@ config, deps, benchmark) is the next `07` deliverable. Separately: XRechnung rou
 | `07` | Aufmaß capture and OCR         | Drafted. DB layer (0020) + tests |
 | `08` | M365 integration               | Drafted                       |
 | `09` | Security and DSGVO             | Drafted                       |
-| `10` | Application stack / dev env    | Drafted. Stack fork resolved  |
+| `10` | Application stack / dev env    | **Frontend live** (2026-06-28) |
 | `99` | Status                         | This file                     |
 
 ## Locked decisions (from `00`)
@@ -121,3 +128,7 @@ a sizing benchmark, not at the design stage.
    config, deps, benchmark on real sheets. Needs Mistral DPA sign-off first.
 5. XRechnung/ZUGFeRD round: EN 16931 XML generation + KoSIT validator integration
    on rechnung issue (validator container verified 2026-06-25).
+6. ~~Phase A+B frontend~~ **Done** (2026-06-28). Three-surface PWA, office review
+   screen, full E2E browser test. `nummernkreis` seed required per tenant (documented
+   in notes/ui/2026-06-28-e2e-browser-test.md). Next: field Aufmaß UI (needs 07
+   backend first), Rechnungen screen, Auftraggeber/Projekte screens, Entra SSO.

@@ -1,0 +1,109 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens for the Aufmaß app.
+ *
+ * Three surfaces, one token system:
+ *   office  — desktop, dense, keyboard (defined here, default)
+ *   field   — mobile-first, large tap targets (extend when field surface builds)
+ *   (owner dashboard inherits office)
+ *
+ * Confidence/trust color bands: the visual language of "show its work."
+ * Every review surface reads from confidence-high/-mid/-low, never from
+ * ad-hoc hex. A colored band tells the reviewer where their attention is
+ * needed without a number to decode.
+ */
+@theme inline {
+  /* Radius — shadcn convention maps rounded-* to these variables */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius: 0.5rem;
+
+  /* Base semantic colors — neutral palette, primary = firm theme #1f2937 */
+  --color-background: oklch(1 0 0);
+  --color-foreground: oklch(0.145 0 0);
+
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.145 0 0);
+
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.145 0 0);
+
+  /* Primary: #1f2937 — the firm's brand dark blue-gray */
+  --color-primary: oklch(0.258 0.019 264.5);
+  --color-primary-foreground: oklch(0.985 0 0);
+
+  --color-secondary: oklch(0.97 0 0);
+  --color-secondary-foreground: oklch(0.258 0.019 264.5);
+
+  --color-muted: oklch(0.97 0 0);
+  --color-muted-foreground: oklch(0.556 0 0);
+
+  --color-accent: oklch(0.97 0 0);
+  --color-accent-foreground: oklch(0.258 0.019 264.5);
+
+  --color-destructive: oklch(0.577 0.245 27.325);
+
+  --color-border: oklch(0.922 0 0);
+  --color-input: oklch(0.922 0 0);
+  --color-ring: oklch(0.258 0.019 264.5);
+
+  /*
+   * Confidence / trust semantic tokens
+   * ─────────────────────────────────
+   * confidence-high  ≥ 0.85 match confidence, or match_status='confirmed'
+   * confidence-mid   0.60 – 0.85
+   * confidence-low   < 0.60, unmatched, or needs human eye
+   *
+   * Used as left-border bands on review cards (border-l-4) and as badge
+   * backgrounds. The office quote-review and Aufmaß crop-verify screens
+   * both read from these same tokens.
+   */
+  --color-confidence-high: oklch(0.696 0.17 162.48);
+  --color-confidence-high-fg: oklch(0.28 0.09 162);
+  --color-confidence-high-bg: oklch(0.965 0.035 162);
+
+  --color-confidence-mid: oklch(0.72 0.175 85.0);
+  --color-confidence-mid-fg: oklch(0.3 0.1 85);
+  --color-confidence-mid-bg: oklch(0.97 0.03 85);
+
+  --color-confidence-low: oklch(0.577 0.245 27.325);
+  --color-confidence-low-fg: oklch(0.28 0.1 27);
+  --color-confidence-low-bg: oklch(0.97 0.03 27);
+
+  /* Chart colors (reserved for future analytics) */
+  --color-chart-1: oklch(0.646 0.222 41.116);
+  --color-chart-2: oklch(0.6 0.118 184.714);
+  --color-chart-3: oklch(0.398 0.07 227.392);
+  --color-chart-4: oklch(0.828 0.189 84.429);
+  --color-chart-5: oklch(0.769 0.188 70.08);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Scrollbar styling for the office dense list */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+}
