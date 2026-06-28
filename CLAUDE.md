@@ -93,10 +93,13 @@ Every later module inherits these rather than re-asserting them.
 
 ### Before changing anything substantial
 
-1. Read `directives/00-overview.md` and the directive for the area.
-2. `ls notes/<area>/` and skim the most recent 2-3 files. If they are silent
-   on your question, that is signal: write a new note as you work.
-3. If you hit a judgment call not covered by directives or notes, **write the
+1. Read `notes/index.md` first — one-line summaries of every note, organised
+   by area. Use it to identify which notes are relevant before opening them.
+2. Read `00-overview.md` and the directive for the area.
+3. Open only the specific notes flagged by the index as relevant to your area.
+   If the index is silent on your question, that is signal: write a new note
+   as you work and add a row to `notes/index.md`.
+4. If you hit a judgment call not covered by directives or notes, **write the
    note first**, then do the work.
 
 ### When you make an assumption
