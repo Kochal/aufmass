@@ -1,6 +1,6 @@
 # 2026-06-28 — Mistral OCR 4 benchmark (mistral-ocr-4-0)
 
-/ area: aufmass / status: pipeline working; bbox gap identified; next: bbox mapping /
+/ area: aufmass / status: pipeline working; bbox mapping implemented (22/25 entries); /
 
 ## What was tested
 
@@ -36,17 +36,14 @@
 
 ### What does not work (gaps)
 
-1. **bbox is null on all 25 entries**: `document_annotation_format` returns
-   semantic annotations only — the bounding boxes live in `response.pages[0].blocks`
-   (raw OCR output), not in the `document_annotation` field. To wire bboxes:
-   - Either: raw OCR pass (blocks) + post-process: text-match each annotation
-     entry against the blocks to assign a bbox. Feasible but requires a
-     matching step.
-   - Or: two-step path (raw OCR → cheap structuring model). Benchmark-gated
-     per directive 07a.
-   This is a design gap, not a quality failure. The verification UX (source crop)
-   requires bboxes; this is on the critical path before `review_status` can be
-   auto-populated.
+1. **bbox gap: resolved.** Initial run had all 25 bboxes null. Implemented
+   `_assign_bboxes()` in `vision_client.py`: parses the page markdown into table
+   rows, matches each annotation entry's numeric tokens against those rows
+   (most-matches wins), computes a proportional vertical slice of the table
+   block bbox, and normalises to 0..1 fractions. Result: 22/25 bboxes assigned.
+   The 3 misses are expected: "dito" (no numeric token), "(cath" and
+   "Winkel zu Deppen" (unreadable stubs with no numbers). Unit tests in
+   `tests/test_bbox_mapping.py` (19 tests, all pass, no API key required).
 
 2. **Word-level confidence not surfaced**: same root cause as above —
    `confidence_scores_granularity="word"` populates `response.pages[0].blocks[*].words`
@@ -94,9 +91,7 @@ thresholding.
 
 ## Next steps for 07
 
-1. **bbox mapping**: in `_parse_annotation` or a post-processing step, use the
-   raw OCR blocks from `response.pages[0].blocks` to assign bboxes to entries
-   by matching `entry.raw_text` against block text (fuzzy or substring match).
+1. **bbox mapping**: done. See `_assign_bboxes()` in `vision_client.py`.
 2. **Benchmark on more sheets**: the sample sheet is a single-page loft/attic
    measurement. Test on sheets with more complex layouts and printed grids.
 3. **Annotation prompt tuning**: "D" prefix for Dach/Decke, "W." for Wand

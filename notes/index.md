@@ -8,7 +8,7 @@ Organised by area, newest first within each area.
 ## aufmass
 | Date | File | Summary |
 |------|------|---------|
-| 2026-06-28 | [mistral-ocr4-benchmark](aufmass/2026-06-28-mistral-ocr4-benchmark.md) | First live benchmark vs sample sheet: 25 entries, no hallucination, expression tree works; bbox null (gap: needs text-match to raw OCR blocks); v2 SDK import paths documented |
+| 2026-06-28 | [mistral-ocr4-benchmark](aufmass/2026-06-28-mistral-ocr4-benchmark.md) | First live benchmark vs sample sheet: 25 entries, no hallucination, expression tree works; bbox mapping implemented (22/25, 3 non-numeric misses expected); v2 SDK import paths documented |
 | 2026-06-28 | [mistral-document-ai-pivot](aufmass/2026-06-28-mistral-document-ai-pivot.md) | Decision to pivot Aufmaß extraction to Mistral Document AI (`mistral-ocr-4-0`); decision 3 relaxed to co-equal per-step routing; DPA pending; compliance checklist; technical shape for code round |
 | 2026-06-27 | [vision-client-poc-benchmark](aufmass/2026-06-27-vision-client-poc-benchmark.md) | PoC result: pipeline works end-to-end; Qwen2.5-VL-7B/8k too small (hallucination, context overflow); 32B+ / 32k context needed; key client fixes documented (fence strip, salvage on truncation, RUNPOD_API_KEY alias) |
 | 2026-06-24 | [aufmass-db-layer](aufmass/2026-06-24-aufmass-db-layer.md) | Migration 0020: `aufmass` + `aufmass_entry` tables, guarantee suite AF1–AF8; engine/DB boundary decision; `quelle`-driven original constraint; prüfbarkeit floor trigger |

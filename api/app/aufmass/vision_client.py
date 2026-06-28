@@ -11,24 +11,24 @@ production call — status: pending (directive 09).
 from __future__ import annotations
 
 import base64
-import json
 import logging
+import re
 import time
-from typing import Any, Mapping
+from typing import Any
 
 from mistralai.client import Mistral
 from mistralai.client.models.jsonschema import JSONSchema
 from mistralai.client.models.responseformat import ResponseFormat
 
-from app.aufmass.schema import AufmassExtractionResult
+from app.aufmass.schema import AufmassEntry, AufmassExtractionResult, Bbox
 from app.config import settings
 
 log = logging.getLogger(__name__)
 
-_TIMEOUT = 300_000   # ms — generous for large images
+_TIMEOUT = 300_000   # ms
 _RETRY_DELAYS = [5.0, 15.0, 45.0]
 
-# JSON schema derived once at import time; stable across requests.
+# Pre-built once at import time; stable for the lifetime of the process.
 _ANNOTATION_FORMAT = ResponseFormat(
     type="json_schema",
     json_schema=JSONSchema(
@@ -81,10 +81,10 @@ def extract(image_bytes: bytes, mime_type: str = "image/jpeg") -> dict[str, Any]
     -------
     dict
         ``{"entries": [...], "_model": ..., "_endpoint": ...}``
-        Entries match ``AufmassEntry``; includes provenance keys for
-        traceability (directive 03). The reconciler (directive 07) does
-        all arithmetic and confidence-gating; this function returns raw
-        candidates only.
+        Entries match ``AufmassEntry``; bbox (0..1 fractions) is populated
+        where the text-match against raw OCR blocks succeeds. Provenance
+        keys for traceability (directive 03). The reconciler (directive 07)
+        does all arithmetic and confidence-gating.
 
     Raises
     ------
@@ -132,7 +132,9 @@ def _call_with_retry(client: Mistral, data_url: str) -> AufmassExtractionResult:
             if elapsed > 30:
                 log.info("aufmass.vision_client: slow response %.0fs", elapsed)
 
-            return _parse_annotation(response)
+            result = _parse_annotation(response)
+            _assign_bboxes(result.entries, response)
+            return result
 
         except Exception as exc:
             status = _status_code(exc)
@@ -169,6 +171,105 @@ def _parse_annotation(response: Any) -> AufmassExtractionResult:
     raise ExtractionError(
         f"Unexpected document_annotation type {type(annotation).__name__}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Bbox mapping: annotation entries → raw OCR table rows
+# ---------------------------------------------------------------------------
+
+def _assign_bboxes(entries: list[AufmassEntry], response: Any) -> None:
+    """Populate entry.bbox by text-matching against the raw OCR table block.
+
+    Mistral's document_annotation returns semantic structure without bboxes.
+    Bboxes live in the raw OCR table block (one block covers the whole
+    measurement table). This function estimates a per-row bbox by:
+      1. Parsing the page markdown into table rows.
+      2. For each annotation entry, finding the table row whose text contains
+         the most of the entry's numeric tokens (most-matches wins).
+      3. Computing a proportional vertical slice of the table block's bbox.
+      4. Normalising pixel coords to 0..1 fractions of page dimensions.
+
+    Entries without numeric tokens (e.g. "dito", unreadable stubs) keep
+    bbox=None. The table's horizontal bounds are used as-is for all entries.
+    Mutates entries in place.
+    """
+    pages = getattr(response, "pages", None) or []
+    if not pages:
+        return
+    page = pages[0]
+
+    dims = getattr(page, "dimensions", None)
+    if not dims or dims.width <= 0 or dims.height <= 0:
+        return
+
+    # All handwritten measurements sit inside the one table block.
+    table_block = next(
+        (b for b in (getattr(page, "blocks", None) or [])
+         if getattr(b, "type", "") == "table"),
+        None,
+    )
+    if not table_block:
+        log.debug("aufmass.vision_client: no table block found; bboxes not assigned")
+        return
+
+    # Parse markdown into table rows (skip separator lines and blanks).
+    md = getattr(page, "markdown", "") or ""
+    table_rows = [
+        line for line in md.splitlines()
+        if line.strip().startswith("|") and "---" not in line
+    ]
+    n_rows = len(table_rows)
+    if n_rows == 0:
+        return
+
+    # Normalised table bounds (0..1).
+    w, h = dims.width, dims.height
+    tbl_x1 = table_block.top_left_x / w
+    tbl_y1 = table_block.top_left_y / h
+    tbl_x2 = table_block.bottom_right_x / w
+    tbl_y2 = table_block.bottom_right_y / h
+    row_h = (tbl_y2 - tbl_y1) / n_rows
+
+    assigned = 0
+    for entry in entries:
+        tokens = _numeric_tokens(entry.raw_text)
+        if not tokens:
+            continue  # "dito", labels-only, or unreadable — leave bbox None
+        row_idx = _best_row(tokens, table_rows)
+        if row_idx is None:
+            continue
+        y1 = tbl_y1 + row_idx * row_h
+        y2 = y1 + row_h
+        entry.bbox = Bbox(
+            x1=round(tbl_x1, 4),
+            y1=round(max(0.0, y1), 4),
+            x2=round(tbl_x2, 4),
+            y2=round(min(1.0, y2), 4),
+        )
+        assigned += 1
+
+    log.info(
+        "aufmass.vision_client: assigned bboxes to %d/%d entries via table-row match",
+        assigned, len(entries),
+    )
+
+
+def _numeric_tokens(text: str) -> list[str]:
+    """Return German-decimal numeric tokens from text (e.g. '3,86', '0,74')."""
+    return re.findall(r"\d[\d,]*", text)
+
+
+def _best_row(tokens: list[str], table_rows: list[str]) -> int | None:
+    """Return 0-based index of the table row whose text matches the most tokens.
+
+    Returns None if no row contains any token.
+    """
+    best_score, best_idx = 0, None
+    for i, row in enumerate(table_rows):
+        score = sum(1 for t in tokens if t in row)
+        if score > best_score:
+            best_score, best_idx = score, i
+    return best_idx if best_score > 0 else None
 
 
 def _status_code(exc: Exception) -> int | None:
