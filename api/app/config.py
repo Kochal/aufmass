@@ -27,16 +27,22 @@ class Settings(BaseSettings):
     # Internal-only sidecars / stubs (directive 10). The frontend never reaches
     # any of these directly; only the backend does.
     validator_url: str = Field(default="http://validator:8080", alias="VALIDATOR_URL")
-    # OpenAI-compatible base URL for the vision model (ends in /openai/v1 in prod).
+
+    # Mistral Document AI — Aufmaß extraction (directive 07a).
+    # DPA + no-training tier required before first production call (directive 09).
+    mistral_api_key: str = Field(default="", alias="MISTRAL_API_KEY")
+    mistral_model_id: str = Field(default="mistral-ocr-4-0", alias="MISTRAL_MODEL_ID")
+
+    # Self-hosted VLM fallback (directive 03 escape hatch) — not the active path.
+    # Kept here so the fallback can be wired in without touching the schema.
     model_endpoint: str = Field(default="http://stubs:9000/openai/v1", alias="MODEL_ENDPOINT")
-    # Accepts MODEL_API_KEY (generic, directive 07a) or RUNPOD_API_KEY (PoC .env).
     model_api_key: str = Field(
         default="",
         validation_alias=AliasChoices("MODEL_API_KEY", "RUNPOD_API_KEY"),
     )
     model_name: str = Field(default="qwen/qwen2.5-vl-7b-instruct", alias="MODEL_NAME")
-    # Set to true only if the vLLM worker was started with guided-decoding enabled.
     model_guided_json: bool = Field(default=False, alias="MODEL_GUIDED_JSON")
+
     m365_endpoint: str = Field(default="http://stubs:9000/m365", alias="M365_ENDPOINT")
 
     env: str = Field(default="dev", alias="ENV")
