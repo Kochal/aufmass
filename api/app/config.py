@@ -7,12 +7,12 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", protected_namespaces=())
 
     # The application connects as a NON-superuser login role that is a member of
     # app_role (directive 02 / the migrations note's footgun): RLS only binds for
@@ -27,7 +27,16 @@ class Settings(BaseSettings):
     # Internal-only sidecars / stubs (directive 10). The frontend never reaches
     # any of these directly; only the backend does.
     validator_url: str = Field(default="http://validator:8080", alias="VALIDATOR_URL")
-    model_endpoint: str = Field(default="http://stubs:9000/model", alias="MODEL_ENDPOINT")
+    # OpenAI-compatible base URL for the vision model (ends in /openai/v1 in prod).
+    model_endpoint: str = Field(default="http://stubs:9000/openai/v1", alias="MODEL_ENDPOINT")
+    # Accepts MODEL_API_KEY (generic, directive 07a) or RUNPOD_API_KEY (PoC .env).
+    model_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("MODEL_API_KEY", "RUNPOD_API_KEY"),
+    )
+    model_name: str = Field(default="qwen/qwen2.5-vl-7b-instruct", alias="MODEL_NAME")
+    # Set to true only if the vLLM worker was started with guided-decoding enabled.
+    model_guided_json: bool = Field(default=False, alias="MODEL_GUIDED_JSON")
     m365_endpoint: str = Field(default="http://stubs:9000/m365", alias="M365_ENDPOINT")
 
     env: str = Field(default="dev", alias="ENV")
