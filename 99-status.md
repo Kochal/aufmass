@@ -3,6 +3,18 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-28: 06 XRechnung e-invoice path complete. Migration 0022 adds adresse,
+  bankverbindung, tenant_billing_profile tables + auftraggeber/rechnung extensions
+  + core.rechnung_finalize_issue. New modules: einvoice/ubl.py (UBL 2.1 builder,
+  stdlib XML), einvoice/validator_client.py (KoSIT HTTP client), storage.py
+  (filesystem write-once original store). ausstellen_rechnung now orchestrates the
+  full flow: master-data gate → assert_issuable → allocate_number → build XML →
+  KoSIT validate → store originals → finalize atomically. pruefen adds two hard
+  checks: einvoice_master_data + einvoice_en16931. Gapless guarantee holds: a
+  failed ausstellen reverts the counter. New routers: adresse, bankverbindung,
+  tenant_billing_profile. Three new test modules. See
+  notes/quotation/2026-06-28-xrechnung-einvoice.md for design decisions and
+  Steuerberater flags.
 - 2026-06-28: Phase A+B frontend complete. shadcn/ui on Tailwind v4, react-router-dom v7,
   react-query v5, openapi-fetch typed client, dev-auth stub (X-Tenant-Id/X-User-Id), role-aware
   three-surface app shell, office quote-matching review screen (two-pane, risk-first, keyboard
@@ -68,7 +80,7 @@ first), Rechnungen UI, real Entra SSO (09).
 | `03` | Infrastructure / model serving | Drafted                       |
 | `04` | Backup and archival            | Drafted                       |
 | `05` | Operational modules (spine)    | **API complete** (2026-06-25) |
-| `06` | Quotation engine               | **Deterministic core API complete** (2026-06-26) |
+| `06` | Quotation engine               | **XRechnung e-invoice complete** (2026-06-28) |
 | `07` | Aufmaß capture and OCR         | Drafted. DB layer (0020) + tests |
 | `08` | M365 integration               | Drafted                       |
 | `09` | Security and DSGVO             | Drafted                       |
@@ -126,8 +138,11 @@ a sizing benchmark, not at the design stage.
    Aufmaß extraction now routes to Mistral Document AI; no GPU required on the
    critical path. Next `07` deliverable: rewrite vision_client.py + schema.py,
    config, deps, benchmark on real sheets. Needs Mistral DPA sign-off first.
-5. XRechnung/ZUGFeRD round: EN 16931 XML generation + KoSIT validator integration
-   on rechnung issue (validator container verified 2026-06-25).
+5. ~~XRechnung round~~ **Done** (2026-06-28). EN 16931 UBL 2.1 generation, KoSIT
+   validation gate on both prüfen (preview) and ausstellen (final), filesystem
+   write-once original store, party master data schema (adresse/bankverbindung/
+   tenant_billing_profile). Gapless guarantee verified (rollback reverts counter).
+   STEUERBERATER flags in notes/quotation/2026-06-28-xrechnung-einvoice.md.
 6. ~~Phase A+B frontend~~ **Done** (2026-06-28). Three-surface PWA, office review
    screen, full E2E browser test. `nummernkreis` seed required per tenant (documented
    in notes/ui/2026-06-28-e2e-browser-test.md). Next: field Aufmaß UI (needs 07

@@ -17,7 +17,8 @@ RUN pip install --no-cache-dir \
       "fastapi>=0.111" "uvicorn[standard]>=0.30" \
       "psycopg[binary]>=3.2" "psycopg_pool>=3.2" \
       "pydantic-settings>=2.3" "httpx>=0.27" \
-      "mistralai>=2.0"
+      "mistralai>=2.0" \
+      "pytest>=8" "anyio>=4"
 
 COPY app ./app
 

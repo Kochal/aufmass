@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
@@ -44,3 +45,6 @@ class RechnungRead(ReadBase):
     kleinunternehmer: bool | None = None
     einvoice_format: str | None = None
     einvoice_artifact_id: UUID | None = None
+    rechnungsdatum: date | None = None
+    faelligkeitsdatum: date | None = None
+    leistungsdatum: date | None = None

@@ -28,6 +28,12 @@ class Settings(BaseSettings):
     # any of these directly; only the backend does.
     validator_url: str = Field(default="http://validator:8080", alias="VALIDATOR_URL")
 
+    # Write-once filesystem original store (directive 04, minimal dev slice).
+    # Production path: replace with an S3/WORM backend in the directive-04 round.
+    documents_dir: str = Field(
+        default="/var/lib/aufmass/documents", alias="DOCUMENTS_DIR"
+    )
+
     # Mistral Document AI — Aufmaß extraction (directive 07a).
     # DPA + no-training tier required before first production call (directive 09).
     mistral_api_key: str = Field(default="", alias="MISTRAL_API_KEY")

@@ -10,9 +10,30 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def ag_id(client: TestClient):
+    """Create an auftraggeber with postal address + Leitweg-ID.
+
+    Since 0022, ausstellen requires all mandatory XRechnung party data:
+    seller billing profile (seeded for T1) + buyer postal address + Leitweg-ID
+    (required for public / B2G buyers). Private buyers without a Leitweg-ID
+    can still be issued invoices when the einvoice_en16931 check passes.
+    We use a public buyer here to exercise the full gate.
+    """
     from app.seed import T1_ID, T1_USER_ID
     h = {"X-Tenant-Id": T1_ID, "X-User-Id": T1_USER_ID}
-    r = client.post("/api/auftraggeber", json={"name": "Rechnung-Test AG", "typ": "gewerblich"}, headers=h)
+    # Create a postal address for the buyer.
+    r = client.post("/api/adresse", json={
+        "strasse": "Testgasse 1", "plz": "10115", "ort": "Berlin"
+    }, headers=h)
+    assert r.status_code == 201
+    adresse_id = r.json()["id"]
+    # Public buyer with address + Leitweg-ID so XRechnung validation passes.
+    r = client.post("/api/auftraggeber", json={
+        "name": "Rechnung-Test AG",
+        "typ": "oeffentlich",
+        "adresse_id": adresse_id,
+        "leitweg_id": "991-99999999-06",
+        "elektronische_adresse": "rechnungen@rechnung-test.de",
+    }, headers=h)
     assert r.status_code == 201
     return r.json()["id"]
 

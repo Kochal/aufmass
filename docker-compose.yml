@@ -75,12 +75,14 @@ services:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     volumes:
       - ./api:/app
+      - documents:/var/lib/aufmass/documents   # write-once original store (directive 04)
     environment:
       # Connects as the NON-superuser `app` role (bootstrapped by the migrate
       # step), NOT the superuser: a superuser/BYPASSRLS connection would silently
       # defeat tenant isolation. This is what makes "full RLS in dev" real.
       DATABASE_URL: postgresql://app:app_dev@postgres:5432/maler
       VALIDATOR_URL: http://validator:8080
+      DOCUMENTS_DIR: /var/lib/aufmass/documents
       # Dev stubs, not live egress (no real Microsoft / model credentials).
       MODEL_ENDPOINT: http://stubs:9000/model
       M365_ENDPOINT: http://stubs:9000/m365
@@ -118,3 +120,4 @@ services:
 
 volumes:
   pg_data:
+  documents:   # write-once original store for e-invoice XML + validation reports (directive 04)
