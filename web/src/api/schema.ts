@@ -41,6 +41,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/adresse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Adresse */
+        get: operations["list_adresse_api_adresse_get"];
+        put?: never;
+        /** Create Adresse */
+        post: operations["create_adresse_api_adresse_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/adresse/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Adresse */
+        get: operations["get_adresse_api_adresse__id__get"];
+        /** Update Adresse */
+        put: operations["update_adresse_api_adresse__id__put"];
+        post?: never;
+        /** Delete Adresse */
+        delete: operations["delete_adresse_api_adresse__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bankverbindung": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Bankverbindung */
+        get: operations["list_bankverbindung_api_bankverbindung_get"];
+        put?: never;
+        /** Create Bankverbindung */
+        post: operations["create_bankverbindung_api_bankverbindung_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/bankverbindung/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Bankverbindung */
+        get: operations["get_bankverbindung_api_bankverbindung__id__get"];
+        /** Update Bankverbindung */
+        put: operations["update_bankverbindung_api_bankverbindung__id__put"];
+        post?: never;
+        /** Delete Bankverbindung */
+        delete: operations["delete_bankverbindung_api_bankverbindung__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tenant-billing-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Billing Profile
+         * @description Return the current tenant's billing profile (404 if not yet configured).
+         */
+        get: operations["get_billing_profile_api_tenant_billing_profile_get"];
+        /**
+         * Update Billing Profile
+         * @description Update the billing profile (optimistic concurrency via row_version).
+         */
+        put: operations["update_billing_profile_api_tenant_billing_profile_put"];
+        /**
+         * Create Billing Profile
+         * @description Create the billing profile. Returns 409 if one already exists (use PUT).
+         */
+        post: operations["create_billing_profile_api_tenant_billing_profile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/kontakt": {
         parameters: {
             query?: never;
@@ -921,10 +1023,9 @@ export interface paths {
         put?: never;
         /**
          * Berechnen Rechnung
-         * @description Price all rechnung_positions and compute betrag_netto/betrag_brutto.
+         * @description Price all rechnung_positions and compute summe_netto/summe_brutto.
          *
          *     Ordering contract: berechnen → pruefen → ausstellen.
-         *     E-invoice generation/validation is deferred to a later round.
          */
         post: operations["berechnen_rechnung_api_rechnung__id__berechnen_post"];
         delete?: never;
@@ -944,7 +1045,15 @@ export interface paths {
         put?: never;
         /**
          * Pruefen Rechnung
-         * @description Run deterministic sense-checks; store and return the results.
+         * @description Run deterministic sense-checks + e-invoice pre-validation; store and return results.
+         *
+         *     Pure engine checks (arithmetic, completeness, etc.) run first. Then two
+         *     additional hard checks are appended:
+         *       - einvoice_master_data: all mandatory XRechnung party fields are present
+         *         and every einheit maps to a UN/ECE Rec 20 code.
+         *       - einvoice_en16931: build a preview XML (placeholder number) and validate
+         *         it against the KoSIT sidecar. Matches the berechnen→prüfen→ausstellen
+         *         contract; ausstellen re-validates with the real allocated number.
          */
         post: operations["pruefen_rechnung_api_rechnung__id__pruefen_post"];
         delete?: never;
@@ -964,9 +1073,19 @@ export interface paths {
         put?: never;
         /**
          * Ausstellen Rechnung
-         * @description Issue the rechnung: enforce the gate, allocate the gapless Rechnungsnummer, snapshot tax, freeze.
+         * @description Issue the rechnung with a KoSIT-validated XRechnung e-invoice.
          *
-         *     E-invoice generation is deferred; the issued rechnung has no einvoice_artifact_id yet.
+         *     Flow (all within one DB transaction — a rollback after step 3 reverts the
+         *     allocated counter, burning no number):
+         *       1. Load rechnung, positions, seller, buyer.
+         *       2. Validate mandatory master data → 422 if missing (before any number is
+         *          allocated, so no gap risk).
+         *       3. assert_issuable → 409 if unresolved hard check failures.
+         *       4. allocate_number → gapless Rechnungsnummer.
+         *       5. build_xrechnung → UBL 2.1 XML bytes.
+         *       6. KoSIT validate → 422 if invalid (txn rolls back, number reverts).
+         *       7. store_original → document row + file on mounted volume.
+         *       8. rechnung_finalize_issue → atomic draft→issued UPDATE.
          */
         post: operations["ausstellen_rechnung_api_rechnung__id__ausstellen_post"];
         delete?: never;
@@ -1186,6 +1305,81 @@ export interface components {
             vorbehalte?: string | null;
             /** Protokoll Document Id */
             protokoll_document_id?: string | null;
+        };
+        /** AdresseCreate */
+        AdresseCreate: {
+            /** Strasse */
+            strasse?: string | null;
+            /** Adresszusatz */
+            adresszusatz?: string | null;
+            /** Plz */
+            plz?: string | null;
+            /** Ort */
+            ort?: string | null;
+            /**
+             * Land
+             * @default DE
+             */
+            land: string;
+        };
+        /** AdresseRead */
+        AdresseRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Strasse */
+            strasse?: string | null;
+            /** Adresszusatz */
+            adresszusatz?: string | null;
+            /** Plz */
+            plz?: string | null;
+            /** Ort */
+            ort?: string | null;
+            /** Land */
+            land: string;
+        };
+        /** AdresseUpdate */
+        AdresseUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Strasse */
+            strasse?: string | null;
+            /** Adresszusatz */
+            adresszusatz?: string | null;
+            /** Plz */
+            plz?: string | null;
+            /** Ort */
+            ort?: string | null;
+            /**
+             * Land
+             * @default DE
+             */
+            land: string;
         };
         /**
          * AngebotBerechnen
@@ -1444,6 +1638,17 @@ export interface components {
             typ?: ("privat" | "gewerblich" | "oeffentlich") | null;
             /** Ust Idnr */
             ust_idnr?: string | null;
+            /** Adresse Id */
+            adresse_id?: string | null;
+            /** Leitweg Id */
+            leitweg_id?: string | null;
+            /** Elektronische Adresse */
+            elektronische_adresse?: string | null;
+            /**
+             * Eas Scheme
+             * @default EM
+             */
+            eas_scheme: string;
         };
         /** AuftraggeberRead */
         AuftraggeberRead: {
@@ -1483,6 +1688,14 @@ export interface components {
             typ?: ("privat" | "gewerblich" | "oeffentlich") | null;
             /** Ust Idnr */
             ust_idnr?: string | null;
+            /** Adresse Id */
+            adresse_id?: string | null;
+            /** Leitweg Id */
+            leitweg_id?: string | null;
+            /** Elektronische Adresse */
+            elektronische_adresse?: string | null;
+            /** Eas Scheme */
+            eas_scheme: string;
         };
         /** AuftraggeberUpdate */
         AuftraggeberUpdate: {
@@ -1496,6 +1709,80 @@ export interface components {
             typ?: ("privat" | "gewerblich" | "oeffentlich") | null;
             /** Ust Idnr */
             ust_idnr?: string | null;
+            /** Adresse Id */
+            adresse_id?: string | null;
+            /** Leitweg Id */
+            leitweg_id?: string | null;
+            /** Elektronische Adresse */
+            elektronische_adresse?: string | null;
+            /**
+             * Eas Scheme
+             * @default EM
+             */
+            eas_scheme: string;
+        };
+        /** BankverbindungCreate */
+        BankverbindungCreate: {
+            /** Iban */
+            iban: string;
+            /** Inhaber */
+            inhaber?: string | null;
+            /** Bic */
+            bic?: string | null;
+            /** Bank Name */
+            bank_name?: string | null;
+        };
+        /** BankverbindungRead */
+        BankverbindungRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Iban */
+            iban: string;
+            /** Inhaber */
+            inhaber?: string | null;
+            /** Bic */
+            bic?: string | null;
+            /** Bank Name */
+            bank_name?: string | null;
+        };
+        /** BankverbindungUpdate */
+        BankverbindungUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Iban */
+            iban: string;
+            /** Inhaber */
+            inhaber?: string | null;
+            /** Bic */
+            bic?: string | null;
+            /** Bank Name */
+            bank_name?: string | null;
         };
         /** BestellpositionCreate */
         BestellpositionCreate: {
@@ -2757,11 +3044,15 @@ export interface components {
         };
         /**
          * RechnungBerechnen
-         * @description Body for the /berechnen action. No discount/surcharge columns on rechnung v1.
+         * @description Body for the /berechnen action.
          */
         RechnungBerechnen: {
             /** Row Version */
             row_version: number;
+            /** Nachlass Betrag */
+            nachlass_betrag?: number | string | null;
+            /** Zuschlag Betrag */
+            zuschlag_betrag?: number | string | null;
         };
         /** RechnungCreate */
         RechnungCreate: {
@@ -2943,10 +3234,14 @@ export interface components {
             supersedes_id?: string | null;
             /** Waehrung */
             waehrung: string;
-            /** Betrag Netto */
-            betrag_netto?: string | null;
-            /** Betrag Brutto */
-            betrag_brutto?: string | null;
+            /** Summe Netto */
+            summe_netto?: string | null;
+            /** Nachlass Betrag */
+            nachlass_betrag?: string | null;
+            /** Zuschlag Betrag */
+            zuschlag_betrag?: string | null;
+            /** Summe Brutto */
+            summe_brutto?: string | null;
             /** Steuer Behandlung */
             steuer_behandlung?: string | null;
             /** Ust Satz */
@@ -2957,6 +3252,12 @@ export interface components {
             einvoice_format?: string | null;
             /** Einvoice Artifact Id */
             einvoice_artifact_id?: string | null;
+            /** Rechnungsdatum */
+            rechnungsdatum?: string | null;
+            /** Faelligkeitsdatum */
+            faelligkeitsdatum?: string | null;
+            /** Leistungsdatum */
+            leistungsdatum?: string | null;
         };
         /** RechnungUpdate */
         RechnungUpdate: {
@@ -2971,6 +3272,105 @@ export interface components {
              * @default EUR
              */
             waehrung: string;
+        };
+        /** TenantBillingProfileCreate */
+        TenantBillingProfileCreate: {
+            /** Adresse Id */
+            adresse_id?: string | null;
+            /** Bankverbindung Id */
+            bankverbindung_id?: string | null;
+            /** Elektronische Adresse */
+            elektronische_adresse?: string | null;
+            /**
+             * Eas Scheme
+             * @default EM
+             */
+            eas_scheme: string;
+            /** Kontakt Name */
+            kontakt_name?: string | null;
+            /** Kontakt Tel */
+            kontakt_tel?: string | null;
+            /** Kontakt Email */
+            kontakt_email?: string | null;
+            /**
+             * Zahlungsziel Tage
+             * @default 30
+             */
+            zahlungsziel_tage: number;
+        };
+        /** TenantBillingProfileRead */
+        TenantBillingProfileRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /** Adresse Id */
+            adresse_id?: string | null;
+            /** Bankverbindung Id */
+            bankverbindung_id?: string | null;
+            /** Elektronische Adresse */
+            elektronische_adresse?: string | null;
+            /** Eas Scheme */
+            eas_scheme: string;
+            /** Kontakt Name */
+            kontakt_name?: string | null;
+            /** Kontakt Tel */
+            kontakt_tel?: string | null;
+            /** Kontakt Email */
+            kontakt_email?: string | null;
+            /** Zahlungsziel Tage */
+            zahlungsziel_tage: number;
+        };
+        /** TenantBillingProfileUpdate */
+        TenantBillingProfileUpdate: {
+            /** Row Version */
+            row_version: number;
+            /** Adresse Id */
+            adresse_id?: string | null;
+            /** Bankverbindung Id */
+            bankverbindung_id?: string | null;
+            /** Elektronische Adresse */
+            elektronische_adresse?: string | null;
+            /**
+             * Eas Scheme
+             * @default EM
+             */
+            eas_scheme: string;
+            /** Kontakt Name */
+            kontakt_name?: string | null;
+            /** Kontakt Tel */
+            kontakt_tel?: string | null;
+            /** Kontakt Email */
+            kontakt_email?: string | null;
+            /**
+             * Zahlungsziel Tage
+             * @default 30
+             */
+            zahlungsziel_tage: number;
         };
         /** TenantTaxProfileRead */
         TenantTaxProfileRead: {
@@ -3225,6 +3625,454 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_adresse_api_adresse_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdresseRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_adresse_api_adresse_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdresseCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdresseRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_adresse_api_adresse__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdresseRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_adresse_api_adresse__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdresseUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdresseRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_adresse_api_adresse__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_bankverbindung_api_bankverbindung_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankverbindungRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_bankverbindung_api_bankverbindung_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankverbindungCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankverbindungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_bankverbindung_api_bankverbindung__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankverbindungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_bankverbindung_api_bankverbindung__id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankverbindungUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankverbindungRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_bankverbindung_api_bankverbindung__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_billing_profile_api_tenant_billing_profile_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantBillingProfileRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_billing_profile_api_tenant_billing_profile_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenantBillingProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantBillingProfileRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_billing_profile_api_tenant_billing_profile_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenantBillingProfileCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantBillingProfileRead"];
+                };
             };
             /** @description Validation Error */
             422: {
