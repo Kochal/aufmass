@@ -11,19 +11,32 @@ production call — status: pending (directive 09).
 from __future__ import annotations
 
 import base64
+import json
 import logging
 import time
-from typing import Any
+from typing import Any, Mapping
 
-from mistralai import Mistral
+from mistralai.client import Mistral
+from mistralai.client.models.jsonschema import JSONSchema
+from mistralai.client.models.responseformat import ResponseFormat
 
 from app.aufmass.schema import AufmassExtractionResult
 from app.config import settings
 
 log = logging.getLogger(__name__)
 
-_TIMEOUT = 300.0
+_TIMEOUT = 300_000   # ms — generous for large images
 _RETRY_DELAYS = [5.0, 15.0, 45.0]
+
+# JSON schema derived once at import time; stable across requests.
+_ANNOTATION_FORMAT = ResponseFormat(
+    type="json_schema",
+    json_schema=JSONSchema(
+        name="AufmassExtractionResult",
+        schema_definition=AufmassExtractionResult.model_json_schema(),
+        strict=True,
+    ),
+)
 
 _ANNOTATION_PROMPT = """\
 You are reading a German handwritten Aufmaß (measurement) sheet from a painter or
@@ -37,8 +50,8 @@ Rules:
 - Do NOT compute arithmetic. Record what is written: operands and operator separately.
   Example: "3,86 × 0,74" → op="*", args with value "3,86" and "0,74".
 - German decimal commas: preserve exactly as written ("3,86" not "3.86").
-- Where a digit or decimal comma is ambiguous, list every plausible reading in
-  the leaf's candidates list.
+- Where a digit or decimal comma is ambiguous, list every plausible reading in the
+  leaf's candidates list.
 - Struck-through entries: include with struck=true.
 - Unreadable entries: still emit with raw_text and confidence near 0.
 - Group numbers by contextual proximity (same Bauteil), not by row or column.
@@ -93,7 +106,7 @@ def extract(image_bytes: bytes, mime_type: str = "image/jpeg") -> dict[str, Any]
 # ---------------------------------------------------------------------------
 
 def _make_client() -> Mistral:
-    return Mistral(api_key=settings.mistral_api_key, timeout_ms=int(_TIMEOUT * 1000))
+    return Mistral(api_key=settings.mistral_api_key, timeout_ms=_TIMEOUT)
 
 
 def _call_with_retry(client: Mistral, data_url: str) -> AufmassExtractionResult:
@@ -109,7 +122,7 @@ def _call_with_retry(client: Mistral, data_url: str) -> AufmassExtractionResult:
             response = client.ocr.process(
                 model=settings.mistral_model_id,
                 document={"type": "image_url", "image_url": data_url},
-                document_annotation_format=AufmassExtractionResult,
+                document_annotation_format=_ANNOTATION_FORMAT,
                 document_annotation_prompt=_ANNOTATION_PROMPT,
                 confidence_scores_granularity="word",
                 include_blocks=True,
@@ -142,13 +155,15 @@ def _call_with_retry(client: Mistral, data_url: str) -> AufmassExtractionResult:
 def _parse_annotation(response: Any) -> AufmassExtractionResult:
     """Extract and validate the structured annotation from the OCR response."""
     annotation = getattr(response, "document_annotation", None)
-    if annotation is None:
+    if not annotation:
         raise ExtractionError(
             "Mistral response has no document_annotation; "
             "check that document_annotation_format was accepted"
         )
     if isinstance(annotation, AufmassExtractionResult):
         return annotation
+    if isinstance(annotation, str):
+        return AufmassExtractionResult.model_validate_json(annotation)
     if isinstance(annotation, dict):
         return AufmassExtractionResult.model_validate(annotation)
     raise ExtractionError(
