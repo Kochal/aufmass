@@ -9,7 +9,7 @@
  * AppShell). Buchhaltung sees issued invoices; Büro sees everything.
  */
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { apiClient, unwrap } from "@/lib/api";
 import {
   Table,
@@ -125,10 +125,14 @@ export function AngebotList() {
 }
 
 function AngebotRow({ angebot }: { angebot: AngebotRead }) {
-  const isDraft = angebot.status === "draft";
+  const navigate = useNavigate();
+  const to = `/office/angebote/${angebot.id}/review`;
 
   return (
-    <TableRow>
+    <TableRow
+      className="cursor-pointer"
+      onClick={() => navigate(to)}
+    >
       <TableCell className="font-mono text-sm">
         {angebot.angebotsnummer ?? (
           <span className="text-muted-foreground italic">nicht ausgestellt</span>
@@ -150,16 +154,11 @@ function AngebotRow({ angebot }: { angebot: AngebotRead }) {
           : "—"}
       </TableCell>
       <TableCell>
-        {isDraft && (
-          <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-            <Link
-              to={`/office/angebote/${angebot.id}/review`}
-              title="Prüfung öffnen"
-            >
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        )}
+        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+          <Link to={to} title="Öffnen" onClick={(e) => e.stopPropagation()}>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Button>
       </TableCell>
     </TableRow>
   );
