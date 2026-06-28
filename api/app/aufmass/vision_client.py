@@ -40,22 +40,33 @@ _ANNOTATION_FORMAT = ResponseFormat(
 
 _ANNOTATION_PROMPT = """\
 You are reading a German handwritten Aufmaß (measurement) sheet from a painter or
-floor layer (Maler/Bodenleger).
+floor layer (Maler/Bodenleger). The sheet is a printed grid with handwritten entries.
 
-EXTRACT: every handwritten measurement, calculation, dimension, and label.
-IGNORE: all printed column headers and grid lines — e.g. Länge, Breite, Höhe, Stück,
-Menge, Anzahl, Pos., Nr., and their abbreviations. These are pre-printed form elements.
+FORM STRUCTURE — use these printed column headers to interpret each handwritten entry:
+- "Bauteil" column: the building component label (e.g. Wand, Decke, Boden, Schrägfläche).
+  Use this as the bauteil for all entries in that row group.
+- "Seite" column: page/face context. Record it in notes if present.
+- Ignore the measurement-unit column headers (Länge, Breite, Höhe, Stück, Menge, Abzug,
+  Summe, Pos., Nr.) — these label the columns but carry no handwritten value themselves.
+
+EXTRACT every handwritten measurement, calculation, dimension, and label.
+EMIT one entry per distinct measurement or sub-calculation — not one entry per table row.
+A single table row often contains multiple entries in different cells.
 
 Rules:
-- Do NOT compute arithmetic. Record what is written: operands and operator separately.
-  Example: "3,86 × 0,74" → op="*", args with value "3,86" and "0,74".
+- Do NOT compute arithmetic. Record operands and operator only.
+  Example: "3,86 × 0,74" → op="*", args=[{value:"3,86"}, {value:"0,74"}].
+- An expression MAY span multiple adjacent cells in the same row. If the handwritten
+  content reads continuously across a cell boundary (e.g. "… x" in one cell and
+  "1,93 x 2" in the next), treat the whole run as one expression.
 - German decimal commas: preserve exactly as written ("3,86" not "3.86").
-- Where a digit or decimal comma is ambiguous, list every plausible reading in the
-  leaf's candidates list.
+- Ambiguous glyphs (0/5/6/8, 1/7, comma/period): list every plausible reading in
+  the leaf's candidates list, most-likely first. Never silently pick one reading.
 - Struck-through entries: include with struck=true.
 - Unreadable entries: still emit with raw_text and confidence near 0.
-- Group numbers by contextual proximity (same Bauteil), not by row or column.
 - Windows, doors, openings that are subtracted: is_deduction=true.
+- A dimension that appears in the Abzug column is a deduction even without explicit
+  minus sign.
 """
 
 
