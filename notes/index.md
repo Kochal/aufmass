@@ -8,6 +8,7 @@ Organised by area, newest first within each area.
 ## aufmass
 | Date | File | Summary |
 |------|------|---------|
+| 2026-06-28 | [two-step-benchmark](aufmass/2026-06-28-two-step-benchmark.md) | two-step (raw OCR + mistral-small structuring) vs one-step: fixes cross-cell expression split; recommend as primary path; 0,5 misread and cell truncation remain |
 | 2026-06-28 | [ocr-quality-findings](aufmass/2026-06-28-ocr-quality-findings.md) | Three structural OCR problems: 0,80→0,5 misread (both scales), expression split at cell boundary, multi-line cell truncation; two-step approach now load-bearing, not optional |
 | 2026-06-28 | [mistral-ocr4-benchmark](aufmass/2026-06-28-mistral-ocr4-benchmark.md) | First live benchmark vs sample sheet: 25 entries, no hallucination, expression tree works; bbox mapping implemented (22/25, 3 non-numeric misses expected); v2 SDK import paths documented |
 | 2026-06-28 | [mistral-document-ai-pivot](aufmass/2026-06-28-mistral-document-ai-pivot.md) | Decision to pivot Aufmaß extraction to Mistral Document AI (`mistral-ocr-4-0`); decision 3 relaxed to co-equal per-step routing; DPA pending; compliance checklist; technical shape for code round |
@@ -17,6 +18,7 @@ Organised by area, newest first within each area.
 ## quotation
 | Date | File | Summary |
 |------|------|---------|
+| 2026-06-28 | [xrechnung-einvoice](quotation/2026-06-28-xrechnung-einvoice.md) | XRechnung UBL 2.1 + KoSIT gate live: issue-flow restructure, party master data (adresse/bankverbindung/billing-profile), unit codes, filesystem write-once store, Steuerberater flags |
 | 2026-06-26 | [quotation-engine-api](quotation/2026-06-26-quotation-engine-api.md) | 06 app layer complete: pricing engine (Decimal/HALF_UP), checks engine, 9 entities, berechnen→pruefen→ausstellen→version flow; deferred: XRechnung/KoSIT, GAEB, PDF matching |
 | 2026-06-23 | [quotation-db-layer](quotation/2026-06-23-quotation-db-layer.md) | Migrations 0015–0019: LV/Angebot/Rechnung schema; what the DB enforces vs. what the app layer owns |
 
