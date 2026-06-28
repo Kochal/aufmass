@@ -1,12 +1,20 @@
 """Vision extraction client for Aufmaß sheets (directive 07a).
 
-Sends a prepared image to Mistral Document AI and returns structured
-extraction candidates. Does no arithmetic, rounding, or validation —
-that is the reconciler's job (directive 07).
+Extracts structured measurement candidates from a prepared image using a
+two-step pipeline:
+  1. Mistral OCR (mistral-ocr-4-0) — raw page markdown, table blocks, bboxes
+  2. Mistral chat (mistral-small-latest) — structures the full markdown text
+     into AufmassExtractionResult JSON
 
-Compliance: Mistral Document AI is on the named EU-native processor allowlist
-(directive 03). A signed DPA and no-training tier are required before first
-production call — status: pending (directive 09).
+The two-step path is used because the one-step document_annotation_format
+treats | table-cell delimiters as expression boundaries, splitting formulas
+that workers write across the STCK and LV-POSITION columns. The chat model
+reads the full row as a string and correctly joins cross-cell expressions.
+See notes/aufmass/2026-06-28-two-step-benchmark.md.
+
+Does no arithmetic, rounding, or validation — that is the reconciler's job
+(directive 07). On failure raises ExtractionError; the caller routes to manual
+review.
 """
 from __future__ import annotations
 
@@ -25,11 +33,13 @@ from app.config import settings
 
 log = logging.getLogger(__name__)
 
-_TIMEOUT = 300_000   # ms
+_TIMEOUT = 300_000           # ms, applied to both API calls
 _RETRY_DELAYS = [5.0, 15.0, 45.0]
 
-# Pre-built once at import time; stable for the lifetime of the process.
-_ANNOTATION_FORMAT = ResponseFormat(
+_OCR_MODEL = settings.mistral_model_id   # "mistral-ocr-4-0"
+_STRUCTURE_MODEL = "mistral-small-latest"
+
+_STRUCTURE_FORMAT = ResponseFormat(
     type="json_schema",
     json_schema=JSONSchema(
         name="AufmassExtractionResult",
@@ -38,173 +48,180 @@ _ANNOTATION_FORMAT = ResponseFormat(
     ),
 )
 
-_ANNOTATION_PROMPT = """\
-You are reading a German handwritten Aufmaß (measurement) sheet from a painter or
-floor layer (Maler/Bodenleger). The sheet is a printed grid with handwritten entries.
+_SYSTEM_PROMPT = """\
+You are extracting structured measurement data from a German handwritten Aufmaß
+(measurement) sheet for a painter or floor layer (Maler/Bodenleger).
 
-FORM STRUCTURE — use these printed column headers to interpret each handwritten entry:
-- "Bauteil" column: the building component label (e.g. Wand, Decke, Boden, Schrägfläche).
-  Use this as the bauteil for all entries in that row group.
-- "Seite" column: page/face context. Record it in notes if present.
-- Ignore the measurement-unit column headers (Länge, Breite, Höhe, Stück, Menge, Abzug,
-  Summe, Pos., Nr.) — these label the columns but carry no handwritten value themselves.
+The sheet is formatted as a printed table. Column meanings (left to right):
+  Bauteil                — building component label (Wand, Decke, Boden, Schrägfläche …)
+  LÄNGE                  — primary length dimension
+  BREITE                 — width
+  HÖHE                   — height
+  STCK                   — piece count or additional factor/formula
+  ABZUG                  — deduction (window, door, recess to subtract)
+  SUMME                  — sum (often empty)
+  LV-POSITION/LEISTUNG   — work-item description or formula continuation from STCK
 
-EXTRACT every handwritten measurement, calculation, dimension, and label.
-EMIT one entry per distinct measurement or sub-calculation — not one entry per table row.
-A single table row often contains multiple entries in different cells.
+CRITICAL: The table is rendered as markdown with | cell delimiters, but a single
+handwritten expression often flows across multiple adjacent cells in one row.
+Read the entire row as a unit. If a cell ends with a dangling operator (×, +, -, /)
+the next non-empty cell in the same row continues the same expression.
+
+Example row:
+  | W. Fächel | 0,74 x 2,84 |  |  | + (2,84 + 0,86) / 2 x |  |  | 1,93 x 2 | 1,81 x 0,1 |
+This row contains THREE entries:
+  1. 0,74 x 2,84                       (wall area — separate entry)
+  2. (2,84 + 0,86) / 2 × 1,93 × 2     (STCK ends with ×, continues in LV-POS)
+  3. 1,81 x 0,1                        (Leiste — separate entry in last column)
 
 Rules:
 - Do NOT compute arithmetic. Record operands and operator only.
-  Example: "3,86 × 0,74" → op="*", args=[{value:"3,86"}, {value:"0,74"}].
-- An expression MAY span multiple adjacent cells in the same row. If the handwritten
-  content reads continuously across a cell boundary (e.g. "… x" in one cell and
-  "1,93 x 2" in the next), treat the whole run as one expression.
 - German decimal commas: preserve exactly as written ("3,86" not "3.86").
-- Ambiguous glyphs (0/5/6/8, 1/7, comma/period): list every plausible reading in
-  the leaf's candidates list, most-likely first. Never silently pick one reading.
-- Struck-through entries: include with struck=true.
-- Unreadable entries: still emit with raw_text and confidence near 0.
-- Windows, doors, openings that are subtracted: is_deduction=true.
-- A dimension that appears in the Abzug column is a deduction even without explicit
-  minus sign.
+- Struck-through entries: struck=true.
+- Unreadable entries: emit with raw_text and confidence near 0.
+- ABZUG column values: is_deduction=true.
+- Bauteil column: use as the bauteil field for all entries in that row group.
+- Seite column: page/face context — record in notes if present.
+- Ignore printed column-header labels (LÄNGE, BREITE, HÖHE, STCK, ABZUG, SUMME).
 """
 
 
 class ExtractionError(Exception):
-    """Raised when the model is unreachable or returns an unusable response.
+    """Raised when OCR or structuring is unreachable or returns unusable output.
 
     The caller must route the sheet to manual review — never guess.
     """
 
 
 def extract(image_bytes: bytes, mime_type: str = "image/jpeg") -> dict[str, Any]:
-    """Submit one prepared Aufmaß image and return the model's raw candidates.
+    """Extract structured measurement candidates from one prepared Aufmaß image.
 
     Parameters
     ----------
     image_bytes:
-        The prepared image (deskewed, oriented). Preprocessing is the
-        caller's responsibility (directive 07).
+        Prepared image (deskewed, oriented). Preprocessing is the caller's
+        responsibility (directive 07).
     mime_type:
         MIME type of the image data.
 
     Returns
     -------
     dict
-        ``{"entries": [...], "_model": ..., "_endpoint": ...}``
-        Entries match ``AufmassEntry``; bbox (0..1 fractions) is populated
-        where the text-match against raw OCR blocks succeeds. Provenance
-        keys for traceability (directive 03). The reconciler (directive 07)
-        does all arithmetic and confidence-gating.
+        ``{"entries": [...], "_model": ..., "_structure_model": ..., "_endpoint": ...}``
+        Entries match ``AufmassEntry``; bbox (0..1 fractions) populated where
+        text-match against raw OCR table rows succeeds. Provenance keys for
+        traceability (directive 03). The reconciler does all arithmetic.
 
     Raises
     ------
     ExtractionError
-        When the model is unreachable after retries, or the response
-        cannot be parsed as a valid annotation.
+        When either API step is unreachable after retries, or the response
+        cannot be parsed as valid AufmassExtractionResult.
     """
     data_url = f"data:{mime_type};base64,{base64.b64encode(image_bytes).decode()}"
     client = _make_client()
-    result = _call_with_retry(client, data_url)
+
+    ocr_response = _ocr(client, data_url)
+    markdown = ocr_response.pages[0].markdown
+    result = _structure(client, markdown)
+    _assign_bboxes(result.entries, ocr_response)
+
     out = result.model_dump(mode="json")
-    out["_model"] = settings.mistral_model_id
+    out["_model"] = _OCR_MODEL
+    out["_structure_model"] = _STRUCTURE_MODEL
     out["_endpoint"] = "api.mistral.ai"
     return out
 
 
 # ---------------------------------------------------------------------------
-# Internal helpers
+# Step 1: raw OCR
 # ---------------------------------------------------------------------------
 
-def _make_client() -> Mistral:
-    return Mistral(api_key=settings.mistral_api_key, timeout_ms=_TIMEOUT)
-
-
-def _call_with_retry(client: Mistral, data_url: str) -> AufmassExtractionResult:
+def _ocr(client: Mistral, data_url: str) -> Any:
     last_exc: Exception | None = None
-
     for attempt, delay in enumerate([0.0] + _RETRY_DELAYS):
         if delay:
-            log.info("aufmass.vision_client: retry %d after %.0fs", attempt, delay)
+            log.info("vision_client: OCR retry %d after %.0fs", attempt, delay)
             time.sleep(delay)
-
         try:
             t0 = time.monotonic()
-            response = client.ocr.process(
-                model=settings.mistral_model_id,
+            resp = client.ocr.process(
+                model=_OCR_MODEL,
                 document={"type": "image_url", "image_url": data_url},
-                document_annotation_format=_ANNOTATION_FORMAT,
-                document_annotation_prompt=_ANNOTATION_PROMPT,
-                confidence_scores_granularity="word",
                 include_blocks=True,
                 extract_header=True,
             )
-            elapsed = time.monotonic() - t0
-            if elapsed > 30:
-                log.info("aufmass.vision_client: slow response %.0fs", elapsed)
-
-            result = _parse_annotation(response)
-            _assign_bboxes(result.entries, response)
-            return result
-
+            log.info(
+                "vision_client: OCR %.1fs  markdown %d chars",
+                time.monotonic() - t0, len(resp.pages[0].markdown),
+            )
+            return resp
         except Exception as exc:
             status = _status_code(exc)
             if status is not None and 400 <= status < 500:
-                raise ExtractionError(
-                    f"Mistral API client error {status}: {exc}"
-                ) from exc
-            log.warning(
-                "aufmass.vision_client: error on attempt %d: %s: %s",
-                attempt + 1, type(exc).__name__, exc,
-            )
+                raise ExtractionError(f"OCR API error {status}: {exc}") from exc
+            log.warning("vision_client: OCR attempt %d: %s", attempt + 1, exc)
             last_exc = exc
-            continue
-
-    raise ExtractionError(
-        f"Mistral unreachable after {len(_RETRY_DELAYS) + 1} attempts"
-    ) from last_exc
+    raise ExtractionError("OCR unreachable after retries") from last_exc
 
 
-def _parse_annotation(response: Any) -> AufmassExtractionResult:
-    """Extract and validate the structured annotation from the OCR response."""
-    annotation = getattr(response, "document_annotation", None)
-    if not annotation:
-        raise ExtractionError(
-            "Mistral response has no document_annotation; "
-            "check that document_annotation_format was accepted"
-        )
-    if isinstance(annotation, AufmassExtractionResult):
-        return annotation
-    if isinstance(annotation, str):
-        return AufmassExtractionResult.model_validate_json(annotation)
-    if isinstance(annotation, dict):
-        return AufmassExtractionResult.model_validate(annotation)
-    raise ExtractionError(
-        f"Unexpected document_annotation type {type(annotation).__name__}"
+# ---------------------------------------------------------------------------
+# Step 2: chat structuring
+# ---------------------------------------------------------------------------
+
+def _structure(client: Mistral, markdown: str) -> AufmassExtractionResult:
+    user_content = (
+        "Here is the OCR output from a German handwritten Aufmaß sheet:\n\n"
+        f"{markdown}\n\n"
+        "Extract all measurement entries as JSON."
     )
+    last_exc: Exception | None = None
+    for attempt, delay in enumerate([0.0] + _RETRY_DELAYS):
+        if delay:
+            log.info("vision_client: structure retry %d after %.0fs", attempt, delay)
+            time.sleep(delay)
+        try:
+            t0 = time.monotonic()
+            resp = client.chat.complete(
+                model=_STRUCTURE_MODEL,
+                messages=[
+                    {"role": "system", "content": _SYSTEM_PROMPT},
+                    {"role": "user", "content": user_content},
+                ],
+                response_format=_STRUCTURE_FORMAT,
+                temperature=0.0,
+            )
+            raw_json = resp.choices[0].message.content
+            log.info(
+                "vision_client: structure %.1fs  %d chars",
+                time.monotonic() - t0, len(raw_json),
+            )
+            return AufmassExtractionResult.model_validate_json(raw_json)
+        except Exception as exc:
+            status = _status_code(exc)
+            if status is not None and 400 <= status < 500:
+                raise ExtractionError(f"structure API error {status}: {exc}") from exc
+            log.warning("vision_client: structure attempt %d: %s", attempt + 1, exc)
+            last_exc = exc
+    raise ExtractionError("structure step unreachable after retries") from last_exc
 
 
 # ---------------------------------------------------------------------------
-# Bbox mapping: annotation entries → raw OCR table rows
+# Bbox mapping: entries → raw OCR table rows
 # ---------------------------------------------------------------------------
 
-def _assign_bboxes(entries: list[AufmassEntry], response: Any) -> None:
-    """Populate entry.bbox by text-matching against the raw OCR table block.
+def _assign_bboxes(entries: list[AufmassEntry], ocr_response: Any) -> None:
+    """Populate entry.bbox by matching numeric tokens against raw OCR table rows.
 
-    Mistral's document_annotation returns semantic structure without bboxes.
-    Bboxes live in the raw OCR table block (one block covers the whole
-    measurement table). This function estimates a per-row bbox by:
-      1. Parsing the page markdown into table rows.
-      2. For each annotation entry, finding the table row whose text contains
-         the most of the entry's numeric tokens (most-matches wins).
-      3. Computing a proportional vertical slice of the table block's bbox.
-      4. Normalising pixel coords to 0..1 fractions of page dimensions.
+    Estimates a per-row bbox by finding which table row in the page markdown
+    contains the most of an entry's German-decimal numeric tokens, then
+    computing a proportional vertical slice of the table block's pixel bbox
+    and normalising to 0..1 fractions of page dimensions.
 
-    Entries without numeric tokens (e.g. "dito", unreadable stubs) keep
-    bbox=None. The table's horizontal bounds are used as-is for all entries.
-    Mutates entries in place.
+    Entries with no numeric tokens (e.g. "dito", unreadable stubs) keep
+    bbox=None. Mutates entries in place.
     """
-    pages = getattr(response, "pages", None) or []
+    pages = getattr(ocr_response, "pages", None) or []
     if not pages:
         return
     page = pages[0]
@@ -213,17 +230,15 @@ def _assign_bboxes(entries: list[AufmassEntry], response: Any) -> None:
     if not dims or dims.width <= 0 or dims.height <= 0:
         return
 
-    # All handwritten measurements sit inside the one table block.
     table_block = next(
         (b for b in (getattr(page, "blocks", None) or [])
          if getattr(b, "type", "") == "table"),
         None,
     )
     if not table_block:
-        log.debug("aufmass.vision_client: no table block found; bboxes not assigned")
+        log.debug("vision_client: no table block; bboxes not assigned")
         return
 
-    # Parse markdown into table rows (skip separator lines and blanks).
     md = getattr(page, "markdown", "") or ""
     table_rows = [
         line for line in md.splitlines()
@@ -233,7 +248,6 @@ def _assign_bboxes(entries: list[AufmassEntry], response: Any) -> None:
     if n_rows == 0:
         return
 
-    # Normalised table bounds (0..1).
     w, h = dims.width, dims.height
     tbl_x1 = table_block.top_left_x / w
     tbl_y1 = table_block.top_left_y / h
@@ -245,7 +259,7 @@ def _assign_bboxes(entries: list[AufmassEntry], response: Any) -> None:
     for entry in entries:
         tokens = _numeric_tokens(entry.raw_text)
         if not tokens:
-            continue  # "dito", labels-only, or unreadable — leave bbox None
+            continue
         row_idx = _best_row(tokens, table_rows)
         if row_idx is None:
             continue
@@ -259,10 +273,7 @@ def _assign_bboxes(entries: list[AufmassEntry], response: Any) -> None:
         )
         assigned += 1
 
-    log.info(
-        "aufmass.vision_client: assigned bboxes to %d/%d entries via table-row match",
-        assigned, len(entries),
-    )
+    log.info("vision_client: assigned bboxes %d/%d", assigned, len(entries))
 
 
 def _numeric_tokens(text: str) -> list[str]:
@@ -271,10 +282,7 @@ def _numeric_tokens(text: str) -> list[str]:
 
 
 def _best_row(tokens: list[str], table_rows: list[str]) -> int | None:
-    """Return 0-based index of the table row whose text matches the most tokens.
-
-    Returns None if no row contains any token.
-    """
+    """Return 0-based index of the table row matching the most tokens."""
     best_score, best_idx = 0, None
     for i, row in enumerate(table_rows):
         score = sum(1 for t in tokens if t in row)
@@ -283,8 +291,15 @@ def _best_row(tokens: list[str], table_rows: list[str]) -> int | None:
     return best_idx if best_score > 0 else None
 
 
+# ---------------------------------------------------------------------------
+# Shared utilities
+# ---------------------------------------------------------------------------
+
+def _make_client() -> Mistral:
+    return Mistral(api_key=settings.mistral_api_key, timeout_ms=_TIMEOUT)
+
+
 def _status_code(exc: Exception) -> int | None:
-    """Best-effort HTTP status code extraction from an SDK exception."""
     for attr in ("status_code", "http_status", "status"):
         v = getattr(exc, attr, None)
         if isinstance(v, int):
