@@ -3,6 +3,11 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-29 (k): Fahrtenbuch + Fahrtzeiten screens live. FahrtenbuchList:
+  Fahrzeug CRUD (create/edit/soft-delete), Privatnutzung badge. FahrtzeitenList:
+  trip log mirroring Arbeitszeit pattern — freigabe_status/projekt filters,
+  Freigeben per row, Korrektur dialog, km total in header. TS clean, 119 tests.
+  See notes/ui/2026-06-29-fahrtenbuch-fahrtzeiten-screen.md.
 - 2026-06-29 (j): Arbeitszeit screen live (ArbeitszeitList). Filters by
   freigabe_status and projekt. Freigeben per row (PATCH /{id}/freigabe);
   Korrektur dialog for approved entries (POST /{id}/korrektur). Total hours
@@ -135,11 +140,11 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 13: Arbeitszeit screen live.** Office management view: filter by status
-and projekt, Freigeben per row, Korrektur dialog, total hours summary. GET
-/api/app-user endpoint added for name resolution. Rechnungen screen (Phase 12)
-also complete — all office surfaces live. 119 tests green.
-Next: Fahrt/Mangel field screens, real Entra SSO (09), swap ASR to self-hosted
+**Phase 14: Fahrtenbuch + Fahrtzeiten screens live.** Fahrzeug CRUD (create/
+edit/soft-delete, Privatnutzung flag) + FahrtzeitenList (trip log with freigabe/
+korrektur, km total, Von→Nach display). All planned field-log screens (Arbeitszeit,
+Fahrtenbuch, Fahrtzeiten) now complete. 119 tests green.
+Next: Mangel/Gewährleistung screen, real Entra SSO (09), swap ASR to self-hosted
 faster-whisper for production, vector embedding matching.
 
 ## Directive set

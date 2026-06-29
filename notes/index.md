@@ -44,6 +44,7 @@ Organised by area, newest first within each area.
 ## ui
 | Date | File | Summary |
 |------|------|---------|
+| 2026-06-29 | [fahrtenbuch-fahrtzeiten-screen](ui/2026-06-29-fahrtenbuch-fahrtzeiten-screen.md) | FahrtenbuchList (Fahrzeug CRUD, privat flag) + FahrtzeitenList (trip log, freigabe/korrektur, km total, Von→Nach) |
 | 2026-06-29 | [arbeitszeit-screen](ui/2026-06-29-arbeitszeit-screen.md) | ArbeitszeitList live: freigabe/projekt filters, Freigeben per row, Korrektur dialog, total hours in header; GET /api/app-user added for name resolution |
 | 2026-06-29 | [rechnungen-screen](ui/2026-06-29-rechnungen-screen.md) | RechnungList + RechnungDetail live: positions CRUD, berechnen/prüfen/ausstellen flow, KoSIT check results inline, XRechnung artifact display for issued; ComingSoon removed |
 | 2026-06-29 | [projekte-screen](ui/2026-06-29-projekte-screen.md) | ProjektList + ProjektDetail live: color-coded status badges, inline status change (PATCH), linked Angebote section, regime/abrechnungsart/Termine fields |

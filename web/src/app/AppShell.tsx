@@ -13,12 +13,14 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   BookOpen,
+  Car,
   Clock,
   FileText,
   FolderOpen,
   HardHat,
   LayoutDashboard,
   LogOut,
+  Navigation,
   Receipt,
   Users,
 } from "lucide-react";
@@ -55,6 +57,8 @@ export function AppShell() {
           { to: "/office/auftraggeber", icon: Users, label: "Auftraggeber" },
           { to: "/office/projekte", icon: FolderOpen, label: "Projekte" },
           { to: "/office/arbeitszeit", icon: Clock, label: "Arbeitszeit" },
+          { to: "/office/fahrtenbuch", icon: Car, label: "Fahrtenbuch" },
+          { to: "/office/fahrtzeiten", icon: Navigation, label: "Fahrtzeiten" },
         ]
       : []),
     ...(canAccessField(role)

@@ -15,6 +15,8 @@ import { AuftraggeberList, AuftraggeberDetail } from "@/surfaces/office/auftragg
 import { ProjektList, ProjektDetail } from "@/surfaces/office/projekte";
 import { RechnungList, RechnungDetail } from "@/surfaces/office/rechnungen";
 import { ArbeitszeitList } from "@/surfaces/office/arbeitszeit";
+import { FahrtenbuchList } from "@/surfaces/office/fahrtenbuch";
+import { FahrtzeitenList } from "@/surfaces/office/fahrtzeiten";
 import { AufmassList, AufmassReview } from "@/surfaces/field";
 import { DashboardStub } from "@/surfaces/dashboard";
 import { useAuth, canAccessOffice, canAccessField } from "@/auth/AuthContext";
@@ -46,6 +48,8 @@ export function AppRoutes() {
           <Route path="projekte" element={<ProjektList />} />
           <Route path="projekte/:id" element={<ProjektDetail />} />
           <Route path="arbeitszeit" element={<ArbeitszeitList />} />
+          <Route path="fahrtenbuch" element={<FahrtenbuchList />} />
+          <Route path="fahrtzeiten" element={<FahrtzeitenList />} />
           <Route path="katalog" element={<KatalogList />} />
           <Route path="katalog/:id" element={<KatalogDetail />} />
         </Route>
