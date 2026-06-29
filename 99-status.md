@@ -3,6 +3,12 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-29 (j): Arbeitszeit screen live (ArbeitszeitList). Filters by
+  freigabe_status and projekt. Freigeben per row (PATCH /{id}/freigabe);
+  Korrektur dialog for approved entries (POST /{id}/korrektur). Total hours
+  in header. GET /api/app-user endpoint added (read-only; user management
+  deferred to directive 09 Entra SSO). TS clean, 119 tests green.
+  See notes/ui/2026-06-29-arbeitszeit-screen.md.
 - 2026-06-29 (i): Rechnungen screen live (RechnungList + RechnungDetail). Full
   berechnen→prüfen→ausstellen workflow in the UI: positions CRUD (draft only),
   Nachlass/Zuschlag inputs, prüfen runs KoSIT+EN16931 checks inline with
@@ -129,14 +135,12 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 12: Rechnungen screen live — all office surfaces complete.** Full billing
-workflow in the UI: positions CRUD, berechnen, prüfen (KoSIT/EN16931 inline),
-ausstellen (gated on hard checks). All office routes now live — ComingSoon
-removed. Screens: Angebote, Katalog, Auftraggeber, Projekte, Rechnungen.
-119 tests green.
-Next: Arbeitszeit/Fahrt/Mangel field screens (voice-fill already wired; need
-dedicated UI), real Entra SSO (09), swap ASR to self-hosted faster-whisper for
-production, vector embedding matching.
+**Phase 13: Arbeitszeit screen live.** Office management view: filter by status
+and projekt, Freigeben per row, Korrektur dialog, total hours summary. GET
+/api/app-user endpoint added for name resolution. Rechnungen screen (Phase 12)
+also complete — all office surfaces live. 119 tests green.
+Next: Fahrt/Mangel field screens, real Entra SSO (09), swap ASR to self-hosted
+faster-whisper for production, vector embedding matching.
 
 ## Directive set
 

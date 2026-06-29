@@ -44,6 +44,7 @@ Organised by area, newest first within each area.
 ## ui
 | Date | File | Summary |
 |------|------|---------|
+| 2026-06-29 | [arbeitszeit-screen](ui/2026-06-29-arbeitszeit-screen.md) | ArbeitszeitList live: freigabe/projekt filters, Freigeben per row, Korrektur dialog, total hours in header; GET /api/app-user added for name resolution |
 | 2026-06-29 | [rechnungen-screen](ui/2026-06-29-rechnungen-screen.md) | RechnungList + RechnungDetail live: positions CRUD, berechnen/prüfen/ausstellen flow, KoSIT check results inline, XRechnung artifact display for issued; ComingSoon removed |
 | 2026-06-29 | [projekte-screen](ui/2026-06-29-projekte-screen.md) | ProjektList + ProjektDetail live: color-coded status badges, inline status change (PATCH), linked Angebote section, regime/abrechnungsart/Termine fields |
 | 2026-06-29 | [auftraggeber-screen](ui/2026-06-29-auftraggeber-screen.md) | AuftraggeberList + AuftraggeberDetail live: stammdaten/adresse/rechnungsdaten form, address upsert pattern, leitweg_id helper text, stub removed from nav |

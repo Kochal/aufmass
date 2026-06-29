@@ -13,6 +13,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   BookOpen,
+  Clock,
   FileText,
   FolderOpen,
   HardHat,
@@ -53,6 +54,7 @@ export function AppShell() {
           { to: "/office/rechnungen", icon: Receipt, label: "Rechnungen" },
           { to: "/office/auftraggeber", icon: Users, label: "Auftraggeber" },
           { to: "/office/projekte", icon: FolderOpen, label: "Projekte" },
+          { to: "/office/arbeitszeit", icon: Clock, label: "Arbeitszeit" },
         ]
       : []),
     ...(canAccessField(role)

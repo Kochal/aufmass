@@ -4,6 +4,40 @@
  */
 
 export interface paths {
+    "/api/app-user": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List App User */
+        get: operations["list_app_user_api_app_user_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/app-user/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get App User */
+        get: operations["get_app_user_api_app_user__id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/aufmass/upload": {
         parameters: {
             query?: never;
@@ -1492,6 +1526,36 @@ export interface paths {
         patch: operations["resolve_check_result_api_check_result__id__resolve_patch"];
         trace?: never;
     };
+    "/api/voice/intent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Voice Intent
+         * @description Transcribe audio and parse it into form field candidates.
+         *
+         *     The worker speaks e.g. "Bauteil Boden, Messwert drei achtzig" and the
+         *     response contains fills like ``[{field: "bauteil", value: "Boden", ...},
+         *     {field: "messwert", value: "3,80", ...}]``.
+         *
+         *     **Confirm-before-commit**: the caller must show these candidates to the user
+         *     for explicit confirmation before populating any form field. This endpoint
+         *     persists nothing — no document, no DB row.
+         *
+         *     Requires ``OPENAI_API_KEY`` (ASR) and ``MISTRAL_API_KEY`` (intent parse).
+         */
+        post: operations["voice_intent_api_voice_intent_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -1798,6 +1862,27 @@ export interface components {
              * @default EUR
              */
             waehrung: string;
+        };
+        /** AppUserRead */
+        AppUserRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /** Email */
+            email: string;
+            /** Display Name */
+            display_name?: string | null;
+            /** Role */
+            role: string;
+            /** Status */
+            status: string;
         };
         /** ArbeitszeitCreate */
         ArbeitszeitCreate: {
@@ -2467,6 +2552,16 @@ export interface components {
             /** Image */
             image: string;
         };
+        /** Body_voice_intent_api_voice_intent_post */
+        Body_voice_intent_api_voice_intent_post: {
+            /** Audio */
+            audio: string;
+            /**
+             * Fields
+             * @description JSON array of FieldSpec
+             */
+            fields: string;
+        };
         /** CheckResultRead */
         CheckResultRead: {
             /**
@@ -2721,6 +2816,24 @@ export interface components {
              * @default false
              */
             privat_genutzt: boolean;
+        };
+        /**
+         * FieldFill
+         * @description One voice-extracted field value, pending human confirmation.
+         */
+        FieldFill: {
+            /**
+             * Field
+             * @description Matches FieldSpec.name
+             */
+            field: string;
+            /**
+             * Value
+             * @description Extracted value, numbers in German decimal format
+             */
+            value: string;
+            /** Confidence */
+            confidence: number;
         };
         /** GewaehrleistungCreate */
         GewaehrleistungCreate: {
@@ -3959,6 +4072,28 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
+        /**
+         * VoiceIntentResponse
+         * @description Response from POST /api/voice/intent.
+         */
+        VoiceIntentResponse: {
+            /**
+             * Transcript
+             * @description Raw ASR transcript
+             */
+            transcript: string;
+            /**
+             * Fills
+             * @description Extracted field fills, pending confirmation
+             */
+            fills: components["schemas"]["FieldFill"][];
+            /** Asr Model */
+            asr_model: string;
+            /** Structure Model */
+            structure_model: string;
+            /** Endpoint */
+            endpoint: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -3968,6 +4103,72 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_app_user_api_app_user_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppUserRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_app_user_api_app_user__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppUserRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     upload_aufmass_api_aufmass_upload_post: {
         parameters: {
             query?: never;
@@ -9090,6 +9291,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CheckResultRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    voice_intent_api_voice_intent_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_voice_intent_api_voice_intent_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceIntentResponse"];
                 };
             };
             /** @description Validation Error */
