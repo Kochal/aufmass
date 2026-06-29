@@ -20,24 +20,24 @@ const ROLE_LABELS: Record<Role, string> = {
   monteur: "Monteur / Geselle",
 };
 
-/** Quick-access presets — replace UUIDs with real seeded values after migration. */
+/** Quick-access presets — seeded demo tenant (seed.py T1_ID / T1_USER_ID). */
 const PRESETS: Array<{ label: string; tenantId: string; userId: string; role: Role }> = [
   {
     label: "Büro (Demo)",
-    tenantId: "00000000-0000-0000-0000-000000000001",
-    userId: "00000000-0000-0000-0000-000000000010",
+    tenantId: "11111111-0000-0000-0000-000000000001",
+    userId: "11111111-0000-0000-0000-000000000002",
     role: "buero",
   },
   {
     label: "Admin (Demo)",
-    tenantId: "00000000-0000-0000-0000-000000000001",
-    userId: "00000000-0000-0000-0000-000000000011",
+    tenantId: "11111111-0000-0000-0000-000000000001",
+    userId: "11111111-0000-0000-0000-000000000002",
     role: "admin",
   },
   {
     label: "Monteur (Demo)",
-    tenantId: "00000000-0000-0000-0000-000000000001",
-    userId: "00000000-0000-0000-0000-000000000012",
+    tenantId: "11111111-0000-0000-0000-000000000001",
+    userId: "11111111-0000-0000-0000-000000000002",
     role: "monteur",
   },
 ];

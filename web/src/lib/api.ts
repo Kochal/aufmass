@@ -15,7 +15,7 @@ import type { paths } from "@/api/schema";
 const AUTH_STORAGE_KEY = "dev-auth";
 
 /** Read auth headers from localStorage (synchronous, works outside React). */
-function getAuthHeaders(): Record<string, string> {
+export function getAuthHeaders(): Record<string, string> {
   try {
     const stored = localStorage.getItem(AUTH_STORAGE_KEY);
     if (!stored) return {};

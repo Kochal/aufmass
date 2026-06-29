@@ -51,7 +51,7 @@ export function AppShell() {
         ]
       : []),
     ...(canAccessField(role)
-      ? [{ to: "/field", icon: HardHat, label: "Aufmaß", stub: true }]
+      ? [{ to: "/field", icon: HardHat, label: "Aufmaß" }]
       : []),
   ];
 

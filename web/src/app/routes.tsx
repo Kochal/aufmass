@@ -2,18 +2,15 @@
  * Route tree for the Aufmaß app.
  *
  * Three surfaces:
- *   office/* — quote review, invoices, clients (live in this phase)
- *   field/*  — Aufmaß capture (stub — no backend endpoints yet, see notes/ui/)
+ *   office/* — quote review, invoices, clients
+ *   field/*  — Aufmaß capture and entry review
  *   /dashboard — owner overview (stub)
- *
- * The app shell handles the sidebar nav; each surface owns its layout within
- * the <Outlet />.
  */
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AppShell } from "@/app/AppShell";
 import { AngebotList } from "@/surfaces/office/quotes/AngebotList";
 import { AngebotReview } from "@/surfaces/office/quotes/AngebotReview";
-import { FieldStub } from "@/surfaces/field";
+import { AufmassList, AufmassReview } from "@/surfaces/field";
 import { DashboardStub } from "@/surfaces/dashboard";
 import { useAuth, canAccessOffice, canAccessField } from "@/auth/AuthContext";
 
@@ -60,8 +57,11 @@ export function AppRoutes() {
           />
         </Route>
 
-        {/* Field surface (deferred) */}
-        <Route path="field/*" element={<FieldStub />} />
+        {/* Field surface */}
+        <Route path="field">
+          <Route index element={<AufmassList />} />
+          <Route path=":aufmassId" element={<AufmassReview />} />
+        </Route>
 
         {/* Owner dashboard (deferred) */}
         <Route path="dashboard" element={<DashboardStub />} />
