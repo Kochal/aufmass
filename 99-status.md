@@ -3,6 +3,28 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-30 (r): Angebot manual workflow + position editing fixes. Manual
+  Angebot creation (Auftraggeber + Projekt picker → navigate to review).
+  Manual position add (creates LV if none exists; source="manual";
+  match_status="review"). Position field edit via pencil on left pane of
+  PositionCard (distinct from "Korrigieren" = catalog picker on right pane);
+  editing always resets match_status to "review". Delete in edit dialog with
+  two-click confirm. Input cursor loss fixed (wrapper div now always rendered
+  when clearable — conditional mount/unmount was dropping focus on first
+  keystroke). "manual" badge label germanised to "Manuell". "Annehmen" now
+  enabled for manual positions without a catalog match. Katalog: manual entry
+  code auto-suggested from highest trailing number in catalog (padded 3 digits).
+  Nominatim geocoding: Nominatim policy prohibits autocomplete; replaced
+  debounced-per-keystroke with explicit search button. Nominatim User-Agent
+  default fixed (example.com placeholder was 403'd). Address search popup now
+  closes when query is cleared. TS clean throughout.
+  See notes/ui/2026-06-30-angebot-position-editing.md,
+  notes/infra/2026-06-29-nominatim-geocoding.md.
+- 2026-06-29 (q): UI overhaul round 3 complete (Nominatim geocoding).
+  Server-side proxy GET /api/geocode → nominatim.openstreetmap.org. Config:
+  NOMINATIM_URL + NOMINATIM_USER_AGENT. AddressFields: explicit search button
+  (one request per click; no autocomplete per OSM policy); fills all address
+  fields from selected suggestion. TS clean.
 - 2026-06-29 (p): UI overhaul rounds 1–2 complete. Round 1a: clickable rows on
   all list screens (useNavigate + onClick on TableRow). Round 1b: all 41 native
   <select> across 14 files replaced with Combobox (Popover+Command, searchable,

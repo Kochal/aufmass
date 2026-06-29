@@ -49,7 +49,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Keyboard, Plus, ScanSearch } from "lucide-react";
+import { ArrowLeft, Keyboard, Plus, ScanSearch, Trash2 } from "lucide-react";
 
 type LvPositionRead = components["schemas"]["LvPositionRead"];
 type CheckResultRead = components["schemas"]["CheckResultRead"];
@@ -68,6 +68,7 @@ function EditPositionDialog({
   onClose: () => void;
 }) {
   const qc = useQueryClient();
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [form, setForm] = useState({
     kurztext: "",
     langtext: "",
@@ -76,21 +77,9 @@ function EditPositionDialog({
     einheitspreis: "",
   });
 
-  // Populate form when position changes
-  useState(() => {
-    if (position) {
-      setForm({
-        kurztext: position.kurztext ?? "",
-        langtext: position.langtext ?? "",
-        menge: position.menge ?? "",
-        einheit: position.einheit ?? "",
-        einheitspreis: position.einheitspreis ?? "",
-      });
-    }
-  });
-
   useEffect(() => {
     if (position && open) {
+      setConfirmDelete(false);
       setForm({
         kurztext: position.kurztext ?? "",
         langtext: position.langtext ?? "",
@@ -119,12 +108,28 @@ function EditPositionDialog({
           einheitspreis: form.einheitspreis || undefined,
           matched_leistung_id: position.matched_leistung_id,
           match_confidence: position.match_confidence,
-          match_status: position.match_status,
+          // Reset to review so changes go back into the queue
+          match_status: "review",
           source: position.source,
           position_nr: position.position_nr,
         },
       });
       return unwrap(res);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["lv-position"] });
+      onClose();
+    },
+    onError: (err) =>
+      toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
+  });
+
+  const del = useMutation({
+    mutationFn: async () => {
+      if (!position) return;
+      await apiClient.DELETE("/api/lv-position/{id}", {
+        params: { path: { id: position.id } },
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lv-position"] });
@@ -195,11 +200,41 @@ function EditPositionDialog({
             </div>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Abbrechen</Button>
-          <Button disabled={!form.kurztext || save.isPending} onClick={() => save.mutate()}>
-            Speichern
-          </Button>
+        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+          <div>
+            {!confirmDelete ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1" />
+                Löschen
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-destructive">Wirklich löschen?</span>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={del.isPending}
+                  onClick={() => del.mutate()}
+                >
+                  Ja, löschen
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>
+                  Nein
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>Abbrechen</Button>
+            <Button disabled={!form.kurztext || save.isPending} onClick={() => save.mutate()}>
+              Speichern
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

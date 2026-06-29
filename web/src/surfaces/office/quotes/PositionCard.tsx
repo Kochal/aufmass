@@ -104,7 +104,7 @@ export function PositionCard({
             )}
             {position.source && (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
-                {position.source === "gaeb" ? "GAEB" : position.source === "pdf" ? "PDF" : position.source}
+                {({ gaeb: "GAEB", pdf: "PDF", manual: "Manuell" } as Record<string, string>)[position.source] ?? position.source}
               </Badge>
             )}
             <Button
@@ -208,9 +208,9 @@ export function PositionCard({
                 size="sm"
                 className="h-7 text-xs px-2.5"
                 onClick={onAccept}
-                disabled={accepting || isUnmatched}
+                disabled={accepting || (isUnmatched && position.source !== "manual")}
                 title={
-                  isUnmatched
+                  isUnmatched && position.source !== "manual"
                     ? "Erst Leistung auswählen (Taste c)"
                     : "Annehmen (Taste a / Enter)"
                 }
