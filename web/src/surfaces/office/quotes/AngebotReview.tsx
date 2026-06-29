@@ -49,37 +49,49 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Keyboard, Plus, ScanSearch, Trash2 } from "lucide-react";
+import { Combobox } from "@/components/ui/combobox";
+import { ArrowLeft, Keyboard, Plus, ScanSearch, Search } from "lucide-react";
 
 type LvPositionRead = components["schemas"]["LvPositionRead"];
 type CheckResultRead = components["schemas"]["CheckResultRead"];
 type LeistungRead = components["schemas"]["LeistungRead"];
 type LvRead = components["schemas"]["LvRead"];
+type LeistungskatalogRead = components["schemas"]["LeistungskatalogRead"];
 
 // ── Edit position dialog ──────────────────────────────────────────────────────
 
+function suggestCode(leistungen: LeistungRead[]): string {
+  const nums = leistungen.map((l) => {
+    const m = l.code.match(/(\d+)$/);
+    return m ? parseInt(m[1], 10) : 0;
+  });
+  const max = nums.length > 0 ? Math.max(...nums) : 0;
+  return String(max + 1).padStart(3, "0");
+}
+
 function EditPositionDialog({
   position,
+  leistungen,
+  katalogList,
   open,
   onClose,
 }: {
   position: LvPositionRead | null;
+  leistungen: LeistungRead[];
+  katalogList: LeistungskatalogRead[];
   open: boolean;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [form, setForm] = useState({
-    kurztext: "",
-    langtext: "",
-    menge: "",
-    einheit: "",
-    einheitspreis: "",
-  });
+  const [form, setForm] = useState({ kurztext: "", langtext: "", menge: "", einheit: "", einheitspreis: "" });
+  const [leistungSearch, setLeistungSearch] = useState("");
+  const [selectedLeistungId, setSelectedLeistungId] = useState<string | null>(null);
+  const [saveToKatalog, setSaveToKatalog] = useState(false);
+  const [newKatalogId, setNewKatalogId] = useState("");
+  const [newCode, setNewCode] = useState("");
 
   useEffect(() => {
     if (position && open) {
-      setConfirmDelete(false);
       setForm({
         kurztext: position.kurztext ?? "",
         langtext: position.langtext ?? "",
@@ -87,15 +99,66 @@ function EditPositionDialog({
         einheit: position.einheit ?? "",
         einheitspreis: position.einheitspreis ?? "",
       });
+      setLeistungSearch("");
+      setSelectedLeistungId(position.matched_leistung_id ?? null);
+      setSaveToKatalog(false);
+      setNewCode("");
+      setNewKatalogId(katalogList[0]?.id ?? "");
     }
   }, [position?.id, open]);
+
+  // When save-to-catalog is toggled on, generate a suggested code
+  useEffect(() => {
+    if (saveToKatalog && newKatalogId) {
+      const catalogLeistungen = leistungen.filter((l) => l.leistungskatalog_id === newKatalogId);
+      setNewCode(suggestCode(catalogLeistungen));
+    }
+  }, [saveToKatalog, newKatalogId]);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  // Local-only autosuggest — no API call
+  const suggestions = leistungSearch.length >= 2
+    ? leistungen.filter((l) => {
+        const q = leistungSearch.toLowerCase();
+        return l.kurztext.toLowerCase().includes(q) || l.code.toLowerCase().includes(q);
+      }).slice(0, 6)
+    : [];
+
+  function applyLeistung(l: LeistungRead) {
+    setForm((f) => ({
+      ...f,
+      kurztext: l.kurztext,
+      einheit: l.einheit,
+      einheitspreis: l.einheitspreis ?? f.einheitspreis,
+    }));
+    setSelectedLeistungId(l.id);
+    setLeistungSearch("");
+    setSaveToKatalog(false);
+  }
+
   const save = useMutation({
     mutationFn: async () => {
       if (!position) return;
+
+      let matched_leistung_id = selectedLeistungId;
+
+      if (saveToKatalog && newKatalogId && newCode) {
+        const res = await apiClient.POST("/api/leistung", {
+          body: {
+            leistungskatalog_id: newKatalogId,
+            code: newCode,
+            kurztext: form.kurztext,
+            langtext: form.langtext || undefined,
+            einheit: form.einheit || "St",
+            einheitspreis: form.einheitspreis || undefined,
+            aktiv: true,
+          },
+        });
+        matched_leistung_id = (unwrap(res) as LeistungRead).id;
+      }
+
       const res = await apiClient.PUT("/api/lv-position/{id}", {
         params: { path: { id: position.id } },
         body: {
@@ -106,9 +169,8 @@ function EditPositionDialog({
           menge: form.menge || undefined,
           einheit: form.einheit || undefined,
           einheitspreis: form.einheitspreis || undefined,
-          matched_leistung_id: position.matched_leistung_id,
-          match_confidence: position.match_confidence,
-          // Reset to review so changes go back into the queue
+          matched_leistung_id,
+          match_confidence: matched_leistung_id ? "1.00" : null,
           match_status: "review",
           source: position.source,
           position_nr: position.position_nr,
@@ -118,123 +180,143 @@ function EditPositionDialog({
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lv-position"] });
+      if (saveToKatalog) qc.invalidateQueries({ queryKey: ["leistung"] });
       onClose();
     },
     onError: (err) =>
       toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
   });
 
-  const del = useMutation({
-    mutationFn: async () => {
-      if (!position) return;
-      await apiClient.DELETE("/api/lv-position/{id}", {
-        params: { path: { id: position.id } },
-      });
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["lv-position"] });
-      onClose();
-    },
-    onError: (err) =>
-      toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
-  });
+  const katalogOptions = katalogList.map((k) => ({ value: k.id, label: k.name }));
+  const selectedLeistung = selectedLeistungId ? leistungen.find((l) => l.id === selectedLeistungId) : null;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Position bearbeiten</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
-          <div>
-            <label htmlFor="edit-kurztext" className="text-sm font-medium">Kurztext</label>
-            <Input
-              id="edit-kurztext"
-              value={form.kurztext}
-              onChange={set("kurztext")}
-              className="mt-1"
-              autoFocus
-            />
-          </div>
-          <div>
-            <label htmlFor="edit-langtext" className="text-sm font-medium">Langtext</label>
-            <Input
-              id="edit-langtext"
-              value={form.langtext}
-              onChange={set("langtext")}
-              className="mt-1"
-            />
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label htmlFor="edit-menge" className="text-sm font-medium">Menge</label>
-              <Input
-                id="edit-menge"
-                value={form.menge}
-                onChange={set("menge")}
-                type="number"
-                step="0.001"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <label htmlFor="edit-einheit" className="text-sm font-medium">Einheit</label>
-              <Input
-                id="edit-einheit"
-                value={form.einheit}
-                onChange={set("einheit")}
-                placeholder="m²"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <label htmlFor="edit-ep" className="text-sm font-medium">EP (€)</label>
-              <Input
-                id="edit-ep"
-                value={form.einheitspreis}
-                onChange={set("einheitspreis")}
-                type="number"
-                step="0.01"
-                className="mt-1"
-              />
-            </div>
-          </div>
-        </div>
-        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
-          <div>
-            {!confirmDelete ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => setConfirmDelete(true)}
-              >
-                <Trash2 className="h-3.5 w-3.5 mr-1" />
-                Löschen
-              </Button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-destructive">Wirklich löschen?</span>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  disabled={del.isPending}
-                  onClick={() => del.mutate()}
-                >
-                  Ja, löschen
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>
-                  Nein
-                </Button>
+
+          {/* Leistung autosuggest */}
+          <div className="relative">
+            <label className="text-sm font-medium">Leistung suchen (optional)</label>
+            {selectedLeistung ? (
+              <div className="mt-1 flex items-center gap-2 rounded-md border bg-muted px-2 py-1.5 text-sm">
+                <span className="font-mono text-xs text-muted-foreground">{selectedLeistung.code}</span>
+                <span className="flex-1 truncate">{selectedLeistung.kurztext}</span>
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:text-foreground text-xs shrink-0"
+                  onClick={() => { setSelectedLeistungId(null); setLeistungSearch(""); }}
+                >✕</button>
               </div>
+            ) : (
+              <>
+                <div className="relative mt-1">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={leistungSearch}
+                    onChange={(e) => setLeistungSearch(e.target.value)}
+                    placeholder="Bezeichnung oder Code eingeben…"
+                    className="pl-8"
+                    autoFocus
+                  />
+                </div>
+                {suggestions.length > 0 && (
+                  <div className="absolute z-50 left-0 right-0 top-full mt-0.5 rounded-md border bg-popover shadow-md max-h-48 overflow-y-auto">
+                    {suggestions.map((l) => (
+                      <button
+                        key={l.id}
+                        type="button"
+                        className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                        onMouseDown={(e) => { e.preventDefault(); applyLeistung(l); }}
+                      >
+                        <span className="font-mono text-xs text-muted-foreground w-16 shrink-0">{l.code}</span>
+                        <span className="flex-1 truncate">{l.kurztext}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">{l.einheit}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>Abbrechen</Button>
-            <Button disabled={!form.kurztext || save.isPending} onClick={() => save.mutate()}>
-              Speichern
-            </Button>
+
+          <div className="border-t pt-3 space-y-3">
+            <div>
+              <label htmlFor="edit-kurztext" className="text-sm font-medium">Kurztext</label>
+              <Input id="edit-kurztext" value={form.kurztext} onChange={set("kurztext")} className="mt-1" />
+            </div>
+            <div>
+              <label htmlFor="edit-langtext" className="text-sm font-medium">Langtext</label>
+              <Input id="edit-langtext" value={form.langtext} onChange={set("langtext")} className="mt-1" />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label htmlFor="edit-menge" className="text-sm font-medium">Menge</label>
+                <Input id="edit-menge" value={form.menge} onChange={set("menge")} type="number" step="0.001" className="mt-1" />
+              </div>
+              <div>
+                <label htmlFor="edit-einheit" className="text-sm font-medium">Einheit</label>
+                <Input id="edit-einheit" value={form.einheit} onChange={set("einheit")} placeholder="m²" className="mt-1" />
+              </div>
+              <div>
+                <label htmlFor="edit-ep" className="text-sm font-medium">EP (€)</label>
+                <Input id="edit-ep" value={form.einheitspreis} onChange={set("einheitspreis")} type="number" step="0.01" className="mt-1" />
+              </div>
+            </div>
           </div>
+
+          {/* Save to catalog — only when not linked to an existing leistung */}
+          {!selectedLeistungId && (
+            <div className="border-t pt-3 space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={saveToKatalog}
+                  onChange={(e) => setSaveToKatalog(e.target.checked)}
+                  className="rounded"
+                />
+                <span className="text-sm">Als neue Leistung in Katalog speichern</span>
+              </label>
+              {saveToKatalog && (
+                <div className="grid grid-cols-2 gap-2 pl-6">
+                  {katalogOptions.length > 1 && (
+                    <div className="col-span-2">
+                      <label className="text-xs text-muted-foreground">Katalog</label>
+                      <Combobox
+                        className="mt-1"
+                        options={katalogOptions}
+                        value={newKatalogId}
+                        onChange={(v) => setNewKatalogId(v ?? "")}
+                        placeholder="Katalog wählen…"
+                        searchPlaceholder="Suchen…"
+                      />
+                    </div>
+                  )}
+                  <div className="col-span-2">
+                    <label className="text-xs text-muted-foreground">Code (automatisch – änderbar)</label>
+                    <Input
+                      value={newCode}
+                      onChange={(e) => setNewCode(e.target.value)}
+                      className="mt-1 font-mono"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Abbrechen</Button>
+          <Button
+            disabled={!form.kurztext || save.isPending || (saveToKatalog && (!newCode || !newKatalogId))}
+            onClick={() => save.mutate()}
+          >
+            Speichern
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -671,10 +753,23 @@ export function AngebotReview() {
 
   // ── Keyboard handlers ─────────────────────────────────────────────────────
 
+  const deletePositionMutation = useMutation({
+    mutationFn: async (positionId: string) => {
+      await apiClient.DELETE("/api/lv-position/{id}", {
+        params: { path: { id: positionId } },
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["lv-position"] }),
+    onError: (err) =>
+      toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
+  });
+
   const handleAccept = useCallback(
     (index: number) => {
       const pos = sortedPositions[index];
-      if (!pos || !pos.matched_leistung_id) return;
+      if (!pos) return;
+      // Manual positions without a catalog match can be confirmed directly
+      if (!pos.matched_leistung_id && pos.source !== "manual") return;
       acceptMutation.mutate(pos);
     },
     [sortedPositions, acceptMutation],
@@ -827,6 +922,7 @@ export function AngebotReview() {
                   handleOpenPicker(index);
                 }}
                 onEdit={() => setEditPosition(position)}
+                onDelete={() => deletePositionMutation.mutate(position.id)}
                 onResolveFlag={(check) => resolveFlagMutation.mutate(check)}
                 resolvingFlagId={resolvingFlagId}
                 accepting={
@@ -854,6 +950,8 @@ export function AngebotReview() {
       {/* Edit position dialog */}
       <EditPositionDialog
         position={editPosition}
+        leistungen={allLeistungen}
+        katalogList={katalogList ?? []}
         open={editPosition !== null}
         onClose={() => setEditPosition(null)}
       />

@@ -15,7 +15,7 @@
  * Nothing on this card computes a money value (directive 00/10). All figures
  * come from the API; they are displayed and confirmed, never re-derived here.
  */
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import type { components } from "@/api/schema";
 import { formatEuro, formatMenge, confidenceTier } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,7 @@ import { ConfidenceBand } from "./ConfidenceBand";
 import { CheckFlags } from "./CheckFlags";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCheck, Pencil } from "lucide-react";
+import { CheckCheck, Pencil, Trash2 } from "lucide-react";
 
 type LvPositionRead = components["schemas"]["LvPositionRead"];
 type LeistungRead = components["schemas"]["LeistungRead"];
@@ -37,6 +37,7 @@ interface Props {
   onAccept: () => void;
   onOpenPicker: () => void;
   onEdit: () => void;
+  onDelete: () => void;
   onResolveFlag: (check: CheckResultRead) => void;
   resolvingFlagId: string | null;
   accepting: boolean;
@@ -50,11 +51,13 @@ export function PositionCard({
   onAccept,
   onOpenPicker,
   onEdit,
+  onDelete,
   onResolveFlag,
   resolvingFlagId,
   accepting,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const tier = confidenceTier(position.match_confidence, position.match_status);
   const matchedLeistung = position.matched_leistung_id
     ? leistungMap.get(position.matched_leistung_id)
@@ -90,7 +93,7 @@ export function PositionCard({
       <div className="flex-1 grid grid-cols-2 divide-x divide-border min-w-0">
         {/* ── LEFT: LV source ── */}
         <div className="p-3 min-w-0 space-y-1 group/left">
-          {/* Header row: OZ + source badge + edit button */}
+          {/* Header row: OZ + source badge + edit/delete buttons */}
           <div className="flex items-center gap-2 flex-wrap">
             {position.oz && (
               <span className="font-mono text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
@@ -107,15 +110,46 @@ export function PositionCard({
                 {({ gaeb: "GAEB", pdf: "PDF", manual: "Manuell" } as Record<string, string>)[position.source] ?? position.source}
               </Badge>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5 ml-auto opacity-0 group-hover/left:opacity-100 transition-opacity shrink-0"
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              title="Position bearbeiten"
-            >
-              <Pencil className="h-3 w-3" />
-            </Button>
+            <div className="ml-auto flex items-center gap-0.5 opacity-0 group-hover/left:opacity-100 transition-opacity shrink-0">
+              {confirmDelete ? (
+                <>
+                  <span className="text-[10px] text-destructive">Löschen?</span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-5 px-1.5 text-[10px]"
+                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                  >Ja</Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 px-1.5 text-[10px]"
+                    onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }}
+                  >Nein</Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5"
+                    onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                    title="Bearbeiten"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 text-destructive/60 hover:text-destructive"
+                    onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+                    title="Löschen"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Kurztext */}
