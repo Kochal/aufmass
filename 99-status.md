@@ -3,6 +3,13 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-29 (o): Gewährleistung auto-expiry live. Migration 0023 adds
+  core.expire_gewaehrleistung() — SECURITY DEFINER (runs as maler superuser,
+  bypasses FORCE RLS), sets actor 'system:expire_gewaehrleistung', cross-tenant
+  UPDATE in one shot; audit trigger reads tenant_id from row (always correct).
+  api/app/jobs.py + asyncio.create_task in lifespan: runs at startup then every
+  24 h. Dashboard "Gewährleistung überfällig" card now self-clears.
+  See notes/ops/2026-06-29-gewaehrleistung-expiry-job.md.
 - 2026-06-29 (n): Bestellungen screens live. LieferantList (CRUD, USt-IdNr,
   Zahlungsziel). MaterialList (catalog: Bezeichnung/Einheit/Standard-Lieferant/
   Standardpreis). BestellungList (status+projekt filters, create→navigate to

@@ -60,6 +60,7 @@ Organised by area, newest first within each area.
 | 2026-06-28 | [design-system-and-surfaces](ui/2026-06-28-design-system-and-surfaces.md) | shadcn/ui on Tailwind v4; three surfaces one design system; confidence/trust colour tokens; react-router-dom v7 + react-query v5 + openapi-fetch; dev-auth seam; office quote-review slice live |
 
 ## ops (infrastructure / tooling)
+| 2026-06-29 | [gewaehrleistung-expiry-job](ops/2026-06-29-gewaehrleistung-expiry-job.md) | SECURITY DEFINER cross-tenant expiry function + asyncio background loop; why superuser ownership, RLS + audit notes, future notification hook point |
 | Date | File | Summary |
 |------|------|---------|
 | 2026-06-25 | [remote-instance-standup](ops/2026-06-25-remote-instance-standup.md) | Hetzner host live: all 5 images build, all 20 migrations applied, KoSIT validator healthy, API /health green, React dev server up |

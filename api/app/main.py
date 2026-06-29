@@ -7,6 +7,7 @@ Feature modules hang off the routers in app/routers/. The OpenAPI schema at
 """
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -14,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .db import healthcheck, pool
+from .jobs import expire_gewaehrleistung_loop
 from .routers import (
     abnahmeprotokoll, adresse, angebot, app_user, arbeitszeit, aufmass, aufmass_entry,
     auftraggeber, bankverbindung,
@@ -27,9 +29,15 @@ from .routers import (
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     pool.open()
+    task = asyncio.create_task(expire_gewaehrleistung_loop())
     try:
         yield
     finally:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
         pool.close()
 
 
