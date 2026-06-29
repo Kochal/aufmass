@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ClipboardCheck, Plus, ChevronRight } from "lucide-react";
+import { ClipboardCheck, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -153,6 +153,7 @@ function CreateDialog({
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 export function MangelList() {
+  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const [projektFilter, setProjektFilter] = useState("");
 
@@ -233,12 +234,12 @@ export function MangelList() {
                 <TableHead className="w-36">Abnahmeart</TableHead>
                 <TableHead>Abnehmer</TableHead>
                 <TableHead>Vorbehalte</TableHead>
-                <TableHead className="w-8" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {protokolle.map((p) => (
-                <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => navigate(`/office/mangel/${p.id}`)}>
                   <TableCell className="text-sm">{fmtDate(String(p.abnahme_datum))}</TableCell>
                   <TableCell className="text-sm font-medium">
                     {projMap.get(p.projekt_id) ?? p.projekt_id.slice(0, 8)}
@@ -249,15 +250,6 @@ export function MangelList() {
                   <TableCell className="text-sm text-muted-foreground">{p.abnehmer ?? "—"}</TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
                     {p.vorbehalte ?? "—"}
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      to={`/office/mangel/${p.id}`}
-                      className="flex items-center gap-1 text-xs text-primary hover:underline"
-                    >
-                      Mängel
-                      <ChevronRight className="h-3 w-3" />
-                    </Link>
                   </TableCell>
                 </TableRow>
               ))}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Users } from "lucide-react";
 import { apiClient, unwrap } from "@/lib/api";
@@ -107,6 +107,7 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: () => void })
 }
 
 export function AuftraggeberList() {
+  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
 
   const { data: auftraggeber, isLoading } = useQuery<AuftraggeberRead[]>({
@@ -163,17 +164,12 @@ export function AuftraggeberList() {
             </TableHeader>
             <TableBody>
               {auftraggeber.map((ag) => (
-                <TableRow key={ag.id} className="cursor-pointer hover:bg-accent/50">
+                <TableRow key={ag.id} className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => navigate(`/office/auftraggeber/${ag.id}`)}>
                   <TableCell className="font-mono text-xs text-muted-foreground">
-                    <Link to={`/office/auftraggeber/${ag.id}`} className="block w-full h-full">
-                      {ag.kundennummer ?? "—"}
-                    </Link>
+                    {ag.kundennummer ?? "—"}
                   </TableCell>
-                  <TableCell className="font-medium">
-                    <Link to={`/office/auftraggeber/${ag.id}`} className="hover:underline">
-                      {ag.name}
-                    </Link>
-                  </TableCell>
+                  <TableCell className="font-medium">{ag.name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {ag.typ ? TYP_LABELS[ag.typ] : "—"}
                   </TableCell>

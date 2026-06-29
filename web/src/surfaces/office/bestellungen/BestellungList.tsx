@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ShoppingCart, Plus, ChevronRight } from "lucide-react";
+import { ShoppingCart, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -140,6 +140,7 @@ function CreateDialog({
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export function BestellungList() {
+  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
   const [projektFilter, setProjektFilter] = useState("");
@@ -224,12 +225,12 @@ export function BestellungList() {
                 <TableHead className="w-28">Bestelldatum</TableHead>
                 <TableHead className="w-28 text-right">Summe</TableHead>
                 <TableHead className="w-28">Status</TableHead>
-                <TableHead className="w-8" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {bestellungen.map((bs) => (
-                <TableRow key={bs.id}>
+                <TableRow key={bs.id} className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => navigate(`/office/bestellungen/${bs.id}`)}>
                   <TableCell className="font-medium text-sm">
                     {lfMap.get(bs.lieferant_id) ?? bs.lieferant_id.slice(0, 8)}
                   </TableCell>
@@ -241,12 +242,6 @@ export function BestellungList() {
                   </TableCell>
                   <TableCell className="text-sm font-mono text-right">{fmtSumme(bs.summe)}</TableCell>
                   <TableCell><StatusBadge status={bs.status} /></TableCell>
-                  <TableCell>
-                    <Link to={`/office/bestellungen/${bs.id}`}
-                      className="flex items-center gap-0.5 text-xs text-primary hover:underline">
-                      Details<ChevronRight className="h-3 w-3" />
-                    </Link>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, FolderOpen } from "lucide-react";
 import { apiClient, unwrap } from "@/lib/api";
@@ -160,6 +160,7 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: () => void })
 }
 
 export function ProjektList() {
+  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const [statusFilter, setStatusFilter] = useState<ProjektStatus | "">("");
 
@@ -251,17 +252,12 @@ export function ProjektList() {
             </TableHeader>
             <TableBody>
               {projekte.map((p) => (
-                <TableRow key={p.id} className="cursor-pointer hover:bg-accent/50">
+                <TableRow key={p.id} className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => navigate(`/office/projekte/${p.id}`)}>
                   <TableCell className="font-mono text-xs text-muted-foreground">
-                    <Link to={`/office/projekte/${p.id}`} className="block w-full">
-                      {p.nummer ?? "—"}
-                    </Link>
+                    {p.nummer ?? "—"}
                   </TableCell>
-                  <TableCell className="font-medium">
-                    <Link to={`/office/projekte/${p.id}`} className="hover:underline">
-                      {p.name}
-                    </Link>
-                  </TableCell>
+                  <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {agMap.get(p.auftraggeber_id) ?? "—"}
                   </TableCell>
