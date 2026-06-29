@@ -36,6 +36,7 @@ interface Props {
   isActive: boolean;
   onAccept: () => void;
   onOpenPicker: () => void;
+  onEdit: () => void;
   onResolveFlag: (check: CheckResultRead) => void;
   resolvingFlagId: string | null;
   accepting: boolean;
@@ -48,6 +49,7 @@ export function PositionCard({
   isActive,
   onAccept,
   onOpenPicker,
+  onEdit,
   onResolveFlag,
   resolvingFlagId,
   accepting,
@@ -87,8 +89,8 @@ export function PositionCard({
       {/* Two panes */}
       <div className="flex-1 grid grid-cols-2 divide-x divide-border min-w-0">
         {/* ── LEFT: LV source ── */}
-        <div className="p-3 min-w-0 space-y-1">
-          {/* Header row: OZ + source badge */}
+        <div className="p-3 min-w-0 space-y-1 group/left">
+          {/* Header row: OZ + source badge + edit button */}
           <div className="flex items-center gap-2 flex-wrap">
             {position.oz && (
               <span className="font-mono text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
@@ -105,6 +107,15 @@ export function PositionCard({
                 {position.source === "gaeb" ? "GAEB" : position.source === "pdf" ? "PDF" : position.source}
               </Badge>
             )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-5 w-5 ml-auto opacity-0 group-hover/left:opacity-100 transition-opacity shrink-0"
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              title="Position bearbeiten"
+            >
+              <Pencil className="h-3 w-3" />
+            </Button>
           </div>
 
           {/* Kurztext */}

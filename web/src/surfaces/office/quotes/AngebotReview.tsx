@@ -27,7 +27,7 @@
  * Keyboard shortcuts: j/k navigate, a/Enter accept, c open picker, x resolve flag.
  * See usePositionKeyboard.ts.
  */
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -55,6 +55,156 @@ type LvPositionRead = components["schemas"]["LvPositionRead"];
 type CheckResultRead = components["schemas"]["CheckResultRead"];
 type LeistungRead = components["schemas"]["LeistungRead"];
 type LvRead = components["schemas"]["LvRead"];
+
+// ── Edit position dialog ──────────────────────────────────────────────────────
+
+function EditPositionDialog({
+  position,
+  open,
+  onClose,
+}: {
+  position: LvPositionRead | null;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const qc = useQueryClient();
+  const [form, setForm] = useState({
+    kurztext: "",
+    langtext: "",
+    menge: "",
+    einheit: "",
+    einheitspreis: "",
+  });
+
+  // Populate form when position changes
+  useState(() => {
+    if (position) {
+      setForm({
+        kurztext: position.kurztext ?? "",
+        langtext: position.langtext ?? "",
+        menge: position.menge ?? "",
+        einheit: position.einheit ?? "",
+        einheitspreis: position.einheitspreis ?? "",
+      });
+    }
+  });
+
+  useEffect(() => {
+    if (position && open) {
+      setForm({
+        kurztext: position.kurztext ?? "",
+        langtext: position.langtext ?? "",
+        menge: position.menge ?? "",
+        einheit: position.einheit ?? "",
+        einheitspreis: position.einheitspreis ?? "",
+      });
+    }
+  }, [position?.id, open]);
+
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!position) return;
+      const res = await apiClient.PUT("/api/lv-position/{id}", {
+        params: { path: { id: position.id } },
+        body: {
+          row_version: position.row_version,
+          oz: position.oz,
+          kurztext: form.kurztext,
+          langtext: form.langtext || undefined,
+          menge: form.menge || undefined,
+          einheit: form.einheit || undefined,
+          einheitspreis: form.einheitspreis || undefined,
+          matched_leistung_id: position.matched_leistung_id,
+          match_confidence: position.match_confidence,
+          match_status: position.match_status,
+          source: position.source,
+          position_nr: position.position_nr,
+        },
+      });
+      return unwrap(res);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["lv-position"] });
+      onClose();
+    },
+    onError: (err) =>
+      toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Position bearbeiten</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div>
+            <label htmlFor="edit-kurztext" className="text-sm font-medium">Kurztext</label>
+            <Input
+              id="edit-kurztext"
+              value={form.kurztext}
+              onChange={set("kurztext")}
+              className="mt-1"
+              autoFocus
+            />
+          </div>
+          <div>
+            <label htmlFor="edit-langtext" className="text-sm font-medium">Langtext</label>
+            <Input
+              id="edit-langtext"
+              value={form.langtext}
+              onChange={set("langtext")}
+              className="mt-1"
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label htmlFor="edit-menge" className="text-sm font-medium">Menge</label>
+              <Input
+                id="edit-menge"
+                value={form.menge}
+                onChange={set("menge")}
+                type="number"
+                step="0.001"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label htmlFor="edit-einheit" className="text-sm font-medium">Einheit</label>
+              <Input
+                id="edit-einheit"
+                value={form.einheit}
+                onChange={set("einheit")}
+                placeholder="m²"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label htmlFor="edit-ep" className="text-sm font-medium">EP (€)</label>
+              <Input
+                id="edit-ep"
+                value={form.einheitspreis}
+                onChange={set("einheitspreis")}
+                type="number"
+                step="0.01"
+                className="mt-1"
+              />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Abbrechen</Button>
+          <Button disabled={!form.kurztext || save.isPending} onClick={() => save.mutate()}>
+            Speichern
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // ── Add position dialog ───────────────────────────────────────────────────────
 
@@ -192,6 +342,7 @@ export function AngebotReview() {
   const [pickerPositionId, setPickerPositionId] = useState<string | null>(null);
   const [resolvingFlagId, setResolvingFlagId] = useState<string | null>(null);
   const [showAddPosition, setShowAddPosition] = useState(false);
+  const [editPosition, setEditPosition] = useState<LvPositionRead | null>(null);
 
   // ── Data loading ─────────────────────────────────────────────────────────
 
@@ -640,6 +791,7 @@ export function AngebotReview() {
                   setActiveIndex(index);
                   handleOpenPicker(index);
                 }}
+                onEdit={() => setEditPosition(position)}
                 onResolveFlag={(check) => resolveFlagMutation.mutate(check)}
                 resolvingFlagId={resolvingFlagId}
                 accepting={
@@ -662,6 +814,13 @@ export function AngebotReview() {
         berechnenPending={berechnenMutation.isPending}
         pruefenPending={pruefenMutation.isPending}
         ausstellenPending={ausstellenMutation.isPending}
+      />
+
+      {/* Edit position dialog */}
+      <EditPositionDialog
+        position={editPosition}
+        open={editPosition !== null}
+        onClose={() => setEditPosition(null)}
       />
 
       {/* Add position dialog */}
