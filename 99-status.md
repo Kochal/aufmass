@@ -3,6 +3,11 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-29 (g): Auftraggeber screen live (AuftraggeberList + AuftraggeberDetail).
+  Three sections: Stammdaten, Adresse (upsert pattern — creates adresse row on
+  first save, updates on subsequent), Rechnungsdaten (leitweg_id/BT-10,
+  elektronische_adresse/BT-49, eas_scheme). Stub removed from nav. TS clean.
+  See notes/ui/2026-06-29-auftraggeber-screen.md.
 - 2026-06-29 (f): Leistungskatalog tool complete + catalog matching wired into
   Angebot LV review. Frontend: KatalogList + KatalogDetail (manual add dialog,
   xlsx/csv spreadsheet import, extract-from-Angebote). Backend:
@@ -111,15 +116,13 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 9: Leistungskatalog + catalog matching complete.** Catalog tool live
-(KatalogList, KatalogDetail — 3 input paths: manual, xlsx/csv import,
-extract-from-Angebote). String-similarity matcher wired into GAEB import
-(auto-runs) and AngebotReview ("Katalog abgleichen" button). Full embedding-based
-matching deferred until GPU/DPA-covered EU endpoint is available and catalog is
-populated. 119 tests green.
-Next: Rechnungen UI, Auftraggeber/Projekte screens, Arbeitszeit/Fahrt/Mangel
-field screens (voice-fill already wired; need dedicated UI), real Entra SSO (09),
-swap ASR to self-hosted faster-whisper for production, vector embedding matching.
+**Phase 10: Auftraggeber screen live.** Client management (list + detail) with
+Stammdaten, Adresse upsert, and Rechnungsdaten (leitweg_id/BT-10 for B2G, BT-49
+electronic address). Catalog tool + catalog matching also complete (Phase 9).
+119 tests green.
+Next: Rechnungen UI, Projekte screen, Arbeitszeit/Fahrt/Mangel field screens
+(voice-fill already wired; need dedicated UI), real Entra SSO (09), swap ASR to
+self-hosted faster-whisper for production, vector embedding matching.
 
 ## Directive set
 

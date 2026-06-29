@@ -49,7 +49,7 @@ export function AppShell() {
           // Rechnungen, Auftraggeber, Projekte — reserved, stub
           { to: "/office/katalog", icon: BookOpen, label: "Katalog" },
           { to: "/office/rechnungen", icon: FileText, label: "Rechnungen", stub: true },
-          { to: "/office/auftraggeber", icon: Users, label: "Auftraggeber", stub: true },
+          { to: "/office/auftraggeber", icon: Users, label: "Auftraggeber" },
         ]
       : []),
     ...(canAccessField(role)

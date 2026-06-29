@@ -44,6 +44,7 @@ Organised by area, newest first within each area.
 ## ui
 | Date | File | Summary |
 |------|------|---------|
+| 2026-06-29 | [auftraggeber-screen](ui/2026-06-29-auftraggeber-screen.md) | AuftraggeberList + AuftraggeberDetail live: stammdaten/adresse/rechnungsdaten form, address upsert pattern, leitweg_id helper text, stub removed from nav |
 | 2026-06-29 | [aufmass-field-surface](ui/2026-06-29-aufmass-field-surface.md) | Field surface live: AufmassList + AufmassReview; DevLogin UUID mismatch bug fixed; two-key auth localStorage; multipart upload via native fetch not apiClient |
 | 2026-06-29 | [voice-form-fill-implementation](ui/2026-06-29-voice-form-fill-implementation.md) | Implementation note: form-level dictation chosen (multi-field routing via LLM); app.voice.asr shared module; first wired into EntryCard correction; PoC uses OpenAI Whisper (egress divergence flagged) |
 | 2026-06-29 | [voice-form-filling](ui/2026-06-29-voice-form-filling.md) | Voice form/field filling: PWA mic → backend Whisper → confirm-before-commit; no money math from voice; field-capture screens first; audio not stored for form-fill |

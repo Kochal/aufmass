@@ -11,6 +11,7 @@ import { AppShell } from "@/app/AppShell";
 import { AngebotList } from "@/surfaces/office/quotes/AngebotList";
 import { AngebotReview } from "@/surfaces/office/quotes/AngebotReview";
 import { KatalogList, KatalogDetail } from "@/surfaces/office/katalog";
+import { AuftraggeberList, AuftraggeberDetail } from "@/surfaces/office/auftraggeber";
 import { AufmassList, AufmassReview } from "@/surfaces/field";
 import { DashboardStub } from "@/surfaces/dashboard";
 import { useAuth, canAccessOffice, canAccessField } from "@/auth/AuthContext";
@@ -52,10 +53,8 @@ export function AppRoutes() {
             path="rechnungen"
             element={<ComingSoon name="Rechnungen" />}
           />
-          <Route
-            path="auftraggeber"
-            element={<ComingSoon name="Auftraggeber" />}
-          />
+          <Route path="auftraggeber" element={<AuftraggeberList />} />
+          <Route path="auftraggeber/:id" element={<AuftraggeberDetail />} />
           <Route path="katalog" element={<KatalogList />} />
           <Route path="katalog/:id" element={<KatalogDetail />} />
         </Route>
