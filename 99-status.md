@@ -162,15 +162,21 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
+**Phase 18: Owner dashboard live.** GET /api/dashboard — single-query CTE endpoint
+(projekte by status, Mängel offen/schwer/überfällig, Gewährleistung laufend/
+ablaufend/überfällig, Rechnungen/Angebote Entwurf, Freigabe-queue Arbeitszeit +
+Fahrt, Bestellungen offen, Finanzsumme). Frontend: 4 sections (Projekte,
+Handlungsbedarf, Gewährleistung, Finanzen) — stat cards with urgency colouring
+(red/orange/muted for zeros), linked to source screens, auto-refresh 60 s.
+Nav "Übersicht" stub removed. TS clean.
+Next: real Entra SSO (09), swap ASR to self-hosted faster-whisper.
+
 **Phase 17: All directive-05 UI complete.** Bestellungen screens live:
 LieferantList, MaterialList, BestellungList, BestellungDetail (status lifecycle,
 Stornieren with audit reason, Bestellposition CRUD, Material pre-fill).
 Full office surface now covers all entities from directives 05 and 06:
 Angebote, Katalog, Rechnungen, Auftraggeber, Projekte, Arbeitszeit, Fahrtenbuch,
 Fahrtzeiten, Mängel, Gewährleistung, Lieferanten, Material, Bestellungen. TS clean.
-Next: real Entra SSO (09), swap ASR to self-hosted faster-whisper, vector
-embedding matching, dashboard/reporting surface.
-faster-whisper for production, vector embedding matching.
 
 ## Directive set
 

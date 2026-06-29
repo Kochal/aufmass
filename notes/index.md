@@ -43,6 +43,7 @@ Organised by area, newest first within each area.
 
 ## ui
 | Date | File | Summary |
+| 2026-06-29 | [dashboard](ui/2026-06-29-dashboard.md) | Owner dashboard: GET /api/dashboard CTE query → 4-section stat-card UI (Projekte/Handlungsbedarf/Gewährleistung/Finanzen); urgency colouring; linked to source screens; 60 s auto-refresh |
 |------|------|---------|
 | 2026-06-29 | [bestellungen-screen](ui/2026-06-29-bestellungen-screen.md) | LieferantList + MaterialList (catalog with lieferant link) + BestellungList + BestellungDetail (status lifecycle, Stornieren with reason, position CRUD locked to entwurf/bestellt, material pre-fill) |
 | 2026-06-29 | [gewaehrleistung-screen](ui/2026-06-29-gewaehrleistung-screen.md) | GewaehrleistungList: flat list, overdue/expiring-soon highlights, regime badges (VOB/BGB), fristende countdown, status filter + create/edit/delete |

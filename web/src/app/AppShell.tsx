@@ -51,7 +51,7 @@ export function AppShell() {
 
   const navItems: NavItem[] = [
     ...(canAccessDashboard(role)
-      ? [{ to: "/dashboard", icon: LayoutDashboard, label: "Übersicht", stub: true }]
+      ? [{ to: "/dashboard", icon: LayoutDashboard, label: "Übersicht" }]
       : []),
     ...(canAccessOffice(role)
       ? [

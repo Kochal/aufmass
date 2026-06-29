@@ -1526,6 +1526,23 @@ export interface paths {
         patch: operations["resolve_check_result_api_check_result__id__resolve_patch"];
         trace?: never;
     };
+    "/api/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Dashboard */
+        get: operations["get_dashboard_api_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/voice/intent": {
         parameters: {
             query?: never;
@@ -2614,6 +2631,43 @@ export interface components {
              * Format: date-time
              */
             checked_at: string;
+        };
+        /** DashboardSummary */
+        DashboardSummary: {
+            /** Projekte In Ausfuehrung */
+            projekte_in_ausfuehrung: number;
+            /** Projekte Kalkulation */
+            projekte_kalkulation: number;
+            /** Projekte Beauftragt */
+            projekte_beauftragt: number;
+            /** Projekte Gewaehrleistung */
+            projekte_gewaehrleistung: number;
+            /** Maengel Offen */
+            maengel_offen: number;
+            /** Maengel Offen Schwer */
+            maengel_offen_schwer: number;
+            /** Maengel Ueberfaellig */
+            maengel_ueberfaellig: number;
+            /** Gewaehrleistung Laufend */
+            gewaehrleistung_laufend: number;
+            /** Gewaehrleistung Expiring Soon */
+            gewaehrleistung_expiring_soon: number;
+            /** Gewaehrleistung Ueberfaellig */
+            gewaehrleistung_ueberfaellig: number;
+            /** Rechnungen Entwurf */
+            rechnungen_entwurf: number;
+            /** Rechnungen Ausgestellt */
+            rechnungen_ausgestellt: number;
+            /** Rechnungen Summe Brutto */
+            rechnungen_summe_brutto: string | null;
+            /** Arbeitszeit Offen */
+            arbeitszeit_offen: number;
+            /** Fahrt Offen */
+            fahrt_offen: number;
+            /** Bestellungen Offen */
+            bestellungen_offen: number;
+            /** Angebote Entwurf */
+            angebote_entwurf: number;
         };
         /** FahrtCreate */
         FahrtCreate: {
@@ -9291,6 +9345,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CheckResultRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_dashboard_api_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardSummary"];
                 };
             };
             /** @description Validation Error */

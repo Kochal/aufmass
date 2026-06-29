@@ -23,7 +23,7 @@ import { LieferantList } from "@/surfaces/office/lieferanten";
 import { MaterialList } from "@/surfaces/office/material";
 import { BestellungList, BestellungDetail } from "@/surfaces/office/bestellungen";
 import { AufmassList, AufmassReview } from "@/surfaces/field";
-import { DashboardStub } from "@/surfaces/dashboard";
+import { Dashboard } from "@/surfaces/dashboard";
 import { useAuth, canAccessOffice, canAccessField } from "@/auth/AuthContext";
 
 /** Redirect to the right landing page for the active role. */
@@ -73,7 +73,7 @@ export function AppRoutes() {
         </Route>
 
         {/* Owner dashboard (deferred) */}
-        <Route path="dashboard" element={<DashboardStub />} />
+        <Route path="dashboard" element={<Dashboard />} />
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
