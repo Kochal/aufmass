@@ -43,7 +43,7 @@ Organised by area, newest first within each area.
 
 ## ui
 | Date | File | Summary |
-| 2026-06-30 | [angebot-position-editing](ui/2026-06-30-angebot-position-editing.md) | Manual Angebot + position creation; position field edit (pencil left pane); delete with confirm; Input cursor-loss fix; "Annehmen" for manual positions; match_status reset on edit |
+| 2026-06-30 | [angebot-position-editing](ui/2026-06-30-angebot-position-editing.md) | Manual Angebot + position workflow (two sessions): delete on card, Leistung search in both dialogs, catalog save, row sum preview, bulk accept, stale_row_version fix, unit warnings (m1/m3/mismatch) |
 | 2026-06-29 | [mangel-fotos](ui/2026-06-29-mangel-fotos.md) | Round 2: mangel_foto table + router (upload/list/image-serve/soft-delete); useImageObjectUrl hook; FotoThumbnail inline delete; MangelFotoDialog per row; upload via native fetch+FormData |
 | 2026-06-29 | [dashboard](ui/2026-06-29-dashboard.md) | Owner dashboard: GET /api/dashboard CTE query → 4-section stat-card UI (Projekte/Handlungsbedarf/Gewährleistung/Finanzen); urgency colouring; linked to source screens; 60 s auto-refresh |
 |------|------|---------|

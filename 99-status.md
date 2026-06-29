@@ -3,6 +3,23 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-30 (s): AngebotReview position UX — second pass. Delete moved from
+  EditPositionDialog to PositionCard left-pane hover controls (inline Ja/Nein
+  confirm, no dialog). EditPositionDialog: Leistung autosuggest (client-side,
+  ≥2 chars, no API call), "In Katalog speichern" checkbox (auto-generated code,
+  catalog picker if >1 catalog, POST Leistung then link position). AddPositionDialog:
+  same Leistung autosuggest, Langtext (Positionstext) field added; selecting a
+  catalog entry sets match_status=confirmed on POST. Manual positions right pane
+  now shows "Eigener Eintrag" + kurztext (previously "Kein Katalogeintrag"). Row
+  sum always visible: = Betrag from engine if available, ≈ Betrag preview
+  (menge×EP) otherwise. Bulk accept "Alle annehmen" button (parallel PUTs, hides
+  when all confirmed). stale_row_version fix: EditPositionDialog now stores
+  editPositionId and looks up the live position from query cache on each render.
+  Save-to-catalog race fix: effectiveKatalogId falls back to katalogList[0] when
+  newKatalogId unset (katalogList loads after dialog opens). Unit warnings (amber ⚠,
+  display-only): m1/m3 flagged as unusual (m2 is accepted shorthand for m² — no
+  warning); unit mismatch between position.einheit and matched catalog einheit.
+  TS clean. See notes/ui/2026-06-30-angebot-position-editing.md.
 - 2026-06-30 (r): Angebot manual workflow + position editing fixes. Manual
   Angebot creation (Auftraggeber + Projekt picker → navigate to review).
   Manual position add (creates LV if none exists; source="manual";
