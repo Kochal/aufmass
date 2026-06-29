@@ -3,6 +3,22 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-29 (f): Leistungskatalog tool complete + catalog matching wired into
+  Angebot LV review. Frontend: KatalogList + KatalogDetail (manual add dialog,
+  xlsx/csv spreadsheet import, extract-from-Angebote). Backend:
+  `katalog/spreadsheet.py` (delimiter auto-detect, German decimal, auto-code),
+  `katalog/matcher.py` (token-Jaccard + SequenceMatcher, thresholds 0.80/0.55),
+  `POST /api/leistungskatalog/{id}/import-spreadsheet`,
+  `POST /api/leistungskatalog/{id}/extract-from-angebote`,
+  `POST /api/lv/{id}/catalog-match` (on-demand scan, "Katalog abgleichen" button
+  in AngebotReview header). GAEB import auto-runs the matcher after creating
+  positions (best-effort). Full embedding-based matching deferred: needs GPU/DPA-
+  covered EU endpoint + populated catalog. 119 tests green.
+  See notes/quotation/2026-06-29-catalog-matching.md.
+- 2026-06-29 (e): GAEB import/export + roundtrip check complete (directive 06).
+  `POST /api/gaeb/import` (X81/X83 → LV + positions, write-once original),
+  `GET /api/gaeb/export/{angebot_id}` (D84 XML), `check_gaeb_roundtrip` hard
+  check wired into prüfen. 15 tests green.
 - 2026-06-29 (d): Voice form-fill implemented (directive 10). POST /api/voice/intent:
   shared ASR (app/voice/asr.py) + Mistral intent-parse (app/voice/intent.py) routes
   transcript to form fields, returns FieldFill candidates. useVoiceFill hook +
@@ -95,14 +111,15 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 8: Voice modality implemented end-to-end.** Both capture paths are live:
-photo (07a, Mistral OCR) and voice (07b, OpenAI Whisper PoC + Mistral structuring).
-Backend router complete (photo upload + voice upload + entry CRUD). Field Aufmaß
-UI complete (AufmassList, AufmassReview, EntryCard). Voice form-fill implemented
-(POST /api/voice/intent, useVoiceFill hook, confirm-before-commit). 17 tests green.
+**Phase 9: Leistungskatalog + catalog matching complete.** Catalog tool live
+(KatalogList, KatalogDetail — 3 input paths: manual, xlsx/csv import,
+extract-from-Angebote). String-similarity matcher wired into GAEB import
+(auto-runs) and AngebotReview ("Katalog abgleichen" button). Full embedding-based
+matching deferred until GPU/DPA-covered EU endpoint is available and catalog is
+populated. 119 tests green.
 Next: Rechnungen UI, Auftraggeber/Projekte screens, Arbeitszeit/Fahrt/Mangel
 field screens (voice-fill already wired; need dedicated UI), real Entra SSO (09),
-swap ASR to self-hosted faster-whisper for production.
+swap ASR to self-hosted faster-whisper for production, vector embedding matching.
 
 ## Directive set
 
@@ -114,7 +131,7 @@ swap ASR to self-hosted faster-whisper for production.
 | `03` | Infrastructure / model serving | Drafted                       |
 | `04` | Backup and archival            | Drafted                       |
 | `05` | Operational modules (spine)    | **API complete** (2026-06-25) |
-| `06` | Quotation engine               | **XRechnung e-invoice complete** (2026-06-28) |
+| `06` | Quotation engine               | **Catalog matching + GAEB complete** (2026-06-29). XRechnung e-invoice, GAEB import/export, Leistungskatalog tool, string-similarity scan. Deferred: embedding matching (GPU/DPA), plausibility bands (price history). |
 | `07` | Aufmaß capture and OCR         | **Complete** (2026-06-29). DB layer, vision + voice clients, backend router (upload/voice/CRUD), field UI, entry confirm/correct/delete. |
 | `07a` | Vision client (photo/Mistral) | **Complete** (2026-06-29). Two-step pipeline, bbox token-match, 19 unit tests. |
 | `07b` | Voice client (Whisper/ASR)    | **Complete** (2026-06-29). OpenAI Whisper PoC ASR (shared asr.py) + Mistral structuring. Swap to faster-whisper for production. |

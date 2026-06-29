@@ -10,6 +10,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { AppShell } from "@/app/AppShell";
 import { AngebotList } from "@/surfaces/office/quotes/AngebotList";
 import { AngebotReview } from "@/surfaces/office/quotes/AngebotReview";
+import { KatalogList, KatalogDetail } from "@/surfaces/office/katalog";
 import { AufmassList, AufmassReview } from "@/surfaces/field";
 import { DashboardStub } from "@/surfaces/dashboard";
 import { useAuth, canAccessOffice, canAccessField } from "@/auth/AuthContext";
@@ -55,6 +56,8 @@ export function AppRoutes() {
             path="auftraggeber"
             element={<ComingSoon name="Auftraggeber" />}
           />
+          <Route path="katalog" element={<KatalogList />} />
+          <Route path="katalog/:id" element={<KatalogDetail />} />
         </Route>
 
         {/* Field surface */}

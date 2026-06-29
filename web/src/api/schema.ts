@@ -160,6 +160,59 @@ export interface paths {
         patch: operations["correct_aufmass_entry_api_aufmass_entry__id__correct_patch"];
         trace?: never;
     };
+    "/api/gaeb/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Gaeb
+         * @description Parse a GAEB DA XML file (X81/X83) and create an LV with positions.
+         *
+         *     Creates:
+         *     - a gaeb_artifact row (with the file stored write-once as a document)
+         *     - an lv row linked to the angebot
+         *     - one lv_position per parsed position (match_status='review', source='gaeb')
+         *
+         *     Returns {gaeb_artifact_id, lv_id, position_count}.
+         */
+        post: operations["import_gaeb_api_gaeb_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/gaeb/export/{angebot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export D84
+         * @description Generate a GAEB DA XML 3.1 D84 (Angebotsabgabe) for the angebot.
+         *
+         *     Loads the angebot + LV positions, builds the XML, stores it as a
+         *     write-once document, and returns the XML bytes with appropriate headers.
+         *
+         *     The GAEB D84 is the artifact of record when submitting via GAEB exchange
+         *     (directive 06 Stage 6).
+         */
+        get: operations["export_d84_api_gaeb_export__angebot_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auftraggeber": {
         parameters: {
             query?: never;
@@ -900,6 +953,69 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/leistungskatalog/{id}/import-spreadsheet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Spreadsheet
+         * @description Batch-import Leistungen from an xlsx or csv file.
+         *
+         *     Columns (case-insensitive, German + abbreviated names accepted):
+         *       code / pos → code (auto-generated from kurztext if absent)
+         *       kurztext / bezeichnung / beschreibung → kurztext  [required]
+         *       langtext → langtext
+         *       einheit / me → einheit  [required]
+         *       einheitspreis / ep / preis → einheitspreis
+         *
+         *     Rows missing kurztext or einheit are silently skipped.
+         *     Rows whose code already exists in this catalog are skipped (idempotent).
+         *
+         *     Returns {imported, skipped_empty, skipped_duplicate, errors}.
+         */
+        post: operations["import_spreadsheet_api_leistungskatalog__id__import_spreadsheet_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/leistungskatalog/{id}/extract-from-angebote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Extract From Angebote
+         * @description Mine confirmed lv_positions not yet in the catalog to create new entries.
+         *
+         *     Scans all lv_positions in this tenant where:
+         *     - match_status = 'confirmed'
+         *     - matched_leistung_id IS NULL (manually priced, not from a catalog entry)
+         *     - kurztext, einheit, einheitspreis are all set
+         *
+         *     Deduplicates by (lower(kurztext), lower(einheit)), takes the most recently
+         *     updated price for each group. Skips entries already in this catalog
+         *     (matched on lower(kurztext) + lower(einheit)).
+         *
+         *     Returns {imported, skipped_already_in_catalog, candidates_found}.
+         */
+        post: operations["extract_from_angebote_api_leistungskatalog__id__extract_from_angebote_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/leistung": {
         parameters: {
             query?: never;
@@ -1089,6 +1205,41 @@ export interface paths {
         post?: never;
         /** Delete Lv */
         delete: operations["delete_lv_api_lv__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/lv/{id}/catalog-match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Catalog Match
+         * @description Run the string-similarity catalog matcher over unmatched positions in this LV.
+         *
+         *     Scans positions where matched_leistung_id IS NULL against all active catalog
+         *     Leistungen for the tenant.  Updates in place:
+         *       score >= 0.80 → match_status='auto',   matched_leistung_id set
+         *       score >= 0.55 → match_status='review', matched_leistung_id set (suggestion)
+         *       score < 0.55  → unchanged
+         *
+         *     This is a *partial implementation*: token + sequence-ratio similarity handles
+         *     near-exact phrasing but misses synonyms and domain abbreviations.  Full
+         *     implementation requires sentence embeddings (deferred, GPU pipeline pending).
+         *
+         *     Confirmed positions (match_status='confirmed') are never touched.
+         *     Already-matched positions (matched_leistung_id IS NOT NULL) are skipped.
+         *
+         *     Returns {auto, suggested, unmatched, skipped_confirmed}.
+         */
+        post: operations["catalog_match_api_lv__id__catalog_match_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2290,6 +2441,21 @@ export interface components {
             summe?: number | string | null;
             /** Auftragsbestaetigung Document Id */
             auftragsbestaetigung_document_id?: string | null;
+        };
+        /** Body_import_gaeb_api_gaeb_import_post */
+        Body_import_gaeb_api_gaeb_import_post: {
+            /**
+             * Angebot Id
+             * Format: uuid
+             */
+            angebot_id: string;
+            /** File */
+            file: string;
+        };
+        /** Body_import_spreadsheet_api_leistungskatalog__id__import_spreadsheet_post */
+        Body_import_spreadsheet_api_leistungskatalog__id__import_spreadsheet_post: {
+            /** File */
+            file: string;
         };
         /** Body_upload_aufmass_api_aufmass_upload_post */
         Body_upload_aufmass_api_aufmass_upload_post: {
@@ -4173,6 +4339,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AufmassEntryRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_gaeb_api_gaeb_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_gaeb_api_gaeb_import_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_d84_api_gaeb_export__angebot_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                angebot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -7362,6 +7598,78 @@ export interface operations {
             };
         };
     };
+    import_spreadsheet_api_leistungskatalog__id__import_spreadsheet_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_spreadsheet_api_leistungskatalog__id__import_spreadsheet_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extract_from_angebote_api_leistungskatalog__id__extract_from_angebote_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_leistung_api_leistung_get: {
         parameters: {
             query?: {
@@ -8014,6 +8322,40 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    catalog_match_api_lv__id__catalog_match_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
             };
             /** @description Validation Error */
             422: {

@@ -25,6 +25,7 @@ from ..deps import Principal, db_session, get_principal
 from ..errors import db_errors
 from ..gaeb.exporter import build_d84
 from ..gaeb.parser import GaebParseError, parse_gaeb
+from ..katalog.matcher import best_match
 from ..storage import store_original
 
 log = logging.getLogger(__name__)
@@ -127,12 +128,44 @@ def import_gaeb(
                 ),
             )
 
+    # Auto-match new positions against the catalog (best-effort; never fails import).
+    match_summary = {"auto": 0, "suggested": 0}
+    try:
+        leistungen = [
+            dict(r) for r in conn.execute(
+                "select id, kurztext from leistung where aktiv=true and deleted_at is null"
+            ).fetchall()
+        ]
+        if leistungen:
+            positions_to_match = conn.execute(
+                "select id, kurztext, row_version from lv_position "
+                "where lv_id=%s and deleted_at is null and matched_leistung_id is null",
+                (str(lv_id),),
+            ).fetchall()
+            for pos in positions_to_match:
+                if not pos["kurztext"]:
+                    continue
+                result = best_match(pos["kurztext"], leistungen)
+                if result.new_status == "unmatched":
+                    continue
+                conn.execute(
+                    "update lv_position set matched_leistung_id=%s, "
+                    "match_confidence=%s, match_status=%s "
+                    "where id=%s and row_version=%s",
+                    (result.leistung_id, str(result.confidence),
+                     result.new_status, pos["id"], pos["row_version"]),
+                )
+                match_summary[result.new_status if result.new_status == "auto" else "suggested"] += 1
+    except Exception as exc:
+        log.warning("gaeb.import: catalog-match failed (non-fatal): %s", exc)
+
     return {
         "gaeb_artifact_id": str(artifact_id),
         "lv_id": str(lv_id),
         "position_count": len(doc.positions),
         "project_name": doc.project_name,
         "phase": doc.phase,
+        "catalog_match": match_summary,
     }
 
 

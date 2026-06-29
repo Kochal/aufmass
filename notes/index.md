@@ -20,6 +20,7 @@ Organised by area, newest first within each area.
 ## quotation
 | Date | File | Summary |
 |------|------|---------|
+| 2026-06-29 | [catalog-matching](quotation/2026-06-29-catalog-matching.md) | String-similarity scan (partial): token-Jaccard + SequenceMatcher, auto@0.80/review@0.55; runs on GAEB import + on-demand button; full embedding path deferred (GPU + DPA pending) |
 | 2026-06-28 | [xrechnung-einvoice](quotation/2026-06-28-xrechnung-einvoice.md) | XRechnung UBL 2.1 + KoSIT gate live: issue-flow restructure, party master data (adresse/bankverbindung/billing-profile), unit codes, filesystem write-once store, Steuerberater flags |
 | 2026-06-26 | [quotation-engine-api](quotation/2026-06-26-quotation-engine-api.md) | 06 app layer complete: pricing engine (Decimal/HALF_UP), checks engine, 9 entities, berechnen→pruefen→ausstellen→version flow; deferred: XRechnung/KoSIT, GAEB, PDF matching |
 | 2026-06-23 | [quotation-db-layer](quotation/2026-06-23-quotation-db-layer.md) | Migrations 0015–0019: LV/Angebot/Rechnung schema; what the DB enforces vs. what the app layer owns |

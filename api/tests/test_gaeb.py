@@ -351,9 +351,11 @@ def test_gaeb_import(client: TestClient, gaeb_angebot_id):
     assert "01.001" in ozs
     assert "01.002" in ozs
     assert "02.001" in ozs
-    # All start in review status, source gaeb
+    # source must be gaeb; match_status is 'review' initially but may be
+    # updated to 'auto' or 'review' (with suggestion) by the catalog matcher
+    # that runs immediately after import — both are valid.
     for p in positions:
-        assert p["match_status"] == "review"
+        assert p["match_status"] in {"review", "auto"}
         assert p["source"] == "gaeb"
     # Menge preserved
     p_streichen = next(p for p in positions if p["oz"] == "01.002")

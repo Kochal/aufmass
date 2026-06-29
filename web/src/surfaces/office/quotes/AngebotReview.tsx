@@ -41,7 +41,7 @@ import { usePositionKeyboard } from "./usePositionKeyboard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Keyboard } from "lucide-react";
+import { ArrowLeft, Keyboard, ScanSearch } from "lucide-react";
 
 type LvPositionRead = components["schemas"]["LvPositionRead"];
 type CheckResultRead = components["schemas"]["CheckResultRead"];
@@ -276,6 +276,28 @@ export function AngebotReview() {
     },
   });
 
+  const catalogMatchMutation = useMutation({
+    mutationFn: async (lvId: string) => {
+      const res = await apiClient.POST("/api/lv/{id}/catalog-match" as never, {
+        params: { path: { id: lvId } },
+      } as never);
+      return unwrap(res as never) as { auto: number; suggested: number; unmatched: number };
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["lv-position"] });
+      const matched = data.auto + data.suggested;
+      if (matched === 0) {
+        toast("Kein Katalogeintrag gefunden — Positionen manuell zuweisen.");
+      } else {
+        toast.success(
+          `${matched} Positionen abgeglichen (${data.auto} automatisch, ${data.suggested} zur Prüfung).`,
+        );
+      }
+    },
+    onError: (err) =>
+      toast.error(`Katalog-Abgleich fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`),
+  });
+
   const berechnenMutation = useMutation({
     mutationFn: async () => {
       const res = await apiClient.POST("/api/angebot/{id}/berechnen", {
@@ -420,6 +442,19 @@ export function AngebotReview() {
             {pendingCount > 0 && ` · ${pendingCount} offen`}
           </p>
         </div>
+        {/* Catalog match button — only when unmatched positions exist */}
+        {lvList?.[0] && allPositions.some((p) => !p.matched_leistung_id) && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="shrink-0"
+            onClick={() => catalogMatchMutation.mutate(lvList[0].id)}
+            disabled={catalogMatchMutation.isPending}
+          >
+            <ScanSearch className="h-4 w-4 mr-1" />
+            {catalogMatchMutation.isPending ? "Abgleich…" : "Katalog abgleichen"}
+          </Button>
+        )}
         {/* Keyboard hint */}
         <div className="hidden lg:flex items-center gap-1 text-xs text-muted-foreground/60">
           <Keyboard className="h-3 w-3" />
