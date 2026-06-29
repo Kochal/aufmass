@@ -15,7 +15,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .db import healthcheck, pool
 from .routers import (
-    abnahmeprotokoll, adresse, angebot, arbeitszeit, auftraggeber, bankverbindung,
+    abnahmeprotokoll, adresse, angebot, arbeitszeit, aufmass, aufmass_entry,
+    auftraggeber, bankverbindung,
     bestellung, bestellposition, check_result, fahrt, fahrzeug, gewaehrleistung,
     kontakt, leistung, leistungskatalog, lieferant, lv, lv_position, mangel,
     material, projekt, rechnung, rechnung_position, tenant_billing_profile,
@@ -42,6 +43,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(aufmass.router)
+app.include_router(aufmass_entry.router)
 app.include_router(auftraggeber.router)
 app.include_router(adresse.router)
 app.include_router(bankverbindung.router)

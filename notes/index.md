@@ -8,6 +8,7 @@ Organised by area, newest first within each area.
 ## aufmass
 | Date | File | Summary |
 |------|------|---------|
+| 2026-06-29 | [aufmass-router](aufmass/2026-06-29-aufmass-router.md) | Router design: upload→extract→DB write, raw_text+is_deduction in candidate_readings jsonb, transaction timing, computed_result deferred to reconciler |
 | 2026-06-28 | [two-step-benchmark](aufmass/2026-06-28-two-step-benchmark.md) | two-step (raw OCR + mistral-small structuring) vs one-step: fixes cross-cell expression split; recommend as primary path; 0,5 misread and cell truncation remain |
 | 2026-06-28 | [ocr-quality-findings](aufmass/2026-06-28-ocr-quality-findings.md) | Three structural OCR problems: 0,80→0,5 misread (both scales), expression split at cell boundary, multi-line cell truncation; two-step approach now load-bearing, not optional |
 | 2026-06-28 | [mistral-ocr4-benchmark](aufmass/2026-06-28-mistral-ocr4-benchmark.md) | First live benchmark vs sample sheet: 25 entries, no hallucination, expression tree works; bbox mapping implemented (22/25, 3 non-numeric misses expected); v2 SDK import paths documented |
