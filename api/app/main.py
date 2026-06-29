@@ -17,10 +17,10 @@ from .db import healthcheck, pool
 from .routers import (
     abnahmeprotokoll, adresse, angebot, arbeitszeit, aufmass, aufmass_entry,
     auftraggeber, bankverbindung,
-    bestellung, bestellposition, check_result, fahrt, fahrzeug, gewaehrleistung,
-    kontakt, leistung, leistungskatalog, lieferant, lv, lv_position, mangel,
-    material, projekt, rechnung, rechnung_position, tenant_billing_profile,
-    tenant_tax_profile,
+    bestellung, bestellposition, check_result, fahrt, fahrzeug, gaeb,
+    gewaehrleistung, kontakt, leistung, leistungskatalog, lieferant, lv,
+    lv_position, mangel, material, projekt, rechnung, rechnung_position,
+    tenant_billing_profile, tenant_tax_profile,
 )
 
 
@@ -45,6 +45,7 @@ app.add_middleware(
 
 app.include_router(aufmass.router)
 app.include_router(aufmass_entry.router)
+app.include_router(gaeb.router)
 app.include_router(auftraggeber.router)
 app.include_router(adresse.router)
 app.include_router(bankverbindung.router)

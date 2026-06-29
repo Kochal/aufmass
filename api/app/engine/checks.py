@@ -5,14 +5,16 @@ check_result. Both angebot and rechnung use summe_netto/summe_brutto (standardis
 in migration 0021); no per-table column aliasing needed.
 
 Implemented:
-  arithmetic  (hard) — re-derives every gesamtpreis and the document totals.
-  zero_guard  (hard) — no zero/negative einheitspreis on a priced position.
-  unit        (soft) — position einheit matches the matched leistung's einheit.
-  completeness (hard) — every position is priced and not in review/unmatched.
+  arithmetic     (hard) — re-derives every gesamtpreis and the document totals.
+  zero_guard     (hard) — no zero/negative einheitspreis on a priced position.
+  unit           (soft) — position einheit matches the matched leistung's einheit.
+  completeness   (hard) — every position is priced and not in review/unmatched.
+  gaeb_roundtrip (hard) — OZ set / count / Menge / Einheit match the source GAEB.
+                           Called from the router (requires GAEB file I/O) when
+                           lv.source='gaeb'.
 
-Deferred (not emitted here):
-  gaeb_roundtrip — needs the parsed GAEB source; deferred to GAEB-import round.
-  plausibility   — needs price history; deferred to cold-start resolution.
+Deferred:
+  plausibility — needs price history; deferred to cold-start resolution.
 """
 from __future__ import annotations
 
@@ -134,6 +136,74 @@ def _check_completeness(positions: list[dict]) -> CheckRow:
         severity="hard",
         passed=len(incomplete) == 0,
         detail={"incomplete": incomplete} if incomplete else None,
+    )
+
+
+def check_gaeb_roundtrip(
+    current_positions: list[dict],
+    gaeb_positions: list,
+) -> CheckRow:
+    """Compare current lv_positions against the original parsed GAEB positions.
+
+    Checks:
+    - Same OZ set (no positions added or dropped)
+    - Same Menge per OZ
+    - Same Einheit per OZ
+    - OZ order preserved (position_nr sequence)
+
+    gaeb_positions: list[GaebPosition] from gaeb.parser.parse_gaeb()
+    """
+    from decimal import ROUND_HALF_UP
+
+    orig_by_oz = {p.oz: p for p in gaeb_positions}
+    curr_by_oz = {p["oz"]: p for p in current_positions if p.get("oz")}
+
+    issues: list[dict] = []
+
+    # Count mismatch
+    if len(orig_by_oz) != len(curr_by_oz):
+        issues.append({
+            "type": "count_mismatch",
+            "original": len(orig_by_oz),
+            "current": len(curr_by_oz),
+        })
+
+    # Positions in original but missing from current
+    for oz in orig_by_oz:
+        if oz not in curr_by_oz:
+            issues.append({"type": "position_dropped", "oz": oz})
+
+    # Positions in current but not in original
+    for oz in curr_by_oz:
+        if oz not in orig_by_oz:
+            issues.append({"type": "position_added", "oz": oz})
+
+    # Per-position checks on the intersection
+    for oz in orig_by_oz:
+        if oz not in curr_by_oz:
+            continue
+        orig = orig_by_oz[oz]
+        curr = curr_by_oz[oz]
+
+        # Menge
+        if orig.menge is not None and curr.get("menge") is not None:
+            orig_m = orig.menge.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            curr_m = Decimal(str(curr["menge"])).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            if orig_m != curr_m:
+                issues.append({"type": "menge_changed", "oz": oz,
+                                "original": str(orig_m), "current": str(curr_m)})
+
+        # Einheit (case-insensitive)
+        if orig.einheit and curr.get("einheit"):
+            if orig.einheit.lower() != str(curr["einheit"]).lower():
+                issues.append({"type": "einheit_changed", "oz": oz,
+                                "original": orig.einheit, "current": curr["einheit"]})
+
+    return CheckRow(
+        rule="gaeb_roundtrip",
+        severity="hard",
+        passed=len(issues) == 0,
+        detail={"issues": issues} if issues else None,
     )
 
 

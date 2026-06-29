@@ -78,3 +78,14 @@ def store_original(
         (kind, content_hash, storage_ref, retention_class),
     ).fetchone()
     return UUID(str(row["id"]))
+
+
+def read_original(storage_ref: str) -> bytes:
+    """Read a previously archived original by its storage_ref (tenant_id/sha256hex).
+
+    Raises FileNotFoundError if the file is missing from the store.
+    """
+    path = Path(settings.documents_dir) / storage_ref
+    if not path.exists():
+        raise FileNotFoundError(f"archived original not found: {storage_ref}")
+    return path.read_bytes()

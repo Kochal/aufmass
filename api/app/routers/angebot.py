@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from decimal import Decimal
 from uuid import UUID
 
@@ -14,6 +15,8 @@ from ..engine import pricing
 from ..errors import db_errors, require_row
 from ..schemas.angebot import AngebotBerechnen, AngebotCreate, AngebotRead, AngebotUpdate
 from ..schemas.check_result import CheckResultRead
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/angebot", tags=["Angebot"])
 
@@ -233,6 +236,24 @@ def pruefen_angebot(
     results = check_engine.run_checks(
         dict(angebot), list(positions), ust_satz, kleinunternehmer, leistungen
     )
+
+    # GAEB round-trip check — only when the LV was imported from a GAEB file.
+    lv = conn.execute(
+        "select lv.*, d.storage_ref from lv "
+        "left join gaeb_artifact ga on ga.id=lv.gaeb_artifact_id "
+        "left join document d on d.id=ga.document_id "
+        "where lv.angebot_id=%s and lv.deleted_at is null limit 1",
+        (str(id),),
+    ).fetchone()
+    if lv and lv["source"] == "gaeb" and lv.get("storage_ref"):
+        try:
+            from ..gaeb.parser import parse_gaeb
+            from ..storage import read_original
+            gaeb_bytes = read_original(lv["storage_ref"])
+            gaeb_doc = parse_gaeb(gaeb_bytes)
+            results.append(check_engine.check_gaeb_roundtrip(list(positions), gaeb_doc.positions))
+        except Exception as exc:
+            log.warning("pruefen: gaeb_roundtrip skipped — could not load/parse source: %s", exc)
 
     # Soft-delete prior unresolved engine-generated results for this document.
     conn.execute(
