@@ -34,9 +34,12 @@ def create_lieferant(
 ):
     with db_errors():
         row = conn.execute(
-            "insert into lieferant(tenant_id, name, ust_idnr, zahlungsziel_tage) "
-            "values (%s,%s,%s,%s) returning *",
-            (str(principal.tenant_id), body.name, body.ust_idnr, body.zahlungsziel_tage),
+            "insert into lieferant(tenant_id, name, ust_idnr, zahlungsziel_tage, adresse_id) "
+            "values (%s,%s,%s,%s,%s) returning *",
+            (
+                str(principal.tenant_id), body.name, body.ust_idnr, body.zahlungsziel_tage,
+                str(body.adresse_id) if body.adresse_id else None,
+            ),
         ).fetchone()
     return row
 
@@ -45,9 +48,13 @@ def create_lieferant(
 def update_lieferant(id: UUID, body: LieferantUpdate, conn: Connection = Depends(db_session)):
     with db_errors():
         row = conn.execute(
-            "update lieferant set name=%s, ust_idnr=%s, zahlungsziel_tage=%s "
+            "update lieferant set name=%s, ust_idnr=%s, zahlungsziel_tage=%s, adresse_id=%s "
             "where id=%s and deleted_at is null and row_version=%s returning *",
-            (body.name, body.ust_idnr, body.zahlungsziel_tage, str(id), body.row_version),
+            (
+                body.name, body.ust_idnr, body.zahlungsziel_tage,
+                str(body.adresse_id) if body.adresse_id else None,
+                str(id), body.row_version,
+            ),
         ).fetchone()
     require_row(row, conn, "lieferant", id)
     return row

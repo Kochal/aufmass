@@ -16,6 +16,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AddressFields,
+  AddressState,
+  emptyAddressState,
+  addressFromRead,
+  useAdresseUpsert,
+  useAdresseLoad,
+} from "@/surfaces/office/_shared/AddressFields";
 import type { components } from "@/api/schema";
 
 type ProjektRead = components["schemas"]["ProjektRead"];
@@ -108,17 +116,18 @@ export function ProjektDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const upsertAdresse = useAdresseUpsert();
   const [showDelete, setShowDelete] = useState(false);
 
   // Form state
   const [name, setName] = useState("");
   const [auftraggeberId, setAuftraggeberId] = useState("");
-  const [siteAdresse, setSiteAdresse] = useState("");
   const [regime, setRegime] = useState<"bgb" | "vob" | "">("");
   const [abrechnungsart, setAbrechnungsart] = useState<"einheitspreis" | "pauschal" | "">("");
   const [startDatum, setStartDatum] = useState("");
   const [endDatum, setEndDatum] = useState("");
   const [abnahmeDatum, setAbnahmeDatum] = useState("");
+  const [baustellenAddressState, setBaustellenAddressState] = useState<AddressState>(emptyAddressState());
 
   const { data: projekt, isLoading } = useQuery<ProjektRead>({
     queryKey: ["projekt", id],
@@ -150,11 +159,12 @@ export function ProjektDetail() {
     enabled: !!id,
   });
 
+  const { data: baustellenAdresse } = useAdresseLoad(projekt?.baustellen_adresse_id ?? null);
+
   useEffect(() => {
     if (!projekt) return;
     setName(projekt.name);
     setAuftraggeberId(projekt.auftraggeber_id);
-    setSiteAdresse(projekt.site_adresse ?? "");
     setRegime(projekt.regime ?? "");
     setAbrechnungsart(projekt.abrechnungsart ?? "");
     setStartDatum(projekt.start_datum ?? "");
@@ -162,16 +172,25 @@ export function ProjektDetail() {
     setAbnahmeDatum(projekt.abnahme_datum ?? "");
   }, [projekt]);
 
+  useEffect(() => {
+    if (baustellenAdresse) setBaustellenAddressState(addressFromRead(baustellenAdresse));
+  }, [baustellenAdresse]);
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!projekt) throw new Error("not loaded");
+      const baustellenAdresseId = await upsertAdresse({
+        adresseId: projekt.baustellen_adresse_id ?? null,
+        state: baustellenAddressState,
+      });
       const res = await apiClient.PUT("/api/projekt/{id}", {
         params: { path: { id: id! } },
         body: {
           row_version: projekt.row_version,
           name,
           auftraggeber_id: auftraggeberId,
-          site_adresse: siteAdresse || null,
+          site_adresse: projekt.site_adresse ?? null,
+          baustellen_adresse_id: baustellenAdresseId || null,
           regime: (regime as "bgb" | "vob") || null,
           abrechnungsart: (abrechnungsart as "einheitspreis" | "pauschal") || null,
           start_datum: startDatum || null,
@@ -183,6 +202,7 @@ export function ProjektDetail() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["projekt"] });
+      qc.invalidateQueries({ queryKey: ["adresse"] });
       toast.success("Gespeichert.");
     },
     onError: (err) =>
@@ -314,16 +334,6 @@ export function ProjektDetail() {
                 />
               </Field>
             </div>
-            <div className="col-span-2">
-              <Field id="p-site" label="Ausführungsort / Baustelle">
-                <Input
-                  id="p-site"
-                  value={siteAdresse}
-                  onChange={(e) => setSiteAdresse(e.target.value)}
-                  placeholder="Musterstraße 12, 10115 Berlin"
-                />
-              </Field>
-            </div>
             <Field id="p-regime" label="Rechtsrahmen">
               <Combobox
                 options={[
@@ -384,6 +394,20 @@ export function ProjektDetail() {
               />
             </Field>
           </div>
+        </section>
+
+        <Separator />
+
+        {/* Baustellenadresse */}
+        <section className="space-y-4">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+            Baustellenadresse
+          </h2>
+          <AddressFields
+            state={baustellenAddressState}
+            onChange={setBaustellenAddressState}
+            idPrefix="bst"
+          />
         </section>
 
         {/* Save */}

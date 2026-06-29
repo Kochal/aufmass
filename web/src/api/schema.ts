@@ -1698,6 +1698,8 @@ export interface components {
         AdresseCreate: {
             /** Strasse */
             strasse?: string | null;
+            /** Hausnummer */
+            hausnummer?: string | null;
             /** Adresszusatz */
             adresszusatz?: string | null;
             /** Plz */
@@ -1742,6 +1744,8 @@ export interface components {
             deleted_at?: string | null;
             /** Strasse */
             strasse?: string | null;
+            /** Hausnummer */
+            hausnummer?: string | null;
             /** Adresszusatz */
             adresszusatz?: string | null;
             /** Plz */
@@ -1757,6 +1761,8 @@ export interface components {
             row_version: number;
             /** Strasse */
             strasse?: string | null;
+            /** Hausnummer */
+            hausnummer?: string | null;
             /** Adresszusatz */
             adresszusatz?: string | null;
             /** Plz */
@@ -2218,6 +2224,8 @@ export interface components {
             typ?: ("privat" | "gewerblich" | "oeffentlich") | null;
             /** Ust Idnr */
             ust_idnr?: string | null;
+            /** Telefon */
+            telefon?: string | null;
             /** Adresse Id */
             adresse_id?: string | null;
             /** Leitweg Id */
@@ -2268,6 +2276,8 @@ export interface components {
             typ?: ("privat" | "gewerblich" | "oeffentlich") | null;
             /** Ust Idnr */
             ust_idnr?: string | null;
+            /** Telefon */
+            telefon?: string | null;
             /** Adresse Id */
             adresse_id?: string | null;
             /** Leitweg Id */
@@ -2289,6 +2299,8 @@ export interface components {
             typ?: ("privat" | "gewerblich" | "oeffentlich") | null;
             /** Ust Idnr */
             ust_idnr?: string | null;
+            /** Telefon */
+            telefon?: string | null;
             /** Adresse Id */
             adresse_id?: string | null;
             /** Leitweg Id */
@@ -3205,6 +3217,8 @@ export interface components {
             ust_idnr?: string | null;
             /** Zahlungsziel Tage */
             zahlungsziel_tage?: number | null;
+            /** Adresse Id */
+            adresse_id?: string | null;
         };
         /** LieferantRead */
         LieferantRead: {
@@ -3242,6 +3256,8 @@ export interface components {
             ust_idnr?: string | null;
             /** Zahlungsziel Tage */
             zahlungsziel_tage?: number | null;
+            /** Adresse Id */
+            adresse_id?: string | null;
         };
         /** LieferantUpdate */
         LieferantUpdate: {
@@ -3253,6 +3269,8 @@ export interface components {
             ust_idnr?: string | null;
             /** Zahlungsziel Tage */
             zahlungsziel_tage?: number | null;
+            /** Adresse Id */
+            adresse_id?: string | null;
         };
         /** LvCreate */
         LvCreate: {
@@ -3600,6 +3618,8 @@ export interface components {
             nummer?: string | null;
             /** Site Adresse */
             site_adresse?: string | null;
+            /** Baustellen Adresse Id */
+            baustellen_adresse_id?: string | null;
             /** Regime */
             regime?: ("bgb" | "vob") | null;
             /** Abrechnungsart */
@@ -3654,6 +3674,8 @@ export interface components {
             name: string;
             /** Site Adresse */
             site_adresse?: string | null;
+            /** Baustellen Adresse Id */
+            baustellen_adresse_id?: string | null;
             /**
              * Status
              * @enum {string}
@@ -3699,6 +3721,8 @@ export interface components {
             auftraggeber_id: string;
             /** Site Adresse */
             site_adresse?: string | null;
+            /** Baustellen Adresse Id */
+            baustellen_adresse_id?: string | null;
             /** Regime */
             regime?: ("bgb" | "vob") | null;
             /** Abrechnungsart */

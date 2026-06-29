@@ -34,10 +34,10 @@ def create_adresse(
 ):
     with db_errors():
         row = conn.execute(
-            "insert into adresse(tenant_id, strasse, adresszusatz, plz, ort, land) "
-            "values (%s,%s,%s,%s,%s,%s) returning *",
-            (str(principal.tenant_id), body.strasse, body.adresszusatz,
-             body.plz, body.ort, body.land),
+            "insert into adresse(tenant_id, strasse, hausnummer, adresszusatz, plz, ort, land) "
+            "values (%s,%s,%s,%s,%s,%s,%s) returning *",
+            (str(principal.tenant_id), body.strasse, body.hausnummer,
+             body.adresszusatz, body.plz, body.ort, body.land),
         ).fetchone()
     return row
 
@@ -46,9 +46,10 @@ def create_adresse(
 def update_adresse(id: UUID, body: AdresseUpdate, conn: Connection = Depends(db_session)):
     with db_errors():
         row = conn.execute(
-            "update adresse set strasse=%s, adresszusatz=%s, plz=%s, ort=%s, land=%s "
+            "update adresse set strasse=%s, hausnummer=%s, adresszusatz=%s, "
+            "  plz=%s, ort=%s, land=%s "
             "where id=%s and deleted_at is null and row_version=%s returning *",
-            (body.strasse, body.adresszusatz, body.plz, body.ort, body.land,
+            (body.strasse, body.hausnummer, body.adresszusatz, body.plz, body.ort, body.land,
              str(id), body.row_version),
         ).fetchone()
     require_row(row, conn, "adresse", id)

@@ -5,6 +5,7 @@ from .common import ReadBase, _Base
 
 class AdresseCreate(_Base):
     strasse: str | None = None
+    hausnummer: str | None = None
     adresszusatz: str | None = None
     plz: str | None = None
     ort: str | None = None
@@ -14,6 +15,7 @@ class AdresseCreate(_Base):
 class AdresseUpdate(_Base):
     row_version: int
     strasse: str | None = None
+    hausnummer: str | None = None
     adresszusatz: str | None = None
     plz: str | None = None
     ort: str | None = None
@@ -22,6 +24,7 @@ class AdresseUpdate(_Base):
 
 class AdresseRead(ReadBase):
     strasse: str | None = None
+    hausnummer: str | None = None
     adresszusatz: str | None = None
     plz: str | None = None
     ort: str | None = None

@@ -18,6 +18,7 @@ class ProjektCreate(_Base):
     name: str
     nummer: str | None = None          # auto-allocated when None
     site_adresse: str | None = None
+    baustellen_adresse_id: UUID | None = None
     regime: Regime | None = None
     abrechnungsart: Abrechnungsart | None = None
     start_datum: date | None = None
@@ -31,6 +32,7 @@ class ProjektUpdate(_Base):
     name: str
     auftraggeber_id: UUID
     site_adresse: str | None = None
+    baustellen_adresse_id: UUID | None = None
     regime: Regime | None = None
     abrechnungsart: Abrechnungsart | None = None
     start_datum: date | None = None
@@ -50,6 +52,7 @@ class ProjektRead(ReadBase):
     nummer: str | None = None
     name: str
     site_adresse: str | None = None
+    baustellen_adresse_id: UUID | None = None
     status: ProjektStatus
     status_vor_pause: str | None = None
     regime: Regime | None = None

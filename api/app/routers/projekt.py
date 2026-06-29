@@ -57,16 +57,17 @@ def create_projekt(
     with db_errors():
         row = conn.execute(
             "insert into projekt("
-            "  tenant_id, auftraggeber_id, name, nummer, site_adresse,"
+            "  tenant_id, auftraggeber_id, name, nummer, site_adresse, baustellen_adresse_id,"
             "  regime, abrechnungsart, start_datum, end_datum,"
             "  abnahme_datum, abnahme_document_id"
-            ") values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) returning *",
+            ") values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) returning *",
             (
                 str(principal.tenant_id),
                 str(body.auftraggeber_id),
                 body.name,
                 body.nummer,           # None → trigger allocates
                 body.site_adresse,
+                str(body.baustellen_adresse_id) if body.baustellen_adresse_id else None,
                 body.regime,
                 body.abrechnungsart,
                 body.start_datum,
@@ -87,7 +88,7 @@ def update_projekt(
     with db_errors():
         row = conn.execute(
             "update projekt set "
-            "  name=%s, auftraggeber_id=%s, site_adresse=%s,"
+            "  name=%s, auftraggeber_id=%s, site_adresse=%s, baustellen_adresse_id=%s,"
             "  regime=%s, abrechnungsart=%s, start_datum=%s, end_datum=%s,"
             "  abnahme_datum=%s, abnahme_document_id=%s "
             "where id=%s and deleted_at is null and row_version=%s returning *",
@@ -95,6 +96,7 @@ def update_projekt(
                 body.name,
                 str(body.auftraggeber_id),
                 body.site_adresse,
+                str(body.baustellen_adresse_id) if body.baustellen_adresse_id else None,
                 body.regime,
                 body.abrechnungsart,
                 body.start_datum,

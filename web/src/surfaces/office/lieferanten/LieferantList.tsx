@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Building2, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -6,46 +6,65 @@ import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  AddressFields,
+  AddressState,
+  emptyAddressState,
+  addressFromRead,
+  useAdresseUpsert,
+  useAdresseLoad,
+} from "@/surfaces/office/_shared/AddressFields";
 import type { components } from "@/api/schema";
 
 type LieferantRead = components["schemas"]["LieferantRead"];
 
 // ── Shared form fields ────────────────────────────────────────────────────────
 
-interface FieldProps {
+interface BaseFieldsProps {
   name: string; setName: (v: string) => void;
   ustIdnr: string; setUstIdnr: (v: string) => void;
   zahlungszielTage: string; setZahlungszielTage: (v: string) => void;
+  addressState: AddressState; setAddressState: (s: AddressState) => void;
+  idPrefix: string;
 }
 
-function LieferantFields({ name, setName, ustIdnr, setUstIdnr, zahlungszielTage, setZahlungszielTage }: FieldProps) {
+function LieferantFormFields({
+  name, setName, ustIdnr, setUstIdnr, zahlungszielTage, setZahlungszielTage,
+  addressState, setAddressState, idPrefix,
+}: BaseFieldsProps) {
   return (
-    <div className="space-y-3 py-2">
+    <div className="space-y-4 py-2">
       <div>
-        <label htmlFor="lf-name" className="text-sm font-medium">
+        <label htmlFor={`${idPrefix}-name`} className="text-sm font-medium">
           Name <span className="text-destructive">*</span>
         </label>
-        <Input id="lf-name" value={name} onChange={(e) => setName(e.target.value)}
+        <Input id={`${idPrefix}-name`} value={name} onChange={(e) => setName(e.target.value)}
           placeholder="Firmenname" className="mt-1" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor="lf-ust" className="text-sm font-medium">USt-IdNr.</label>
-          <Input id="lf-ust" value={ustIdnr} onChange={(e) => setUstIdnr(e.target.value)}
+          <label htmlFor={`${idPrefix}-ust`} className="text-sm font-medium">USt-IdNr.</label>
+          <Input id={`${idPrefix}-ust`} value={ustIdnr} onChange={(e) => setUstIdnr(e.target.value)}
             placeholder="DE123456789" className="mt-1 font-mono" />
         </div>
         <div>
-          <label htmlFor="lf-zz" className="text-sm font-medium">Zahlungsziel (Tage)</label>
-          <Input id="lf-zz" type="number" min={0} value={zahlungszielTage}
+          <label htmlFor={`${idPrefix}-zz`} className="text-sm font-medium">Zahlungsziel (Tage)</label>
+          <Input id={`${idPrefix}-zz`} type="number" min={0} value={zahlungszielTage}
             onChange={(e) => setZahlungszielTage(e.target.value)}
             placeholder="30" className="mt-1" />
         </div>
+      </div>
+      <Separator />
+      <div>
+        <p className="text-sm font-medium text-muted-foreground mb-3">Adresse</p>
+        <AddressFields state={addressState} onChange={setAddressState} idPrefix={idPrefix} />
       </div>
     </div>
   );
@@ -55,24 +74,32 @@ function LieferantFields({ name, setName, ustIdnr, setUstIdnr, zahlungszielTage,
 
 function CreateDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qc = useQueryClient();
+  const upsertAdresse = useAdresseUpsert();
   const [name, setName] = useState("");
   const [ustIdnr, setUstIdnr] = useState("");
   const [zahlungszielTage, setZahlungszielTage] = useState("");
+  const [addressState, setAddressState] = useState<AddressState>(emptyAddressState());
+
+  function reset() {
+    setName(""); setUstIdnr(""); setZahlungszielTage("");
+    setAddressState(emptyAddressState());
+  }
 
   const create = useMutation({
     mutationFn: async () => {
-      const res = await apiClient.POST("/api/lieferant", {
+      const adresseId = await upsertAdresse({ adresseId: null, state: addressState });
+      return unwrap(await apiClient.POST("/api/lieferant", {
         body: {
           name,
           ust_idnr: ustIdnr || null,
           zahlungsziel_tage: zahlungszielTage ? parseInt(zahlungszielTage, 10) : null,
+          adresse_id: adresseId || null,
         },
-      });
-      return unwrap(res);
+      }));
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lieferant"] });
-      setName(""); setUstIdnr(""); setZahlungszielTage("");
+      reset();
       onClose();
       toast.success("Lieferant angelegt.");
     },
@@ -80,13 +107,18 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: () => void })
   });
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm">
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose(); } }}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Neuer Lieferant</DialogTitle></DialogHeader>
-        <LieferantFields name={name} setName={setName} ustIdnr={ustIdnr} setUstIdnr={setUstIdnr}
-          zahlungszielTage={zahlungszielTage} setZahlungszielTage={setZahlungszielTage} />
+        <LieferantFormFields
+          name={name} setName={setName}
+          ustIdnr={ustIdnr} setUstIdnr={setUstIdnr}
+          zahlungszielTage={zahlungszielTage} setZahlungszielTage={setZahlungszielTage}
+          addressState={addressState} setAddressState={setAddressState}
+          idPrefix="lf-new"
+        />
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Abbrechen</Button>
+          <Button variant="outline" onClick={() => { reset(); onClose(); }}>Abbrechen</Button>
           <Button disabled={!name.trim() || create.isPending} onClick={() => create.mutate()}>Speichern</Button>
         </DialogFooter>
       </DialogContent>
@@ -98,27 +130,40 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: () => void })
 
 function EditDialog({ lieferant, onClose }: { lieferant: LieferantRead; onClose: () => void }) {
   const qc = useQueryClient();
+  const upsertAdresse = useAdresseUpsert();
   const [name, setName] = useState(lieferant.name);
   const [ustIdnr, setUstIdnr] = useState(lieferant.ust_idnr ?? "");
   const [zahlungszielTage, setZahlungszielTage] = useState(
     lieferant.zahlungsziel_tage != null ? String(lieferant.zahlungsziel_tage) : ""
   );
+  const [addressState, setAddressState] = useState<AddressState>(emptyAddressState());
+
+  const { data: adresse } = useAdresseLoad(lieferant.adresse_id ?? null);
+
+  useEffect(() => {
+    if (adresse) setAddressState(addressFromRead(adresse));
+  }, [adresse]);
 
   const update = useMutation({
     mutationFn: async () => {
-      const res = await apiClient.PUT("/api/lieferant/{id}", {
+      const adresseId = await upsertAdresse({
+        adresseId: lieferant.adresse_id ?? null,
+        state: addressState,
+      });
+      return unwrap(await apiClient.PUT("/api/lieferant/{id}", {
         params: { path: { id: lieferant.id } },
         body: {
           row_version: lieferant.row_version,
           name,
           ust_idnr: ustIdnr || null,
           zahlungsziel_tage: zahlungszielTage ? parseInt(zahlungszielTage, 10) : null,
+          adresse_id: adresseId || null,
         },
-      });
-      return unwrap(res);
+      }));
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lieferant"] });
+      qc.invalidateQueries({ queryKey: ["adresse"] });
       toast.success("Gespeichert.");
       onClose();
     },
@@ -127,10 +172,15 @@ function EditDialog({ lieferant, onClose }: { lieferant: LieferantRead; onClose:
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Lieferant bearbeiten</DialogTitle></DialogHeader>
-        <LieferantFields name={name} setName={setName} ustIdnr={ustIdnr} setUstIdnr={setUstIdnr}
-          zahlungszielTage={zahlungszielTage} setZahlungszielTage={setZahlungszielTage} />
+        <LieferantFormFields
+          name={name} setName={setName}
+          ustIdnr={ustIdnr} setUstIdnr={setUstIdnr}
+          zahlungszielTage={zahlungszielTage} setZahlungszielTage={setZahlungszielTage}
+          addressState={addressState} setAddressState={setAddressState}
+          idPrefix="lf-edit"
+        />
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Abbrechen</Button>
           <Button disabled={!name.trim() || update.isPending} onClick={() => update.mutate()}>Speichern</Button>

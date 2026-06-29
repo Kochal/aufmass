@@ -34,11 +34,12 @@ def create_auftraggeber(
 ):
     with db_errors():
         row = conn.execute(
-            "insert into auftraggeber(tenant_id, name, kundennummer, typ, ust_idnr,"
+            "insert into auftraggeber(tenant_id, name, kundennummer, typ, ust_idnr, telefon,"
             "  adresse_id, leitweg_id, elektronische_adresse, eas_scheme) "
-            "values (%s, %s, %s, %s, %s, %s, %s, %s, %s) returning *",
+            "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) returning *",
             (
                 str(principal.tenant_id), body.name, body.kundennummer, body.typ, body.ust_idnr,
+                body.telefon,
                 str(body.adresse_id) if body.adresse_id else None,
                 body.leitweg_id, body.elektronische_adresse, body.eas_scheme,
             ),
@@ -54,11 +55,11 @@ def update_auftraggeber(
 ):
     with db_errors():
         row = conn.execute(
-            "update auftraggeber set name=%s, kundennummer=%s, typ=%s, ust_idnr=%s,"
+            "update auftraggeber set name=%s, kundennummer=%s, typ=%s, ust_idnr=%s, telefon=%s,"
             "  adresse_id=%s, leitweg_id=%s, elektronische_adresse=%s, eas_scheme=%s "
             "where id=%s and deleted_at is null and row_version=%s returning *",
             (
-                body.name, body.kundennummer, body.typ, body.ust_idnr,
+                body.name, body.kundennummer, body.typ, body.ust_idnr, body.telefon,
                 str(body.adresse_id) if body.adresse_id else None,
                 body.leitweg_id, body.elektronische_adresse, body.eas_scheme,
                 str(id), body.row_version,

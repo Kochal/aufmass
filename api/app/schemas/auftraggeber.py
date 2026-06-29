@@ -11,6 +11,7 @@ class AuftraggeberCreate(_Base):
     kundennummer: str | None = None
     typ: AuftraggeberTyp | None = None
     ust_idnr: str | None = None
+    telefon: str | None = None
     adresse_id: UUID | None = None
     leitweg_id: str | None = None          # BT-10 Buyer Reference (mandatory for B2G)
     elektronische_adresse: str | None = None  # BT-49
@@ -23,6 +24,7 @@ class AuftraggeberUpdate(_Base):
     kundennummer: str | None = None
     typ: AuftraggeberTyp | None = None
     ust_idnr: str | None = None
+    telefon: str | None = None
     adresse_id: UUID | None = None
     leitweg_id: str | None = None
     elektronische_adresse: str | None = None
@@ -34,6 +36,7 @@ class AuftraggeberRead(ReadBase):
     kundennummer: str | None = None
     typ: AuftraggeberTyp | None = None
     ust_idnr: str | None = None
+    telefon: str | None = None
     adresse_id: UUID | None = None
     leitweg_id: str | None = None
     elektronische_adresse: str | None = None

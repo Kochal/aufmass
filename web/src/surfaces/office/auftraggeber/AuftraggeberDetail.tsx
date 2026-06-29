@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, Pencil, Phone, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -15,11 +16,25 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AddressFields,
+  AddressState,
+  emptyAddressState,
+  addressFromRead,
+  useAdresseUpsert,
+  useAdresseLoad,
+} from "@/surfaces/office/_shared/AddressFields";
 import type { components } from "@/api/schema";
 
 type AuftraggeberRead = components["schemas"]["AuftraggeberRead"];
-type AdresseRead = components["schemas"]["AdresseRead"];
 type AuftraggeberTyp = "privat" | "gewerblich" | "oeffentlich";
+type KontaktRead = components["schemas"]["KontaktRead"];
+
+const TYP_OPTIONS = [
+  { value: "gewerblich", label: "Gewerblich" },
+  { value: "privat", label: "Privat" },
+  { value: "oeffentlich", label: "Öffentlich" },
+];
 
 function Field({
   id,
@@ -43,18 +58,95 @@ function Field({
   );
 }
 
-function DeleteConfirmDialog({
+// ── Kontakt dialog ─────────────────────────────────────────────────────────────
+
+function KontaktDialog({
   open,
-  name,
-  onConfirm,
+  auftraggeberId,
+  existing,
   onClose,
-  isPending,
 }: {
   open: boolean;
-  name: string;
-  onConfirm: () => void;
+  auftraggeberId: string;
+  existing?: KontaktRead;
   onClose: () => void;
-  isPending: boolean;
+}) {
+  const qc = useQueryClient();
+  const [name, setName] = useState(existing?.name ?? "");
+  const [rolle, setRolle] = useState(existing?.rolle ?? "");
+  const [email, setEmail] = useState(existing?.email ?? "");
+  const [telefon, setTelefon] = useState(existing?.telefon ?? "");
+
+  useEffect(() => {
+    if (existing) {
+      setName(existing.name);
+      setRolle(existing.rolle ?? "");
+      setEmail(existing.email ?? "");
+      setTelefon(existing.telefon ?? "");
+    } else {
+      setName(""); setRolle(""); setEmail(""); setTelefon("");
+    }
+  }, [existing, open]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (existing) {
+        return unwrap(await apiClient.PUT("/api/kontakt/{id}", {
+          params: { path: { id: existing.id } },
+          body: { row_version: existing.row_version, name, rolle: rolle || null, email: email || null, telefon: telefon || null },
+        }));
+      }
+      return unwrap(await apiClient.POST("/api/kontakt", {
+        body: { auftraggeber_id: auftraggeberId, name, rolle: rolle || null, email: email || null, telefon: telefon || null },
+      }));
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["kontakt", auftraggeberId] });
+      toast.success(existing ? "Kontakt aktualisiert." : "Kontakt angelegt.");
+      onClose();
+    },
+    onError: (err) => toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{existing ? "Kontakt bearbeiten" : "Neuer Ansprechpartner"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div>
+            <label className="text-sm font-medium">Name <span className="text-destructive">*</span></label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Max Mustermann" className="mt-1" />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Rolle / Funktion</label>
+            <Input value={rolle} onChange={(e) => setRolle(e.target.value)} placeholder="z.B. Einkauf, Bauleitung" className="mt-1" />
+          </div>
+          <div>
+            <label className="text-sm font-medium">E-Mail</label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@firma.de" className="mt-1" />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Telefon</label>
+            <Input value={telefon} onChange={(e) => setTelefon(e.target.value)} placeholder="+49 30 …" className="mt-1" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Abbrechen</Button>
+          <Button disabled={!name || save.isPending} onClick={() => save.mutate()}>Speichern</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── DeleteConfirmDialog ────────────────────────────────────────────────────────
+
+function DeleteConfirmDialog({
+  open, name, onConfirm, onClose, isPending,
+}: {
+  open: boolean; name: string; onConfirm: () => void; onClose: () => void; isPending: boolean;
 }) {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -63,13 +155,10 @@ function DeleteConfirmDialog({
           <DialogTitle>Auftraggeber löschen?</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground py-2">
-          <strong>{name}</strong> wird archiviert. Verknüpfte Angebote und Rechnungen bleiben
-          erhalten.
+          <strong>{name}</strong> wird archiviert. Verknüpfte Angebote und Rechnungen bleiben erhalten.
         </p>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Abbrechen
-          </Button>
+          <Button variant="outline" onClick={onClose}>Abbrechen</Button>
           <Button variant="destructive" disabled={isPending} onClick={onConfirm}>
             {isPending ? "Wird gelöscht…" : "Löschen"}
           </Button>
@@ -79,24 +168,26 @@ function DeleteConfirmDialog({
   );
 }
 
+// ── Main component ─────────────────────────────────────────────────────────────
+
 export function AuftraggeberDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const upsertAdresse = useAdresseUpsert();
   const [showDelete, setShowDelete] = useState(false);
+  const [showKontaktDialog, setShowKontaktDialog] = useState(false);
+  const [editKontakt, setEditKontakt] = useState<KontaktRead | undefined>();
 
   // Stammdaten
   const [name, setName] = useState("");
   const [kundennummer, setKundennummer] = useState("");
   const [typ, setTyp] = useState<AuftraggeberTyp | "">("");
   const [ustIdnr, setUstIdnr] = useState("");
+  const [telefon, setTelefon] = useState("");
 
   // Adresse
-  const [strasse, setStrasse] = useState("");
-  const [adresszusatz, setAdresszusatz] = useState("");
-  const [plz, setPlz] = useState("");
-  const [ort, setOrt] = useState("");
-  const [land, setLand] = useState("DE");
+  const [addressState, setAddressState] = useState<AddressState>(emptyAddressState());
 
   // Rechnungsdaten
   const [leitwegId, setLeitwegId] = useState("");
@@ -105,88 +196,46 @@ export function AuftraggeberDetail() {
 
   const { data: ag, isLoading } = useQuery<AuftraggeberRead>({
     queryKey: ["auftraggeber", id],
-    queryFn: async () => {
-      const res = await apiClient.GET("/api/auftraggeber/{id}", {
-        params: { path: { id: id! } },
-      });
-      return unwrap(res) as AuftraggeberRead;
-    },
+    queryFn: async () => unwrap(await apiClient.GET("/api/auftraggeber/{id}", {
+      params: { path: { id: id! } },
+    })) as AuftraggeberRead,
     enabled: !!id,
   });
 
-  const { data: adresse } = useQuery<AdresseRead>({
-    queryKey: ["adresse", ag?.adresse_id],
-    queryFn: async () => {
-      const res = await apiClient.GET("/api/adresse/{id}", {
-        params: { path: { id: ag!.adresse_id! } },
-      });
-      return unwrap(res) as AdresseRead;
-    },
-    enabled: !!ag?.adresse_id,
+  const { data: adresse } = useAdresseLoad(ag?.adresse_id ?? null);
+
+  const { data: kontakte } = useQuery<KontaktRead[]>({
+    queryKey: ["kontakt", id],
+    queryFn: async () => unwrap(await apiClient.GET("/api/kontakt", {
+      params: { query: { auftraggeber_id: id } },
+    })) as KontaktRead[],
+    enabled: !!id,
   });
 
-  // Populate form when data arrives
   useEffect(() => {
     if (!ag) return;
     setName(ag.name);
     setKundennummer(ag.kundennummer ?? "");
     setTyp(ag.typ ?? "");
     setUstIdnr(ag.ust_idnr ?? "");
+    setTelefon(ag.telefon ?? "");
     setLeitwegId(ag.leitweg_id ?? "");
     setElektronischeAdresse(ag.elektronische_adresse ?? "");
     setEasScheme(ag.eas_scheme ?? "EM");
   }, [ag]);
 
   useEffect(() => {
-    if (!adresse) return;
-    setStrasse(adresse.strasse ?? "");
-    setAdresszusatz(adresse.adresszusatz ?? "");
-    setPlz(adresse.plz ?? "");
-    setOrt(adresse.ort ?? "");
-    setLand(adresse.land ?? "DE");
+    if (adresse) setAddressState(addressFromRead(adresse));
   }, [adresse]);
-
-  const hasAddressContent = strasse || plz || ort;
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!ag) throw new Error("not loaded");
-
-      // Step 1: upsert address if there's content
-      let newAdresseId: string | null = ag.adresse_id ?? null;
-
-      if (hasAddressContent) {
-        if (ag.adresse_id && adresse) {
-          // Update existing address
-          await apiClient.PUT("/api/adresse/{id}", {
-            params: { path: { id: ag.adresse_id } },
-            body: {
-              row_version: adresse.row_version,
-              strasse: strasse || null,
-              adresszusatz: adresszusatz || null,
-              plz: plz || null,
-              ort: ort || null,
-              land: land || "DE",
-            },
-          });
-        } else if (!ag.adresse_id) {
-          // Create new address
-          const res = await apiClient.POST("/api/adresse", {
-            body: {
-              strasse: strasse || null,
-              adresszusatz: adresszusatz || null,
-              plz: plz || null,
-              ort: ort || null,
-              land: land || "DE",
-            },
-          });
-          const created = unwrap(res) as AdresseRead;
-          newAdresseId = created.id;
-        }
-      }
-
-      // Step 2: update Auftraggeber
-      const res = await apiClient.PUT("/api/auftraggeber/{id}", {
+      const newAdresseId = await upsertAdresse({
+        adresseId: ag.adresse_id ?? null,
+        state: addressState,
+      });
+      return unwrap(await apiClient.PUT("/api/auftraggeber/{id}", {
         params: { path: { id: id! } },
         body: {
           row_version: ag.row_version,
@@ -194,37 +243,39 @@ export function AuftraggeberDetail() {
           kundennummer: kundennummer || null,
           typ: (typ as AuftraggeberTyp) || null,
           ust_idnr: ustIdnr || null,
+          telefon: telefon || null,
           adresse_id: newAdresseId || null,
           leitweg_id: leitwegId || null,
           elektronische_adresse: elektronischeAdresse || null,
           eas_scheme: easScheme || "EM",
         },
-      });
-      return unwrap(res);
+      }));
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["auftraggeber"] });
       qc.invalidateQueries({ queryKey: ["adresse"] });
       toast.success("Gespeichert.");
     },
-    onError: (err) =>
-      toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
+    onError: (err) => toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiClient.DELETE("/api/auftraggeber/{id}", {
-        params: { path: { id: id! } },
-      });
-      return res;
-    },
+    mutationFn: async () => apiClient.DELETE("/api/auftraggeber/{id}", { params: { path: { id: id! } } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["auftraggeber"] });
       toast.success("Auftraggeber archiviert.");
       navigate("/office/auftraggeber");
     },
-    onError: (err) =>
-      toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
+    onError: (err) => toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
+  });
+
+  const deleteKontakt = useMutation({
+    mutationFn: async (kid: string) => apiClient.DELETE("/api/kontakt/{id}", { params: { path: { id: kid } } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["kontakt", id] });
+      toast.success("Kontakt entfernt.");
+    },
+    onError: (err) => toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
   });
 
   if (isLoading) {
@@ -249,13 +300,9 @@ export function AuftraggeberDetail() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Link
-            to="/office/auftraggeber"
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
+          <Link to="/office/auftraggeber" className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <h1 className="text-xl font-semibold">{ag.name}</h1>
@@ -263,13 +310,8 @@ export function AuftraggeberDetail() {
             <span className="text-sm font-mono text-muted-foreground">{ag.kundennummer}</span>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-destructive"
-          onClick={() => setShowDelete(true)}
-          title="Auftraggeber löschen"
-        >
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive"
+          onClick={() => setShowDelete(true)} title="Auftraggeber löschen">
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
@@ -277,51 +319,31 @@ export function AuftraggeberDetail() {
       <div className="space-y-6">
         {/* Stammdaten */}
         <section className="space-y-4">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-            Stammdaten
-          </h2>
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Stammdaten</h2>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <Field id="ag-name" label="Name" required>
-                <Input
-                  id="ag-name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Firmenname oder Nachname"
-                />
+                <Input id="ag-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Firmenname oder Nachname" />
               </Field>
             </div>
             <Field id="ag-kundennr" label="Kundennummer">
-              <Input
-                id="ag-kundennr"
-                value={kundennummer}
-                onChange={(e) => setKundennummer(e.target.value)}
-                placeholder="z.B. KD-0042"
-              />
+              <Input id="ag-kundennr" value={kundennummer} onChange={(e) => setKundennummer(e.target.value)} placeholder="z.B. KD-0042" />
             </Field>
             <Field id="ag-typ" label="Typ">
-              <select
-                id="ag-typ"
+              <Combobox
+                options={TYP_OPTIONS}
                 value={typ}
-                onChange={(e) => setTyp(e.target.value as AuftraggeberTyp | "")}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="">— kein —</option>
-                <option value="gewerblich">Gewerblich</option>
-                <option value="privat">Privat</option>
-                <option value="oeffentlich">Öffentlich</option>
-              </select>
+                onChange={(v) => setTyp(v as AuftraggeberTyp | "")}
+                placeholder="— kein —"
+                allowClear
+              />
             </Field>
-            <div className="col-span-2">
-              <Field id="ag-ust" label="USt-IdNr.">
-                <Input
-                  id="ag-ust"
-                  value={ustIdnr}
-                  onChange={(e) => setUstIdnr(e.target.value)}
-                  placeholder="DE123456789"
-                />
-              </Field>
-            </div>
+            <Field id="ag-ust" label="USt-IdNr.">
+              <Input id="ag-ust" value={ustIdnr} onChange={(e) => setUstIdnr(e.target.value)} placeholder="DE123456789" />
+            </Field>
+            <Field id="ag-tel" label="Telefon">
+              <Input id="ag-tel" value={telefon} onChange={(e) => setTelefon(e.target.value)} placeholder="+49 30 …" type="tel" />
+            </Field>
           </div>
         </section>
 
@@ -329,57 +351,8 @@ export function AuftraggeberDetail() {
 
         {/* Adresse */}
         <section className="space-y-4">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-            Adresse
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <Field id="ag-strasse" label="Straße und Hausnummer">
-                <Input
-                  id="ag-strasse"
-                  value={strasse}
-                  onChange={(e) => setStrasse(e.target.value)}
-                  placeholder="Musterstraße 1"
-                />
-              </Field>
-            </div>
-            <div className="col-span-2">
-              <Field id="ag-zusatz" label="Adresszusatz">
-                <Input
-                  id="ag-zusatz"
-                  value={adresszusatz}
-                  onChange={(e) => setAdresszusatz(e.target.value)}
-                  placeholder="c/o, Etage, …"
-                />
-              </Field>
-            </div>
-            <Field id="ag-plz" label="PLZ">
-              <Input
-                id="ag-plz"
-                value={plz}
-                onChange={(e) => setPlz(e.target.value)}
-                placeholder="12345"
-                maxLength={10}
-              />
-            </Field>
-            <Field id="ag-ort" label="Ort">
-              <Input
-                id="ag-ort"
-                value={ort}
-                onChange={(e) => setOrt(e.target.value)}
-                placeholder="Berlin"
-              />
-            </Field>
-            <Field id="ag-land" label="Land (ISO)">
-              <Input
-                id="ag-land"
-                value={land}
-                onChange={(e) => setLand(e.target.value.toUpperCase())}
-                placeholder="DE"
-                maxLength={2}
-              />
-            </Field>
-          </div>
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Adresse</h2>
+          <AddressFields state={addressState} onChange={setAddressState} idPrefix="ag" />
         </section>
 
         <Separator />
@@ -387,57 +360,81 @@ export function AuftraggeberDetail() {
         {/* Rechnungsdaten */}
         <section className="space-y-4">
           <div>
-            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-              Rechnungsdaten
-            </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Pflichtfelder für XRechnung / B2G-Pflicht
-            </p>
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Rechnungsdaten</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Pflichtfelder für XRechnung / B2G-Pflicht</p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <Field id="ag-leitweg" label="Leitweg-ID (BT-10)">
-                <Input
-                  id="ag-leitweg"
-                  value={leitwegId}
-                  onChange={(e) => setLeitwegId(e.target.value)}
-                  placeholder="04011000-1234512345-06"
-                />
+                <Input id="ag-leitweg" value={leitwegId} onChange={(e) => setLeitwegId(e.target.value)} placeholder="04011000-1234512345-06" />
               </Field>
-              <p className="text-xs text-muted-foreground mt-1">
-                Pflicht für öffentliche Auftraggeber (B2G). Vergabestelle mitteilen lassen.
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Pflicht für öffentliche Auftraggeber (B2G). Vergabestelle mitteilen lassen.</p>
             </div>
             <div className="col-span-2">
               <Field id="ag-eaddr" label="Elektronische Adresse (BT-49)">
-                <Input
-                  id="ag-eaddr"
-                  value={elektronischeAdresse}
-                  onChange={(e) => setElektronischeAdresse(e.target.value)}
-                  placeholder="einkauf@auftraggeber.de"
-                />
+                <Input id="ag-eaddr" value={elektronischeAdresse} onChange={(e) => setElektronischeAdresse(e.target.value)} placeholder="einkauf@auftraggeber.de" />
               </Field>
             </div>
             <Field id="ag-eas" label="EAS-Schema (BT-49-1)">
-              <Input
-                id="ag-eas"
-                value={easScheme}
-                onChange={(e) => setEasScheme(e.target.value)}
-                placeholder="EM"
-              />
+              <Input id="ag-eas" value={easScheme} onChange={(e) => setEasScheme(e.target.value)} placeholder="EM" />
             </Field>
           </div>
         </section>
 
         {/* Save */}
         <div className="flex justify-end pt-2">
-          <Button
-            disabled={!name || saveMutation.isPending}
-            onClick={() => saveMutation.mutate()}
-          >
+          <Button disabled={!name || saveMutation.isPending} onClick={() => saveMutation.mutate()}>
             {saveMutation.isPending ? "Speichern…" : "Speichern"}
           </Button>
         </div>
+
+        <Separator />
+
+        {/* Ansprechpartner */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Ansprechpartner</h2>
+            <Button size="sm" variant="outline" onClick={() => { setEditKontakt(undefined); setShowKontaktDialog(true); }}>
+              <Plus className="h-4 w-4 mr-1" />Hinzufügen
+            </Button>
+          </div>
+          {!kontakte?.length ? (
+            <p className="text-sm text-muted-foreground">Noch kein Ansprechpartner hinterlegt.</p>
+          ) : (
+            <div className="space-y-2">
+              {kontakte.map((k) => (
+                <div key={k.id} className="flex items-start justify-between rounded-md border p-3 bg-card">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium">{k.name}</p>
+                    {k.rolle && <p className="text-xs text-muted-foreground">{k.rolle}</p>}
+                    <div className="flex items-center gap-3 mt-1">
+                      {k.email && (
+                        <a href={`mailto:${k.email}`} className="flex items-center gap-1 text-xs text-primary hover:underline">
+                          <Mail className="h-3 w-3" />{k.email}
+                        </a>
+                      )}
+                      {k.telefon && (
+                        <a href={`tel:${k.telefon}`} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                          <Phone className="h-3 w-3" />{k.telefon}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-7 w-7"
+                      onClick={() => { setEditKontakt(k); setShowKontaktDialog(true); }}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      onClick={() => deleteKontakt.mutate(k.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
 
       <DeleteConfirmDialog
@@ -447,6 +444,15 @@ export function AuftraggeberDetail() {
         onClose={() => setShowDelete(false)}
         isPending={deleteMutation.isPending}
       />
+
+      {showKontaktDialog && (
+        <KontaktDialog
+          open={showKontaktDialog}
+          auftraggeberId={id!}
+          existing={editKontakt}
+          onClose={() => { setShowKontaktDialog(false); setEditKontakt(undefined); }}
+        />
+      )}
     </div>
   );
 }
