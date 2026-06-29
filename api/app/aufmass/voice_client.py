@@ -1,12 +1,12 @@
 """Voice extraction client for Aufmaß dictation (directive 07b).
 
 Two-step pipeline:
-  1. OpenAI Whisper API (whisper-1) — German ASR → transcript + segment timestamps
+  1. OpenAI Whisper API (whisper-1) via app.voice.asr.transcribe — German ASR
+     → transcript + segment timestamps
   2. Mistral chat (mistral-small-latest) — structures transcript → AufmassExtractionResult
 
-PoC note: the ASR step uses the OpenAI Whisper API (egress to US, no DPA in place).
-Swap _transcribe() for a faster-whisper local call when moving to production
-(see directive 07b and notes/aufmass/2026-06-29-voice-aufmass-design.md).
+PoC note: ASR uses the OpenAI Whisper API (egress to US, no DPA in place).
+Swap app.voice.asr for a faster-whisper call in production (see directive 07b).
 
 Does no arithmetic. On failure raises ExtractionError; the caller routes to manual.
 """
@@ -16,20 +16,17 @@ import logging
 import time
 from typing import Any
 
-import httpx
 from mistralai.client import Mistral
 from mistralai.client.models.jsonschema import JSONSchema
 from mistralai.client.models.responseformat import ResponseFormat
 
 from app.aufmass.schema import AufmassExtractionResult
 from app.config import settings
+from app.voice.asr import ASRError, transcribe as asr_transcribe
 
 log = logging.getLogger(__name__)
 
-_ASR_ENDPOINT = "https://api.openai.com/v1/audio/transcriptions"
-_ASR_MAX_BYTES = 25 * 1024 * 1024  # OpenAI Whisper API limit
 _STRUCTURE_MODEL = "mistral-small-latest"
-_TIMEOUT = 120.0  # seconds (httpx uses float; Mistral SDK uses ms)
 _MISTRAL_TIMEOUT_MS = 120_000
 _RETRY_DELAYS = [5.0, 15.0, 45.0]
 
@@ -41,16 +38,6 @@ _STRUCTURE_FORMAT = ResponseFormat(
         strict=True,
     ),
 )
-
-_MIME_TO_FILENAME: dict[str, str] = {
-    "audio/webm": "audio.webm",
-    "audio/ogg": "audio.ogg",
-    "audio/mp4": "audio.mp4",
-    "audio/mpeg": "audio.mp3",
-    "audio/wav": "audio.wav",
-    "audio/x-wav": "audio.wav",
-    "audio/x-m4a": "audio.m4a",
-}
 
 _VOICE_SYSTEM_PROMPT = """\
 Du extrahierst strukturierte Messdaten aus einem gesprochenen deutschen Aufmaß
@@ -107,39 +94,24 @@ class ExtractionError(Exception):
 def extract(audio_bytes: bytes, mime_type: str = "audio/webm") -> dict[str, Any]:
     """Extract structured measurement candidates from one spoken Aufmaß recording.
 
-    Parameters
-    ----------
-    audio_bytes:
-        Raw audio data (webm/opus, mp4, ogg, wav). Sent to OpenAI Whisper API.
-    mime_type:
-        MIME type of the audio (used to pick a filename for the multipart upload).
+    Returns same shape as vision_client.extract() — ``{"entries": [...],
+    "_asr_model": ..., "_structure_model": ..., "_endpoint": ...}``.
+    Each entry has ``bbox`` set to ``{"start_s": x, "end_s": y}`` where a
+    segment match was found (stored as ``source_crop_ref`` in the DB).
 
-    Returns
-    -------
-    dict
-        Same shape as vision_client.extract() — ``{"entries": [...],
-        "_asr_model": ..., "_structure_model": ..., "_endpoint": ...}``.
-        Each entry has ``bbox`` set to ``{"start_s": x, "end_s": y}`` where a
-        segment match was found (stored as ``source_crop_ref`` in the DB).
-
-    Raises
-    ------
-    ExtractionError
-        On size limit exceeded, API error, or structuring failure after retries.
+    Raises ExtractionError on ASR failure or structuring failure after retries.
     """
-    if len(audio_bytes) > _ASR_MAX_BYTES:
-        raise ExtractionError(
-            f"audio too large ({len(audio_bytes) // 1024 // 1024} MB); "
-            f"OpenAI Whisper API limit is 25 MB"
-        )
+    try:
+        asr = asr_transcribe(audio_bytes, mime_type)
+    except ASRError as exc:
+        raise ExtractionError(str(exc)) from exc
 
-    transcript, segments = _transcribe(audio_bytes, mime_type)
-    if not transcript.strip():
+    if not asr.transcript.strip():
         raise ExtractionError("ASR returned empty transcript")
 
-    result = _structure(transcript)
+    result = _structure(asr.transcript)
     out = result.model_dump(mode="json")
-    _assign_segment_refs(out["entries"], segments)
+    _assign_segment_refs(out["entries"], asr.segments)
     out["_asr_model"] = settings.asr_model_id
     out["_structure_model"] = _STRUCTURE_MODEL
     out["_endpoint"] = "api.openai.com"
@@ -147,54 +119,7 @@ def extract(audio_bytes: bytes, mime_type: str = "audio/webm") -> dict[str, Any]
 
 
 # ---------------------------------------------------------------------------
-# Step 1: ASR (OpenAI Whisper API via httpx)
-# ---------------------------------------------------------------------------
-
-def _transcribe(audio_bytes: bytes, mime_type: str) -> tuple[str, list[dict]]:
-    """POST audio to the OpenAI Whisper API. Returns (transcript, segments).
-
-    Uses ``response_format=verbose_json`` to get segment-level timestamps that
-    ``_assign_segment_refs`` maps to ``source_crop_ref`` in the DB.
-    """
-    base_mime = mime_type.split(";")[0].strip().lower()
-    filename = _MIME_TO_FILENAME.get(base_mime, "audio.webm")
-
-    t0 = time.monotonic()
-    try:
-        with httpx.Client(timeout=_TIMEOUT) as client:
-            resp = client.post(
-                _ASR_ENDPOINT,
-                headers={"Authorization": f"Bearer {settings.openai_api_key}"},
-                files={"file": (filename, audio_bytes, base_mime)},
-                data={
-                    "model": settings.asr_model_id,
-                    "language": "de",
-                    "response_format": "verbose_json",
-                },
-            )
-        resp.raise_for_status()
-    except httpx.HTTPStatusError as exc:
-        raise ExtractionError(
-            f"OpenAI Whisper API returned {exc.response.status_code}: {exc.response.text[:200]}"
-        ) from exc
-    except httpx.TimeoutException as exc:
-        raise ExtractionError("OpenAI Whisper API timed out") from exc
-
-    payload = resp.json()
-    segments = [
-        {"start": s["start"], "end": s["end"], "text": s["text"].strip()}
-        for s in payload.get("segments", [])
-    ]
-    transcript = payload.get("text", "").strip()
-    log.info(
-        "voice_client: ASR %.1fs  %d segs  %d chars  model=%s",
-        time.monotonic() - t0, len(segments), len(transcript), settings.asr_model_id,
-    )
-    return transcript, segments
-
-
-# ---------------------------------------------------------------------------
-# Step 2: transcript structuring (Mistral chat)
+# Step 2: structuring (Mistral chat)
 # ---------------------------------------------------------------------------
 
 def _structure(transcript: str) -> AufmassExtractionResult:

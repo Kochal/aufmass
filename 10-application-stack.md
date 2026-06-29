@@ -15,6 +15,11 @@ e-invoice validation and GAEB are `06`; image preprocessing is `07`; M365 is
 Audience: you (Claude Code) and any human contributor.
 
 ## Changelog
+- 2026-06-29 (b): Voice form-fill implemented. POST /api/voice/intent (OpenAI
+  Whisper PoC ASR + Mistral intent parse, form-level multi-field dictation).
+  useVoiceFill hook + VoiceFillButton presenter. Wired into Aufmaß-entry
+  correction form (EntryCard). ASR is the PoC OpenAI path — not yet self-hosted;
+  known divergence from directive 07b to close before production.
 - 2026-06-29: Voice input section added. PWA mic capture (MediaRecorder),
   backend intent-parse endpoint (Whisper + self-hosted LLM), confirm-before-commit
   rule, field-capture-screens-first rollout. See

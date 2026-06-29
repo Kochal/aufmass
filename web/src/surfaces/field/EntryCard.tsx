@@ -1,11 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { components } from "@/api/schema";
 import { cn, confidenceTier, formatMenge } from "@/lib/utils";
 import { ConfidenceBand } from "@/surfaces/office/quotes/ConfidenceBand";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { VoiceFillButton } from "@/components/VoiceFillButton";
+import { useVoiceFill } from "@/lib/useVoiceFill";
+import type { FieldFill } from "@/lib/useVoiceFill";
 import { CheckCheck, Pencil, Trash2 } from "lucide-react";
+
+const ENTRY_FIELDS = [
+  { name: "bauteil",  label: "Bauteil",  hint: "Text" },
+  { name: "einheit",  label: "Einheit",  hint: "z.B. m2, lfm, Stk" },
+  { name: "messwert", label: "Messwert", hint: "Dezimalzahl" },
+];
 
 type AufmassEntryRead = components["schemas"]["AufmassEntryRead"];
 
@@ -42,6 +52,39 @@ export function EntryCard({
   const [writtenResult, setWrittenResult] = useState("");
   const [bauteil, setBauteil] = useState("");
   const [einheit, setEinheit] = useState("");
+  const [pendingFills, setPendingFills] = useState<FieldFill[]>([]);
+
+  const voice = useVoiceFill(ENTRY_FIELDS);
+
+  // When fills arrive from the voice hook, surface them as pending confirms.
+  useEffect(() => {
+    if (voice.fills.length > 0) {
+      setPendingFills(voice.fills);
+      voice.reset();
+    }
+  }, [voice.fills]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Show ASR / intent errors via toast.
+  useEffect(() => {
+    if (voice.error) toast.error(voice.error);
+  }, [voice.error]);
+
+  function applyFills() {
+    for (const fill of pendingFills) {
+      if (fill.field === "bauteil")  setBauteil(fill.value);
+      if (fill.field === "einheit")  setEinheit(fill.value);
+      if (fill.field === "messwert") setWrittenResult(fill.value);
+    }
+    setPendingFills([]);
+  }
+
+  async function handleVoiceToggle() {
+    if (voice.recording) {
+      voice.stop();
+    } else {
+      await voice.start();
+    }
+  }
 
   const tier = confidenceTier(
     entry.confidence != null ? String(entry.confidence) : undefined,
@@ -56,6 +99,8 @@ export function EntryCard({
     setWrittenResult(entry.written_result != null ? String(entry.written_result) : "");
     setBauteil(entry.bauteil ?? "");
     setEinheit(entry.einheit ?? "");
+    setPendingFills([]);
+    voice.reset();
     setEditing(true);
   }
 
@@ -113,6 +158,49 @@ export function EntryCard({
         {/* Inline edit form */}
         {editing && (
           <div className="space-y-2 pt-1">
+            {/* Voice fill trigger */}
+            {voice.supported && (
+              <div className="flex items-center gap-2">
+                <VoiceFillButton
+                  recording={voice.recording}
+                  busy={voice.busy}
+                  onToggle={handleVoiceToggle}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {voice.recording
+                    ? "Aufnahme läuft — erneut tippen zum Beenden"
+                    : voice.busy
+                      ? "Wird verarbeitet…"
+                      : "Sprechen statt tippen"}
+                </span>
+              </div>
+            )}
+
+            {/* Pending voice confirmation strip */}
+            {pendingFills.length > 0 && (
+              <div className="rounded border border-border bg-muted/40 px-3 py-2 space-y-1.5">
+                <p className="text-xs font-medium text-muted-foreground">Erkannt — übernehmen?</p>
+                <p className="text-xs font-mono">
+                  {pendingFills
+                    .map((f) => `${ENTRY_FIELDS.find((s) => s.name === f.field)?.label ?? f.field}: ${f.value}`)
+                    .join(" · ")}
+                </p>
+                <div className="flex gap-1.5">
+                  <Button size="sm" className="h-6 text-xs px-2" onClick={applyFills}>
+                    Übernehmen
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 text-xs px-2"
+                    onClick={() => setPendingFills([])}
+                  >
+                    Verwerfen
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs text-muted-foreground">Bauteil</label>

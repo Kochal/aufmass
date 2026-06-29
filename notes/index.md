@@ -44,6 +44,7 @@ Organised by area, newest first within each area.
 | Date | File | Summary |
 |------|------|---------|
 | 2026-06-29 | [aufmass-field-surface](ui/2026-06-29-aufmass-field-surface.md) | Field surface live: AufmassList + AufmassReview; DevLogin UUID mismatch bug fixed; two-key auth localStorage; multipart upload via native fetch not apiClient |
+| 2026-06-29 | [voice-form-fill-implementation](ui/2026-06-29-voice-form-fill-implementation.md) | Implementation note: form-level dictation chosen (multi-field routing via LLM); app.voice.asr shared module; first wired into EntryCard correction; PoC uses OpenAI Whisper (egress divergence flagged) |
 | 2026-06-29 | [voice-form-filling](ui/2026-06-29-voice-form-filling.md) | Voice form/field filling: PWA mic → backend Whisper → confirm-before-commit; no money math from voice; field-capture screens first; audio not stored for form-fill |
 | 2026-06-28 | [e2e-browser-test](ui/2026-06-28-e2e-browser-test.md) | E2E browser walkthrough complete; two bugs fixed (ausstellenMutation cache, nummernkreis format); immutability trigger confirmed; nummernkreis seed requirement documented |
 | 2026-06-28 | [design-system-and-surfaces](ui/2026-06-28-design-system-and-surfaces.md) | shadcn/ui on Tailwind v4; three surfaces one design system; confidence/trust colour tokens; react-router-dom v7 + react-query v5 + openapi-fetch; dev-auth seam; office quote-review slice live |
