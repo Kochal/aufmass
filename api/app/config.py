@@ -39,12 +39,11 @@ class Settings(BaseSettings):
     mistral_api_key: str = Field(default="", alias="MISTRAL_API_KEY")
     mistral_model_id: str = Field(default="mistral-ocr-4-0", alias="MISTRAL_MODEL_ID")
 
-    # Whisper ASR — voice Aufmaß extraction (directive 07b, self-hosted).
-    # Model is downloaded from HuggingFace on first use and cached locally.
-    # Dev default: "base" (~145 MB, fast). Production: "large-v3" (~3 GB, accurate).
-    asr_model_id: str = Field(default="base", alias="ASR_MODEL_ID")
-    asr_device: str = Field(default="cpu", alias="ASR_DEVICE")
-    asr_compute_type: str = Field(default="int8", alias="ASR_COMPUTE_TYPE")
+    # OpenAI Whisper API — voice Aufmaß extraction (directive 07b, PoC path).
+    # PoC only: audio is sent to OpenAI (US, no DPA). Replace with self-hosted
+    # faster-whisper for production (see directive 07b).
+    openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
+    asr_model_id: str = Field(default="whisper-1", alias="ASR_MODEL_ID")
 
     # Self-hosted VLM fallback (directive 03 escape hatch) — not the active path.
     # Kept here so the fallback can be wired in without touching the schema.

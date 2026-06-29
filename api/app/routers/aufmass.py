@@ -123,6 +123,8 @@ def upload_voice_aufmass(
     if not audio_bytes:
         raise HTTPException(400, "empty audio file")
 
+    if not settings.openai_api_key:
+        raise HTTPException(503, "OPENAI_API_KEY not configured (needed for Whisper ASR)")
     if not settings.mistral_api_key:
         raise HTTPException(503, "MISTRAL_API_KEY not configured (needed for structuring)")
 
