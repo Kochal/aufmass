@@ -25,9 +25,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, CheckCheck, Pencil, Trash2 } from "lucide-react";
 
-// Units that are almost certainly typos (m2/m3 are accepted keyboard shorthand for m²/m³)
+// Units that are almost certainly typos or unusual in Maler/Bodenbelag work.
+// m2 is kept as accepted keyboard shorthand for m²; m3/cbm are uncommon in this trade.
 const UNIT_TYPOS: Record<string, string> = {
   m1: "m oder lm",
+  m3: "m³ oder cbm (ungewöhnlich für Maler/Boden – bitte prüfen)",
 };
 
 type LvPositionRead = components["schemas"]["LvPositionRead"];
