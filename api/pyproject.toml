@@ -11,6 +11,7 @@ dependencies = [
     "pydantic-settings>=2.3",
     "httpx>=0.27",          # backend -> validator / model / m365 (server-side only)
     "mistralai>=2.0",        # vision client: Mistral Document AI OCR (directive 07a); v2 SDK
+    "faster-whisper>=1.0",   # voice client: self-hosted German ASR (directive 07b)
 ]
 
 [project.optional-dependencies]

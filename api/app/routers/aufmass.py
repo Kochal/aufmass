@@ -21,6 +21,8 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, Upl
 from psycopg import Connection
 
 from ..aufmass.vision_client import ExtractionError, extract
+from ..aufmass.voice_client import ExtractionError as VoiceExtractionError
+from ..aufmass.voice_client import extract as voice_extract
 from ..config import settings
 from ..deps import Principal, db_session, get_principal
 from ..errors import db_errors, require_row
@@ -33,6 +35,10 @@ router = APIRouter(prefix="/api/aufmass", tags=["Aufmass"])
 
 _SELECT_ALIVE = "select * from aufmass where deleted_at is null"
 _ALLOWED_MIME = frozenset({"image/jpeg", "image/png", "image/webp"})
+_ALLOWED_AUDIO_MIME = frozenset({
+    "audio/webm", "audio/ogg", "audio/mp4", "audio/mpeg",
+    "audio/wav", "audio/x-wav", "audio/x-m4a",
+})
 
 
 # ── Photo upload (primary path) ─────────────────────────────────────────────
@@ -76,6 +82,67 @@ def upload_aufmass(
         aufmass_row = conn.execute(
             "insert into aufmass(tenant_id, projekt_id, erfasst_von, quelle, source_document_id)"
             " values (%s,%s,%s,'foto',%s) returning *",
+            (str(principal.tenant_id), str(projekt_id), str(principal.user_id), str(doc_id)),
+        ).fetchone()
+
+    entries = []
+    for entry in extraction.get("entries", []):
+        row = _insert_entry(conn, aufmass_row["id"], principal.tenant_id, entry)
+        entries.append(row)
+
+    result = dict(aufmass_row)
+    result["entries"] = entries
+    return result
+
+
+# ── Voice upload (co-equal path) ────────────────────────────────────────────
+
+@router.post("/upload-voice", response_model=AufmassRead, status_code=201)
+def upload_voice_aufmass(
+    projekt_id: UUID = Form(...),
+    audio: UploadFile = File(...),
+    principal: Principal = Depends(get_principal),
+    conn: Connection = Depends(db_session),
+):
+    """Upload a spoken Aufmaß recording, run self-hosted Whisper ASR + Mistral
+    structuring, archive the original audio and return the aufmass with all
+    extracted entries for human review.
+
+    Requires MISTRAL_API_KEY (for the structuring step) and faster-whisper
+    installed with ffmpeg on PATH. ASR runs locally; audio never leaves the server.
+    """
+    content_type = (audio.content_type or "audio/webm").split(";")[0].strip()
+    if content_type not in _ALLOWED_AUDIO_MIME:
+        raise HTTPException(
+            400,
+            f"unsupported audio type {content_type!r}; "
+            "accept webm/ogg/mp4/mpeg/wav/m4a",
+        )
+
+    audio_bytes = audio.file.read()
+    if not audio_bytes:
+        raise HTTPException(400, "empty audio file")
+
+    if not settings.mistral_api_key:
+        raise HTTPException(503, "MISTRAL_API_KEY not configured (needed for structuring)")
+
+    # ASR + structuring run BEFORE any DB write — same pattern as photo upload.
+    log.info(
+        "aufmass.upload-voice: extracting (proj=%s  %dB  %s)",
+        projekt_id, len(audio_bytes), content_type,
+    )
+    try:
+        extraction = voice_extract(audio_bytes, content_type)
+    except VoiceExtractionError as exc:
+        log.warning("aufmass.upload-voice: extraction failed: %s", exc)
+        raise HTTPException(502, f"voice extraction failed: {exc}") from exc
+
+    doc_id = store_original(conn, principal.tenant_id, "aufmass_voice", audio_bytes)
+
+    with db_errors():
+        aufmass_row = conn.execute(
+            "insert into aufmass(tenant_id, projekt_id, erfasst_von, quelle, source_document_id)"
+            " values (%s,%s,%s,'voice',%s) returning *",
             (str(principal.tenant_id), str(projekt_id), str(principal.user_id), str(doc_id)),
         ).fetchone()
 
