@@ -161,7 +161,10 @@ export function AddressFields({ state, onChange, idPrefix = "addr" }: AddressFie
         <div className="flex gap-2 mt-1">
           <Input
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              if (!e.target.value.trim()) setSuggestions(null);
+            }}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSearch(); } }}
             placeholder="z.B. Musterstraße 12 Berlin"
             autoComplete="off"
