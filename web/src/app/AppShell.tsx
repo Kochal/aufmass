@@ -14,6 +14,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   BookOpen,
   FileText,
+  FolderOpen,
   HardHat,
   LayoutDashboard,
   LogOut,
@@ -50,6 +51,7 @@ export function AppShell() {
           { to: "/office/katalog", icon: BookOpen, label: "Katalog" },
           { to: "/office/rechnungen", icon: FileText, label: "Rechnungen", stub: true },
           { to: "/office/auftraggeber", icon: Users, label: "Auftraggeber" },
+          { to: "/office/projekte", icon: FolderOpen, label: "Projekte" },
         ]
       : []),
     ...(canAccessField(role)

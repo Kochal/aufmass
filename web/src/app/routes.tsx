@@ -12,6 +12,7 @@ import { AngebotList } from "@/surfaces/office/quotes/AngebotList";
 import { AngebotReview } from "@/surfaces/office/quotes/AngebotReview";
 import { KatalogList, KatalogDetail } from "@/surfaces/office/katalog";
 import { AuftraggeberList, AuftraggeberDetail } from "@/surfaces/office/auftraggeber";
+import { ProjektList, ProjektDetail } from "@/surfaces/office/projekte";
 import { AufmassList, AufmassReview } from "@/surfaces/field";
 import { DashboardStub } from "@/surfaces/dashboard";
 import { useAuth, canAccessOffice, canAccessField } from "@/auth/AuthContext";
@@ -55,6 +56,8 @@ export function AppRoutes() {
           />
           <Route path="auftraggeber" element={<AuftraggeberList />} />
           <Route path="auftraggeber/:id" element={<AuftraggeberDetail />} />
+          <Route path="projekte" element={<ProjektList />} />
+          <Route path="projekte/:id" element={<ProjektDetail />} />
           <Route path="katalog" element={<KatalogList />} />
           <Route path="katalog/:id" element={<KatalogDetail />} />
         </Route>

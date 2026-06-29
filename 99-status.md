@@ -3,6 +3,12 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-29 (h): Projekte screen live (ProjektList + ProjektDetail). Status
+  filter on list; color-coded status badges (10 statuses); inline status change
+  via PATCH /{id}/status; Projektdaten form (name, auftraggeber, site_adresse,
+  regime, abrechnungsart) + Termine (start/end/abnahme); linked Angebote section
+  (GET /api/angebot?projekt_id=...) with links into AngebotReview. Nav item added.
+  TS clean. See notes/ui/2026-06-29-projekte-screen.md.
 - 2026-06-29 (g): Auftraggeber screen live (AuftraggeberList + AuftraggeberDetail).
   Three sections: Stammdaten, Adresse (upsert pattern — creates adresse row on
   first save, updates on subsequent), Rechnungsdaten (leitweg_id/BT-10,
@@ -116,13 +122,13 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 10: Auftraggeber screen live.** Client management (list + detail) with
-Stammdaten, Adresse upsert, and Rechnungsdaten (leitweg_id/BT-10 for B2G, BT-49
-electronic address). Catalog tool + catalog matching also complete (Phase 9).
-119 tests green.
-Next: Rechnungen UI, Projekte screen, Arbeitszeit/Fahrt/Mangel field screens
-(voice-fill already wired; need dedicated UI), real Entra SSO (09), swap ASR to
-self-hosted faster-whisper for production, vector embedding matching.
+**Phase 11: Projekte + Auftraggeber screens live.** Core office CRUD complete:
+Angebote (review/GAEB/XRechnung), Katalog, Auftraggeber, Projekte. Projekte
+screen includes inline status lifecycle (10 statuses), linked Angebote panel,
+regime/Abrechnungsart/Termine. 119 tests green.
+Next: Rechnungen UI, Arbeitszeit/Fahrt/Mangel field screens (voice-fill already
+wired; need dedicated UI), real Entra SSO (09), swap ASR to self-hosted
+faster-whisper for production, vector embedding matching.
 
 ## Directive set
 
