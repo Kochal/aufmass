@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -36,12 +36,23 @@ type Leistung = components["schemas"]["LeistungRead"];
 
 // ── Manual add dialog ─────────────────────────────────────────────────────────
 
+function suggestCode(leistungen: Leistung[]): string {
+  const nums = leistungen.map((l) => {
+    const m = l.code.match(/(\d+)$/);
+    return m ? parseInt(m[1], 10) : 0;
+  });
+  const max = nums.length > 0 ? Math.max(...nums) : 0;
+  return String(max + 1).padStart(3, "0");
+}
+
 function AddLeistungDialog({
   katalogId,
+  leistungen,
   open,
   onClose,
 }: {
   katalogId: string;
+  leistungen: Leistung[];
   open: boolean;
   onClose: () => void;
 }) {
@@ -53,6 +64,10 @@ function AddLeistungDialog({
     einheit: "",
     einheitspreis: "",
   });
+
+  useEffect(() => {
+    if (open) setForm((f) => ({ ...f, code: suggestCode(leistungen) }));
+  }, [open]);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -569,6 +584,7 @@ export function KatalogDetail() {
         <>
           <AddLeistungDialog
             katalogId={id}
+            leistungen={leistungen ?? []}
             open={showAdd}
             onClose={() => setShowAdd(false)}
           />
