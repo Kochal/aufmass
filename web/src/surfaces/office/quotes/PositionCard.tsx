@@ -23,7 +23,14 @@ import { ConfidenceBand } from "./ConfidenceBand";
 import { CheckFlags } from "./CheckFlags";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCheck, Pencil, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCheck, Pencil, Trash2 } from "lucide-react";
+
+// Units that are almost certainly OCR/voice typos
+const UNIT_TYPOS: Record<string, string> = {
+  m1: "m oder lm",
+  m2: "m²",
+  m3: "m³",
+};
 
 type LvPositionRead = components["schemas"]["LvPositionRead"];
 type LeistungRead = components["schemas"]["LeistungRead"];
@@ -65,6 +72,16 @@ export function PositionCard({
   const isConfirmed = position.match_status === "confirmed";
   const isUnmatched = !position.matched_leistung_id;
   const isManualEntry = isUnmatched && position.source === "manual";
+
+  // Unit warnings
+  const unitTypoHint = position.einheit
+    ? UNIT_TYPOS[position.einheit.trim().toLowerCase()] ?? null
+    : null;
+  const unitMismatch =
+    matchedLeistung &&
+    position.einheit &&
+    matchedLeistung.einheit &&
+    position.einheit.trim().toLowerCase() !== matchedLeistung.einheit.trim().toLowerCase();
 
   // Row sum: prefer the engine-computed gesamtpreis; fall back to a live preview
   const gesamtpreisEngine = position.gesamtpreis ?? null;
@@ -182,8 +199,16 @@ export function PositionCard({
 
           {/* Menge × Einheit */}
           {position.menge && (
-            <p className="text-xs text-foreground font-mono">
+            <p className="text-xs text-foreground font-mono flex items-center gap-1">
               {formatMenge(position.menge, position.einheit)}
+              {unitTypoHint && (
+                <span
+                  className="text-amber-600 inline-flex items-center"
+                  title={`Einheit „${position.einheit}" ungewöhnlich — meintest du ${unitTypoHint}?`}
+                >
+                  <AlertTriangle className="h-3 w-3" />
+                </span>
+              )}
             </p>
           )}
         </div>
@@ -221,6 +246,12 @@ export function PositionCard({
                   {matchedLeistung.kurztext}
                 </p>
               </div>
+              {unitMismatch && (
+                <p className="text-[10px] text-amber-600 flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                  Einheit abweichend: Position „{position.einheit}", Katalog „{matchedLeistung.einheit}"
+                </p>
+              )}
             </div>
           ) : (
             // matched_leistung_id set but not in our leistung map yet (loading)

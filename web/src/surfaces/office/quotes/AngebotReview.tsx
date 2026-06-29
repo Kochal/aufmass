@@ -335,11 +335,13 @@ function EditPositionDialog({
 function AddPositionDialog({
   angebotId,
   lvList,
+  leistungen,
   open,
   onClose,
 }: {
   angebotId: string;
   lvList: LvRead[];
+  leistungen: LeistungRead[];
   open: boolean;
   onClose: () => void;
 }) {
@@ -351,13 +353,34 @@ function AddPositionDialog({
     einheit: "",
     einheitspreis: "",
   });
+  const [leistungSearch, setLeistungSearch] = useState("");
+  const [selectedLeistungId, setSelectedLeistungId] = useState<string | null>(null);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const suggestions = leistungSearch.length >= 2
+    ? leistungen.filter((l) => {
+        const q = leistungSearch.toLowerCase();
+        return l.kurztext.toLowerCase().includes(q) || l.code.toLowerCase().includes(q);
+      }).slice(0, 6)
+    : [];
+
+  function applyLeistung(l: LeistungRead) {
+    setForm((f) => ({
+      ...f,
+      kurztext: l.kurztext,
+      einheit: l.einheit,
+      einheitspreis: l.einheitspreis ?? f.einheitspreis,
+    }));
+    setSelectedLeistungId(l.id);
+    setLeistungSearch("");
+  }
+
+  const selectedLeistung = selectedLeistungId ? leistungen.find((l) => l.id === selectedLeistungId) : null;
+
   const add = useMutation({
     mutationFn: async () => {
-      // Ensure an LV exists for this Angebot; create one if not
       let lvId: string;
       if (lvList.length > 0) {
         lvId = lvList[0].id;
@@ -375,8 +398,10 @@ function AddPositionDialog({
           menge: form.menge || undefined,
           einheit: form.einheit || undefined,
           einheitspreis: form.einheitspreis || undefined,
+          matched_leistung_id: selectedLeistungId || undefined,
+          match_confidence: selectedLeistungId ? "1.00" : undefined,
           source: "manual",
-          match_status: "review",
+          match_status: selectedLeistungId ? "confirmed" : "review",
         },
       });
       return unwrap(res);
@@ -385,6 +410,8 @@ function AddPositionDialog({
       qc.invalidateQueries({ queryKey: ["lv-position"] });
       qc.invalidateQueries({ queryKey: ["lv", { angebot_id: angebotId }] });
       setForm({ kurztext: "", langtext: "", menge: "", einheit: "", einheitspreis: "" });
+      setLeistungSearch("");
+      setSelectedLeistungId(null);
       onClose();
     },
     onError: (err) =>
@@ -393,66 +420,116 @@ function AddPositionDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Position hinzufügen</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
-          <div>
-            <label htmlFor="pos-kurztext" className="text-sm font-medium">Kurztext *</label>
-            <Input
-              id="pos-kurztext"
-              value={form.kurztext}
-              onChange={set("kurztext")}
-              placeholder="Wände streichen 2× Dispersionsfarbe"
-              className="mt-1"
-              autoFocus
-            />
-          </div>
-          <div>
-            <label htmlFor="pos-langtext" className="text-sm font-medium">Positionstext</label>
-            <Input
-              id="pos-langtext"
-              value={form.langtext}
-              onChange={set("langtext")}
-              placeholder="Detaillierte Beschreibung der Leistung…"
-              className="mt-1"
-            />
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-1">
-              <label htmlFor="pos-menge" className="text-sm font-medium">Menge</label>
+
+          {/* Leistung autosuggest */}
+          {leistungen.length > 0 && (
+            <div className="relative">
+              <label className="text-sm font-medium">Leistung aus Katalog (optional)</label>
+              {selectedLeistung ? (
+                <div className="mt-1 flex items-center gap-2 rounded-md border bg-muted px-2 py-1.5 text-sm">
+                  <span className="font-mono text-xs text-muted-foreground">{selectedLeistung.code}</span>
+                  <span className="flex-1 truncate">{selectedLeistung.kurztext}</span>
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground text-xs shrink-0"
+                    onClick={() => { setSelectedLeistungId(null); setLeistungSearch(""); }}
+                  >✕</button>
+                </div>
+              ) : (
+                <>
+                  <div className="relative mt-1">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                    <Input
+                      value={leistungSearch}
+                      onChange={(e) => setLeistungSearch(e.target.value)}
+                      placeholder="Bezeichnung oder Code eingeben…"
+                      className="pl-8"
+                      autoFocus
+                    />
+                  </div>
+                  {suggestions.length > 0 && (
+                    <div className="absolute z-50 left-0 right-0 top-full mt-0.5 rounded-md border bg-popover shadow-md max-h-48 overflow-y-auto">
+                      {suggestions.map((l) => (
+                        <button
+                          key={l.id}
+                          type="button"
+                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                          onMouseDown={(e) => { e.preventDefault(); applyLeistung(l); }}
+                        >
+                          <span className="font-mono text-xs text-muted-foreground w-16 shrink-0">{l.code}</span>
+                          <span className="flex-1 truncate">{l.kurztext}</span>
+                          <span className="text-xs text-muted-foreground shrink-0">{l.einheit}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="border-t pt-3 space-y-3">
+            <div>
+              <label htmlFor="pos-kurztext" className="text-sm font-medium">Kurztext *</label>
               <Input
-                id="pos-menge"
-                value={form.menge}
-                onChange={set("menge")}
-                placeholder="42"
-                type="number"
-                step="0.001"
+                id="pos-kurztext"
+                value={form.kurztext}
+                onChange={set("kurztext")}
+                placeholder="Wände streichen 2× Dispersionsfarbe"
+                className="mt-1"
+                autoFocus={leistungen.length === 0}
+              />
+            </div>
+            <div>
+              <label htmlFor="pos-langtext" className="text-sm font-medium">Positionstext</label>
+              <Input
+                id="pos-langtext"
+                value={form.langtext}
+                onChange={set("langtext")}
+                placeholder="Detaillierte Beschreibung der Leistung…"
                 className="mt-1"
               />
             </div>
-            <div className="col-span-1">
-              <label htmlFor="pos-einheit" className="text-sm font-medium">Einheit</label>
-              <Input
-                id="pos-einheit"
-                value={form.einheit}
-                onChange={set("einheit")}
-                placeholder="m²"
-                className="mt-1"
-              />
-            </div>
-            <div className="col-span-1">
-              <label htmlFor="pos-ep" className="text-sm font-medium">EP (€)</label>
-              <Input
-                id="pos-ep"
-                value={form.einheitspreis}
-                onChange={set("einheitspreis")}
-                placeholder="12.50"
-                type="number"
-                step="0.01"
-                className="mt-1"
-              />
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-1">
+                <label htmlFor="pos-menge" className="text-sm font-medium">Menge</label>
+                <Input
+                  id="pos-menge"
+                  value={form.menge}
+                  onChange={set("menge")}
+                  placeholder="42"
+                  type="number"
+                  step="0.001"
+                  className="mt-1"
+                />
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="pos-einheit" className="text-sm font-medium">Einheit</label>
+                <Input
+                  id="pos-einheit"
+                  value={form.einheit}
+                  onChange={set("einheit")}
+                  placeholder="m²"
+                  className="mt-1"
+                />
+              </div>
+              <div className="col-span-1">
+                <label htmlFor="pos-ep" className="text-sm font-medium">EP (€)</label>
+                <Input
+                  id="pos-ep"
+                  value={form.einheitspreis}
+                  onChange={set("einheitspreis")}
+                  placeholder="12.50"
+                  type="number"
+                  step="0.01"
+                  className="mt-1"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -1031,6 +1108,7 @@ export function AngebotReview() {
       <AddPositionDialog
         angebotId={id!}
         lvList={lvList ?? []}
+        leistungen={allLeistungen}
         open={showAddPosition}
         onClose={() => setShowAddPosition(false)}
       />
