@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Receipt } from "lucide-react";
 import { apiClient, unwrap } from "@/lib/api";
@@ -135,6 +135,7 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string)
 }
 
 export function RechnungList() {
+  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const [statusFilter, setStatusFilter] = useState("");
 
@@ -218,11 +219,13 @@ export function RechnungList() {
             </TableHeader>
             <TableBody>
               {rechnungen.map((r) => (
-                <TableRow key={r.id} className="cursor-pointer hover:bg-accent/50">
+                <TableRow
+                  key={r.id}
+                  className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => navigate(`/office/rechnungen/${r.id}`)}
+                >
                   <TableCell className="font-mono text-xs">
-                    <Link to={`/office/rechnungen/${r.id}`} className="block w-full hover:underline">
-                      {r.rechnungsnummer ?? "Entwurf"}
-                    </Link>
+                    {r.rechnungsnummer ?? "Entwurf"}
                   </TableCell>
                   <TableCell className="text-sm">{r.auftraggeber_id ? agMap.get(r.auftraggeber_id) ?? "—" : "—"}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.projekt_id ? projMap.get(r.projekt_id) ?? "—" : "—"}</TableCell>
