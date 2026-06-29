@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Camera, Plus, ArrowRight, HardHat } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Combobox } from "@/components/ui/combobox";
 
 type AufmassRead = components["schemas"]["AufmassRead"];
 type ProjektRead = components["schemas"]["ProjektRead"];
@@ -105,24 +106,12 @@ export function AufmassList() {
         {projektLoading ? (
           <Skeleton className="h-9 w-full" />
         ) : (
-          <select
-            id="projekt-select"
-            className={cn(
-              "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1",
-              "text-sm shadow-sm transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              "disabled:cursor-not-allowed disabled:opacity-50",
-            )}
+          <Combobox
+            options={(projekte ?? []).map((p: ProjektRead) => ({ value: p.id, label: p.name }))}
             value={projektId}
-            onChange={(e) => setProjektId(e.target.value)}
-          >
-            <option value="">Projekt wählen…</option>
-            {(projekte ?? []).map((p: ProjektRead) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setProjektId(v)}
+            placeholder="Projekt wählen…"
+          />
         )}
       </div>
 

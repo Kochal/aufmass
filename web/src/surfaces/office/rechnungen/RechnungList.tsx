@@ -5,6 +5,7 @@ import { Plus, Receipt } from "lucide-react";
 import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -93,31 +94,25 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string)
         <div className="space-y-3 py-2">
           <div>
             <label htmlFor="rech-ag" className="text-sm font-medium">Auftraggeber</label>
-            <select
-              id="rech-ag"
+            <Combobox
+              className="mt-1"
+              options={auftraggeber?.map((ag) => ({ value: ag.id, label: ag.name })) ?? []}
               value={auftraggeberId}
-              onChange={(e) => { setAuftraggeberId(e.target.value); setProjektId(""); }}
-              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              <option value="">— kein —</option>
-              {auftraggeber?.map((ag) => (
-                <option key={ag.id} value={ag.id}>{ag.name}</option>
-              ))}
-            </select>
+              onChange={(v) => { setAuftraggeberId(v); setProjektId(""); }}
+              placeholder="— kein —"
+              allowClear
+            />
           </div>
           <div>
             <label htmlFor="rech-proj" className="text-sm font-medium">Projekt</label>
-            <select
-              id="rech-proj"
+            <Combobox
+              className="mt-1"
+              options={filteredProjekte?.map((p) => ({ value: p.id, label: p.name })) ?? []}
               value={projektId}
-              onChange={(e) => setProjektId(e.target.value)}
-              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              <option value="">— kein —</option>
-              {filteredProjekte?.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+              onChange={(v) => setProjektId(v)}
+              placeholder="— kein —"
+              allowClear
+            />
           </div>
         </div>
         <DialogFooter>
@@ -172,15 +167,17 @@ export function RechnungList() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <select
+          <Combobox
+            className="w-40"
+            options={[
+              { value: "draft", label: "Entwurf" },
+              { value: "issued", label: "Ausgestellt" },
+            ]}
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-8 rounded-md border border-input bg-transparent px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="">Alle Status</option>
-            <option value="draft">Entwurf</option>
-            <option value="issued">Ausgestellt</option>
-          </select>
+            onChange={(v) => setStatusFilter(v)}
+            placeholder="Alle Status"
+            allowClear
+          />
           <Button size="sm" onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4 mr-1" />
             Neue Rechnung

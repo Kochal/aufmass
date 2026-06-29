@@ -6,6 +6,7 @@ import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -135,17 +136,13 @@ function GewaehrleistungFields({
           <label htmlFor="gw-proj" className="text-sm font-medium">
             Projekt <span className="text-destructive">*</span>
           </label>
-          <select
-            id="gw-proj"
+          <Combobox
+            className="mt-1"
+            options={projekte.map((p) => ({ value: p.id, label: p.name }))}
             value={projektId}
-            onChange={(e) => setProjektId(e.target.value)}
-            className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="">— wählen —</option>
-            {projekte.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+            onChange={(v) => setProjektId(v)}
+            placeholder="— wählen —"
+          />
         </div>
       )}
       <div className="grid grid-cols-2 gap-3">
@@ -153,15 +150,15 @@ function GewaehrleistungFields({
           <label htmlFor="gw-regime" className="text-sm font-medium">
             Regime <span className="text-destructive">*</span>
           </label>
-          <select
-            id="gw-regime"
+          <Combobox
+            className="mt-1"
+            options={[
+              { value: "vob", label: "VOB (§ 13 VOB/B)" },
+              { value: "bgb", label: "BGB (§ 634a BGB)" },
+            ]}
             value={regime}
-            onChange={(e) => setRegime(e.target.value)}
-            className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="vob">VOB (§ 13 VOB/B)</option>
-            <option value="bgb">BGB (§ 634a BGB)</option>
-          </select>
+            onChange={(v) => setRegime(v)}
+          />
         </div>
         <div>
           <label htmlFor="gw-frist" className="text-sm font-medium">
@@ -193,16 +190,16 @@ function GewaehrleistungFields({
       {showStatus && setStatus && (
         <div>
           <label htmlFor="gw-status" className="text-sm font-medium">Status</label>
-          <select
-            id="gw-status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="laufend">Laufend</option>
-            <option value="abgelaufen">Abgelaufen</option>
-            <option value="beendet">Beendet</option>
-          </select>
+          <Combobox
+            className="mt-1"
+            options={[
+              { value: "laufend", label: "Laufend" },
+              { value: "abgelaufen", label: "Abgelaufen" },
+              { value: "beendet", label: "Beendet" },
+            ]}
+            value={status ?? ""}
+            onChange={(v) => setStatus(v)}
+          />
         </div>
       )}
     </div>
@@ -394,16 +391,18 @@ export function GewaehrleistungList() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <select
+          <Combobox
+            className="w-40"
+            options={[
+              { value: "laufend", label: "Laufend" },
+              { value: "abgelaufen", label: "Abgelaufen" },
+              { value: "beendet", label: "Beendet" },
+            ]}
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-8 rounded-md border border-input bg-transparent px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="">Alle Status</option>
-            <option value="laufend">Laufend</option>
-            <option value="abgelaufen">Abgelaufen</option>
-            <option value="beendet">Beendet</option>
-          </select>
+            onChange={(v) => setStatusFilter(v)}
+            placeholder="Alle Status"
+            allowClear
+          />
           <Button size="sm" onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4 mr-1" />
             Neue Gewährleistung

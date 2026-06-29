@@ -6,6 +6,7 @@ import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -117,20 +118,16 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: () => void })
             <label htmlFor="proj-ag" className="text-sm font-medium">
               Auftraggeber <span className="text-destructive">*</span>
             </label>
-            <select
-              id="proj-ag"
+            <Combobox
+              className="mt-1"
+              options={auftraggeber?.map((ag) => ({
+                value: ag.id,
+                label: ag.kundennummer ? `${ag.name} (${ag.kundennummer})` : ag.name,
+              })) ?? []}
               value={auftraggeberId}
-              onChange={(e) => setAuftraggeberId(e.target.value)}
-              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              <option value="">— wählen —</option>
-              {auftraggeber?.map((ag) => (
-                <option key={ag.id} value={ag.id}>
-                  {ag.name}
-                  {ag.kundennummer ? ` (${ag.kundennummer})` : ""}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setAuftraggeberId(v)}
+              placeholder="— wählen —"
+            />
             {!auftraggeber?.length && (
               <p className="text-xs text-muted-foreground mt-1">
                 Noch kein Auftraggeber angelegt.{" "}
@@ -196,18 +193,14 @@ export function ProjektList() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <select
+          <Combobox
+            className="w-44"
+            options={(Object.keys(STATUS_LABELS) as ProjektStatus[]).map((s) => ({ value: s, label: STATUS_LABELS[s] }))}
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as ProjektStatus | "")}
-            className="h-8 rounded-md border border-input bg-transparent px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="">Alle Status</option>
-            {(Object.keys(STATUS_LABELS) as ProjektStatus[]).map((s) => (
-              <option key={s} value={s}>
-                {STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setStatusFilter(v as ProjektStatus | "")}
+            placeholder="Alle Status"
+            allowClear
+          />
           <Button size="sm" onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4 mr-1" />
             Neues Projekt

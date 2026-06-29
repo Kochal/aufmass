@@ -9,6 +9,7 @@ import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -203,18 +204,24 @@ function BestellungHeader({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="bh-lf" className="text-sm font-medium">Lieferant <span className="text-destructive">*</span></label>
-            <select id="bh-lf" value={lieferantId} onChange={(e) => setLieferantId(e.target.value)}
-              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring">
-              {lieferanten.map((lf) => <option key={lf.id} value={lf.id}>{lf.name}</option>)}
-            </select>
+            <Combobox
+              className="mt-1"
+              options={lieferanten.map((lf) => ({ value: lf.id, label: lf.name }))}
+              value={lieferantId}
+              onChange={(v) => setLieferantId(v)}
+              placeholder="— wählen —"
+            />
           </div>
           <div>
             <label htmlFor="bh-proj" className="text-sm font-medium">Projekt</label>
-            <select id="bh-proj" value={projektId} onChange={(e) => setProjektId(e.target.value)}
-              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring">
-              <option value="">— kein —</option>
-              {projekte.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+            <Combobox
+              className="mt-1"
+              options={projekte.map((p) => ({ value: p.id, label: p.name }))}
+              value={projektId}
+              onChange={(v) => setProjektId(v)}
+              placeholder="— kein —"
+              allowClear
+            />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -334,13 +341,14 @@ function PositionFields({
     <div className="space-y-3 py-2">
       <div>
         <label htmlFor="pos-mat" className="text-sm font-medium">Material (optional)</label>
-        <select id="pos-mat" value={materialId} onChange={(e) => handleMaterialSelect(e.target.value)}
-          className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring">
-          <option value="">— kein / freie Eingabe —</option>
-          {materialien.map((m) => (
-            <option key={m.id} value={m.id}>{m.bezeichnung} ({m.einheit})</option>
-          ))}
-        </select>
+        <Combobox
+          className="mt-1"
+          options={materialien.map((m) => ({ value: m.id, label: `${m.bezeichnung} (${m.einheit})` }))}
+          value={materialId}
+          onChange={(v) => handleMaterialSelect(v)}
+          placeholder="— kein / freie Eingabe —"
+          allowClear
+        />
         {materialId && <p className="text-[10px] text-muted-foreground mt-0.5">Felder vorausgefüllt — können überschrieben werden.</p>}
       </div>
       <div>

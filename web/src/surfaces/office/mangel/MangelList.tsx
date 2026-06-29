@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -88,17 +89,13 @@ function CreateDialog({
             <label htmlFor="ap-proj" className="text-sm font-medium">
               Projekt <span className="text-destructive">*</span>
             </label>
-            <select
-              id="ap-proj"
+            <Combobox
+              className="mt-1"
+              options={projekte.map((p) => ({ value: p.id, label: p.name }))}
               value={projektId}
-              onChange={(e) => setProjektId(e.target.value)}
-              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              <option value="">— wählen —</option>
-              {projekte.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+              onChange={(v) => setProjektId(v)}
+              placeholder="— wählen —"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -110,16 +107,12 @@ function CreateDialog({
             </div>
             <div>
               <label htmlFor="ap-art" className="text-sm font-medium">Art</label>
-              <select
-                id="ap-art"
+              <Combobox
+                className="mt-1"
+                options={Object.entries(ART_LABELS).map(([v, l]) => ({ value: v, label: l }))}
                 value={art}
-                onChange={(e) => setArt(e.target.value)}
-                className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                {Object.entries(ART_LABELS).map(([v, l]) => (
-                  <option key={v} value={v}>{l}</option>
-                ))}
-              </select>
+                onChange={(v) => setArt(v)}
+              />
             </div>
           </div>
           <div>
@@ -191,16 +184,14 @@ export function MangelList() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <select
+          <Combobox
+            className="w-48"
+            options={projekte?.map((p) => ({ value: p.id, label: p.name })) ?? []}
             value={projektFilter}
-            onChange={(e) => setProjektFilter(e.target.value)}
-            className="h-8 rounded-md border border-input bg-transparent px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="">Alle Projekte</option>
-            {projekte?.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+            onChange={(v) => setProjektFilter(v)}
+            placeholder="Alle Projekte"
+            allowClear
+          />
           <Button size="sm" onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4 mr-1" />
             Neues Protokoll

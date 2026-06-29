@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -58,17 +59,14 @@ function MaterialFields({ bezeichnung, setBezeichnung, einheit, setEinheit, lief
       </div>
       <div>
         <label htmlFor="mt-lf" className="text-sm font-medium">Standard-Lieferant</label>
-        <select
-          id="mt-lf"
+        <Combobox
+          className="mt-1"
+          options={lieferanten.map((lf) => ({ value: lf.id, label: lf.name }))}
           value={lieferantId}
-          onChange={(e) => setLieferantId(e.target.value)}
-          className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-        >
-          <option value="">— kein —</option>
-          {lieferanten.map((lf) => (
-            <option key={lf.id} value={lf.id}>{lf.name}</option>
-          ))}
-        </select>
+          onChange={(v) => setLieferantId(v)}
+          placeholder="— kein —"
+          allowClear
+        />
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -127,17 +128,18 @@ function MangelFormFields({
         </div>
         <div>
           <label htmlFor="mg-schwere" className="text-sm font-medium">Schwere</label>
-          <select
-            id="mg-schwere"
+          <Combobox
+            className="mt-1"
+            options={[
+              { value: "gering", label: "Gering" },
+              { value: "mittel", label: "Mittel" },
+              { value: "schwer", label: "Schwer" },
+            ]}
             value={schwere}
-            onChange={(e) => setSchwere(e.target.value)}
-            className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="">— keine —</option>
-            <option value="gering">Gering</option>
-            <option value="mittel">Mittel</option>
-            <option value="schwer">Schwer</option>
-          </select>
+            onChange={(v) => setSchwere(v)}
+            placeholder="— keine —"
+            allowClear
+          />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -149,16 +151,16 @@ function MangelFormFields({
         {showStatus && (
           <div>
             <label htmlFor="mg-status" className="text-sm font-medium">Status</label>
-            <select
-              id="mg-status"
+            <Combobox
+              className="mt-1"
+              options={[
+                { value: "offen", label: "Offen" },
+                { value: "behoben", label: "Behoben" },
+                { value: "abgelehnt", label: "Abgelehnt" },
+              ]}
               value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              <option value="offen">Offen</option>
-              <option value="behoben">Behoben</option>
-              <option value="abgelehnt">Abgelehnt</option>
-            </select>
+              onChange={(v) => setStatus(v)}
+            />
           </div>
         )}
       </div>
@@ -368,16 +370,12 @@ function AbnahmeHeader({
         </div>
         <div>
           <label htmlFor="ap-art" className="text-sm font-medium">Art</label>
-          <select
-            id="ap-art"
+          <Combobox
+            className="mt-1"
+            options={Object.entries(ART_LABELS).map(([v, l]) => ({ value: v, label: l }))}
             value={art}
-            onChange={(e) => setArt(e.target.value as AbnahmeprotokollRead["art"])}
-            className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            {Object.entries(ART_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
-          </select>
+            onChange={(v) => setArt(v as AbnahmeprotokollRead["art"])}
+          />
         </div>
       </div>
       <div>
@@ -509,16 +507,18 @@ export function MangelDetail() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <select
+          <Combobox
+            className="w-40"
+            options={[
+              { value: "offen", label: "Offen" },
+              { value: "behoben", label: "Behoben" },
+              { value: "abgelehnt", label: "Abgelehnt" },
+            ]}
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-8 rounded-md border border-input bg-transparent px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="">Alle</option>
-            <option value="offen">Offen</option>
-            <option value="behoben">Behoben</option>
-            <option value="abgelehnt">Abgelehnt</option>
-          </select>
+            onChange={(v) => setStatusFilter(v)}
+            placeholder="Alle"
+            allowClear
+          />
           <Button size="sm" onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4 mr-1" />Neuer Mangel
           </Button>

@@ -13,6 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Table,
   TableBody,
@@ -76,16 +77,16 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: () => void })
             <label htmlFor="ag-typ" className="text-sm font-medium">
               Typ
             </label>
-            <select
-              id="ag-typ"
+            <Combobox
+              className="mt-1"
+              options={[
+                { value: "gewerblich", label: "Gewerblich" },
+                { value: "privat", label: "Privat" },
+                { value: "oeffentlich", label: "Öffentlich" },
+              ]}
               value={typ}
-              onChange={(e) => setTyp(e.target.value as AuftraggeberTyp)}
-              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              <option value="gewerblich">Gewerblich</option>
-              <option value="privat">Privat</option>
-              <option value="oeffentlich">Öffentlich</option>
-            </select>
+              onChange={(v) => setTyp(v as AuftraggeberTyp)}
+            />
           </div>
         </div>
         <DialogFooter>

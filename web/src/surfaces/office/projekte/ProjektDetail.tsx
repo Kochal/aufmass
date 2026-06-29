@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -35,18 +36,6 @@ const STATUS_LABELS: Record<ProjektStatus, string> = {
   storniert: "Storniert",
 };
 
-const STATUS_COLORS: Record<ProjektStatus, string> = {
-  angelegt: "bg-muted text-muted-foreground",
-  kalkulation: "bg-blue-100 text-blue-700",
-  beauftragt: "bg-blue-200 text-blue-800",
-  in_ausfuehrung: "bg-yellow-100 text-yellow-800",
-  abgenommen: "bg-green-100 text-green-700",
-  abgerechnet: "bg-green-200 text-green-800",
-  gewaehrleistung: "bg-purple-100 text-purple-700",
-  abgeschlossen: "bg-green-300 text-green-900",
-  pausiert: "bg-orange-100 text-orange-700",
-  storniert: "bg-red-100 text-red-700",
-};
 
 function Field({
   id,
@@ -285,18 +274,13 @@ export function ProjektDetail() {
         {/* Status */}
         <section className="flex items-center gap-3">
           <span className="text-sm font-medium text-muted-foreground w-16">Status</span>
-          <select
+          <Combobox
+            className="w-44"
+            options={(Object.keys(STATUS_LABELS) as ProjektStatus[]).map((s) => ({ value: s, label: STATUS_LABELS[s] }))}
             value={projekt.status}
-            onChange={(e) => statusMutation.mutate(e.target.value as ProjektStatus)}
+            onChange={(v) => v && statusMutation.mutate(v as ProjektStatus)}
             disabled={statusMutation.isPending}
-            className={`h-8 rounded-full border-0 px-3 text-xs font-medium cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring ${STATUS_COLORS[projekt.status]}`}
-          >
-            {(Object.keys(STATUS_LABELS) as ProjektStatus[]).map((s) => (
-              <option key={s} value={s}>
-                {STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
+          />
         </section>
 
         <Separator />
@@ -319,20 +303,15 @@ export function ProjektDetail() {
             </div>
             <div className="col-span-2">
               <Field id="p-ag" label="Auftraggeber" required>
-                <select
-                  id="p-ag"
+                <Combobox
+                  options={auftraggeber?.map((ag) => ({
+                    value: ag.id,
+                    label: ag.kundennummer ? `${ag.name} (${ag.kundennummer})` : ag.name,
+                  })) ?? []}
                   value={auftraggeberId}
-                  onChange={(e) => setAuftraggeberId(e.target.value)}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  <option value="">— wählen —</option>
-                  {auftraggeber?.map((ag) => (
-                    <option key={ag.id} value={ag.id}>
-                      {ag.name}
-                      {ag.kundennummer ? ` (${ag.kundennummer})` : ""}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setAuftraggeberId(v)}
+                  placeholder="— wählen —"
+                />
               </Field>
             </div>
             <div className="col-span-2">
@@ -346,30 +325,28 @@ export function ProjektDetail() {
               </Field>
             </div>
             <Field id="p-regime" label="Rechtsrahmen">
-              <select
-                id="p-regime"
+              <Combobox
+                options={[
+                  { value: "bgb", label: "BGB" },
+                  { value: "vob", label: "VOB" },
+                ]}
                 value={regime}
-                onChange={(e) => setRegime(e.target.value as "bgb" | "vob" | "")}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="">— kein —</option>
-                <option value="bgb">BGB</option>
-                <option value="vob">VOB</option>
-              </select>
+                onChange={(v) => setRegime(v as "bgb" | "vob" | "")}
+                placeholder="— kein —"
+                allowClear
+              />
             </Field>
             <Field id="p-abr" label="Abrechnungsart">
-              <select
-                id="p-abr"
+              <Combobox
+                options={[
+                  { value: "einheitspreis", label: "Einheitspreis" },
+                  { value: "pauschal", label: "Pauschal" },
+                ]}
                 value={abrechnungsart}
-                onChange={(e) =>
-                  setAbrechnungsart(e.target.value as "einheitspreis" | "pauschal" | "")
-                }
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="">— kein —</option>
-                <option value="einheitspreis">Einheitspreis</option>
-                <option value="pauschal">Pauschal</option>
-              </select>
+                onChange={(v) => setAbrechnungsart(v as "einheitspreis" | "pauschal" | "")}
+                placeholder="— kein —"
+                allowClear
+              />
             </Field>
           </div>
         </section>

@@ -7,6 +7,7 @@ import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -99,19 +100,24 @@ function CreateDialog({
             <label htmlFor="bs-lf" className="text-sm font-medium">
               Lieferant <span className="text-destructive">*</span>
             </label>
-            <select id="bs-lf" value={lieferantId} onChange={(e) => setLieferantId(e.target.value)}
-              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring">
-              <option value="">— wählen —</option>
-              {lieferanten.map((lf) => <option key={lf.id} value={lf.id}>{lf.name}</option>)}
-            </select>
+            <Combobox
+              className="mt-1"
+              options={lieferanten.map((lf) => ({ value: lf.id, label: lf.name }))}
+              value={lieferantId}
+              onChange={(v) => setLieferantId(v)}
+              placeholder="— wählen —"
+            />
           </div>
           <div>
             <label htmlFor="bs-proj" className="text-sm font-medium">Projekt</label>
-            <select id="bs-proj" value={projektId} onChange={(e) => setProjektId(e.target.value)}
-              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring">
-              <option value="">— kein —</option>
-              {projekte.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+            <Combobox
+              className="mt-1"
+              options={projekte.map((p) => ({ value: p.id, label: p.name }))}
+              value={projektId}
+              onChange={(v) => setProjektId(v)}
+              placeholder="— kein —"
+              allowClear
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -185,16 +191,22 @@ export function BestellungList() {
           {bestellungen && <span className="text-sm text-muted-foreground">({bestellungen.length})</span>}
         </div>
         <div className="flex items-center gap-2">
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-8 rounded-md border border-input bg-transparent px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
-            <option value="">Alle Status</option>
-            {Object.entries(STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-          </select>
-          <select value={projektFilter} onChange={(e) => setProjektFilter(e.target.value)}
-            className="h-8 rounded-md border border-input bg-transparent px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
-            <option value="">Alle Projekte</option>
-            {projekte?.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+          <Combobox
+            className="w-40"
+            options={Object.entries(STATUS_LABELS).map(([v, l]) => ({ value: v, label: l }))}
+            value={statusFilter}
+            onChange={(v) => setStatusFilter(v)}
+            placeholder="Alle Status"
+            allowClear
+          />
+          <Combobox
+            className="w-48"
+            options={projekte?.map((p) => ({ value: p.id, label: p.name })) ?? []}
+            value={projektFilter}
+            onChange={(v) => setProjektFilter(v)}
+            placeholder="Alle Projekte"
+            allowClear
+          />
           <Button size="sm" onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4 mr-1" />Neue Bestellung
           </Button>

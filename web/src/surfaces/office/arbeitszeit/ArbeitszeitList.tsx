@@ -6,6 +6,7 @@ import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -140,33 +141,24 @@ function CreateDialog({
             <label htmlFor="az-user" className="text-sm font-medium">
               Mitarbeiter <span className="text-destructive">*</span>
             </label>
-            <select
-              id="az-user"
+            <Combobox
+              className="mt-1"
+              options={users.map((u) => ({ value: u.id, label: u.display_name ?? u.email }))}
               value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              <option value="">— wählen —</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.display_name ?? u.email}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setUserId(v)}
+              placeholder="— wählen —"
+            />
           </div>
           <div>
             <label htmlFor="az-proj" className="text-sm font-medium">Projekt</label>
-            <select
-              id="az-proj"
+            <Combobox
+              className="mt-1"
+              options={projekte.map((p) => ({ value: p.id, label: p.name }))}
               value={projektId}
-              onChange={(e) => setProjektId(e.target.value)}
-              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              <option value="">— kein —</option>
-              {projekte.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+              onChange={(v) => setProjektId(v)}
+              placeholder="— kein —"
+              allowClear
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -279,17 +271,14 @@ function KorrekturDialog({
         <div className="space-y-3 py-1">
           <div>
             <label htmlFor="korr-proj" className="text-sm font-medium">Projekt</label>
-            <select
-              id="korr-proj"
+            <Combobox
+              className="mt-1"
+              options={projekte.map((p) => ({ value: p.id, label: p.name }))}
               value={projektId}
-              onChange={(e) => setProjektId(e.target.value)}
-              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              <option value="">— kein —</option>
-              {projekte.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+              onChange={(v) => setProjektId(v)}
+              placeholder="— kein —"
+              allowClear
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -401,25 +390,25 @@ export function ArbeitszeitList() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <select
+          <Combobox
+            className="w-40"
+            options={[
+              { value: "offen", label: "Offen" },
+              { value: "freigegeben", label: "Freigegeben" },
+            ]}
             value={freigabeFilter}
-            onChange={(e) => setFreigabeFilter(e.target.value as "" | "offen" | "freigegeben")}
-            className="h-8 rounded-md border border-input bg-transparent px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="">Alle Status</option>
-            <option value="offen">Offen</option>
-            <option value="freigegeben">Freigegeben</option>
-          </select>
-          <select
+            onChange={(v) => setFreigabeFilter(v as "" | "offen" | "freigegeben")}
+            placeholder="Alle Status"
+            allowClear
+          />
+          <Combobox
+            className="w-48"
+            options={projekte?.map((p) => ({ value: p.id, label: p.name })) ?? []}
             value={projektFilter}
-            onChange={(e) => setProjektFilter(e.target.value)}
-            className="h-8 rounded-md border border-input bg-transparent px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="">Alle Projekte</option>
-            {projekte?.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+            onChange={(v) => setProjektFilter(v)}
+            placeholder="Alle Projekte"
+            allowClear
+          />
           <Button size="sm" onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4 mr-1" />
             Neuer Eintrag
