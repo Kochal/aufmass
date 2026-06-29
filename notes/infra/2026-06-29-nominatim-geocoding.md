@@ -12,6 +12,18 @@ to the public OpenStreetMap Nominatim API (`nominatim.openstreetmap.org`).
 The result is trimmed to `{ label, strasse, hausnummer, plz, ort, land }` and
 returned to the frontend `AddressFields` component as autocomplete suggestions.
 
+## Nominatim policy: no autocomplete
+
+The OSM Nominatim usage policy explicitly states:
+> "Auto-complete search — This is not yet supported by Nominatim and you must
+> not implement such a service on the client side using the API."
+
+The implementation fires **one request per explicit user action** (clicking the
+"Adresse suchen" button or pressing Enter). The debounced-per-keystroke approach
+used in the original Round 3 implementation was removed because it violated this
+rule. Free-text typing into the individual address fields (Straße, PLZ, Ort)
+never triggers a Nominatim call.
+
 ## Why proxied
 
 - **Browser never calls Nominatim directly.** The user's IP address would be

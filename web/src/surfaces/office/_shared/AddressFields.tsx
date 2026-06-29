@@ -1,8 +1,9 @@
-import { useCallback, useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { MapPin } from "lucide-react";
+import { useCallback, useState, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { MapPin, Search } from "lucide-react";
 import { apiClient, unwrap } from "@/lib/api";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import { COUNTRY_OPTIONS } from "@/lib/countries";
 import type { components } from "@/api/schema";
@@ -97,21 +98,6 @@ export function useAdresseLoad(adresseId: string | null | undefined) {
   });
 }
 
-// ── Geocode suggestions hook ──────────────────────────────────────────────────
-
-function useGeocodeSuggestions(query: string, enabled: boolean) {
-  return useQuery<GeocodeResult[]>({
-    queryKey: ["geocode", query],
-    queryFn: async () =>
-      unwrap(await apiClient.GET("/api/geocode", {
-        params: { query: { q: query } },
-      })) as GeocodeResult[],
-    enabled: enabled && query.length >= 3,
-    staleTime: 30_000,
-    gcTime: 60_000,
-  });
-}
-
 // ── AddressFields component ───────────────────────────────────────────────────
 
 interface AddressFieldsProps {
@@ -121,32 +107,38 @@ interface AddressFieldsProps {
 }
 
 export function AddressFields({ state, onChange, idPrefix = "addr" }: AddressFieldsProps) {
-  const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [geocodeEnabled, setGeocodeEnabled] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Geocode search: only fires on explicit button press (Nominatim policy
+  // prohibits autocomplete / per-keystroke requests).
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<GeocodeResult[] | null>(null);
+  const [searching, setSearching] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const qc = useQueryClient();
 
   function set(key: keyof AddressState, value: string) {
     onChange({ ...state, [key]: value });
   }
 
-  function handleStrasseChange(value: string) {
-    set("strasse", value);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (value.length >= 3) {
-      timerRef.current = setTimeout(() => {
-        setDebouncedQuery(value);
-        setGeocodeEnabled(true);
-        setShowSuggestions(true);
-      }, 400);
-    } else {
-      setShowSuggestions(false);
-      setGeocodeEnabled(false);
+  async function handleSearch() {
+    const q = searchQuery.trim() || state.strasse.trim();
+    if (q.length < 3) return;
+    setSearching(true);
+    setSuggestions(null);
+    try {
+      const cached = qc.getQueryData<GeocodeResult[]>(["geocode", q]);
+      if (cached) {
+        setSuggestions(cached);
+      } else {
+        const res = unwrap(await apiClient.GET("/api/geocode", {
+          params: { query: { q } },
+        })) as GeocodeResult[];
+        qc.setQueryData(["geocode", q], res);
+        setSuggestions(res);
+      }
+    } finally {
+      setSearching(false);
     }
   }
-
-  const { data: suggestions } = useGeocodeSuggestions(debouncedQuery, geocodeEnabled);
 
   function applySuggestion(hit: GeocodeResult) {
     onChange({
@@ -157,43 +149,40 @@ export function AddressFields({ state, onChange, idPrefix = "addr" }: AddressFie
       ort: hit.ort ?? state.ort,
       land: hit.land ?? state.land,
     });
-    setShowSuggestions(false);
-    setGeocodeEnabled(false);
+    setSuggestions(null);
+    setSearchQuery("");
   }
-
-  // Close suggestions on outside click
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const visibleSuggestions = showSuggestions && suggestions && suggestions.length > 0
-    ? suggestions
-    : [];
 
   return (
     <div className="space-y-3">
-      {/* Straße + Hausnr with autocomplete */}
-      <div className="grid grid-cols-3 gap-3" ref={containerRef}>
-        <div className="col-span-2 relative">
-          <label htmlFor={`${idPrefix}-strasse`} className="text-sm font-medium">Straße</label>
+      {/* Address search (explicit button — no per-keystroke requests per Nominatim policy) */}
+      <div ref={containerRef} className="relative">
+        <label className="text-sm font-medium">Adresse suchen</label>
+        <div className="flex gap-2 mt-1">
           <Input
-            id={`${idPrefix}-strasse`}
-            value={state.strasse}
-            onChange={(e) => handleStrasseChange(e.target.value)}
-            onFocus={() => { if (debouncedQuery.length >= 3 && suggestions?.length) setShowSuggestions(true); }}
-            placeholder="Musterstraße"
-            className="mt-1"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSearch(); } }}
+            placeholder="z.B. Musterstraße 12 Berlin"
             autoComplete="off"
           />
-          {visibleSuggestions.length > 0 && (
-            <div className="absolute z-50 left-0 right-0 top-full mt-1 rounded-md border bg-popover shadow-md max-h-60 overflow-y-auto">
-              {visibleSuggestions.map((hit, i) => (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            disabled={searching || (searchQuery.trim().length < 3 && state.strasse.trim().length < 3)}
+            onClick={handleSearch}
+            title="Adresse suchen"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+        </div>
+        {suggestions !== null && (
+          <div className="absolute z-50 left-0 right-0 top-full mt-1 rounded-md border bg-popover shadow-md max-h-60 overflow-y-auto">
+            {suggestions.length === 0 ? (
+              <p className="px-3 py-2 text-sm text-muted-foreground">Keine Ergebnisse gefunden.</p>
+            ) : (
+              suggestions.map((hit, i) => (
                 <button
                   key={i}
                   type="button"
@@ -203,9 +192,23 @@ export function AddressFields({ state, onChange, idPrefix = "addr" }: AddressFie
                   <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground" />
                   <span className="line-clamp-2 text-xs leading-snug">{hit.label}</span>
                 </button>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Manual address fields */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="col-span-2">
+          <label htmlFor={`${idPrefix}-strasse`} className="text-sm font-medium">Straße</label>
+          <Input
+            id={`${idPrefix}-strasse`}
+            value={state.strasse}
+            onChange={(e) => set("strasse", e.target.value)}
+            placeholder="Musterstraße"
+            className="mt-1"
+          />
         </div>
         <div>
           <label htmlFor={`${idPrefix}-hn`} className="text-sm font-medium">Hausnr.</label>
