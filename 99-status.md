@@ -3,6 +3,12 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-29 (m): Gewährleistung screen live (GewaehrleistungList). Flat list
+  with status filter. Regime badges (VOB § 13 / BGB § 634a), fristende countdown
+  with overdue (red) / expiring-soon (orange, ≤90 days) highlights. Create uses
+  DB trigger defaults for frist_jahre (VOB=4/BGB=5) when left blank. Status
+  change in edit dialog (laufend/abgelaufen/beendet). All directive-05 screens
+  now live. TS clean. See notes/ui/2026-06-29-gewaehrleistung-screen.md.
 - 2026-06-29 (l): Mängel screen live. MangelList: Abnahmeprotokoll list with
   projekt filter; create navigates to detail. MangelDetail: protocol header
   (inline edit), Mängel CRUD (create/edit/soft-delete for offen entries),
@@ -147,12 +153,13 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 15: Mängel screen live.** All operational office screens now complete:
+**Phase 16: All directive-05 screens complete.** Gewährleistung screen live —
+flat list, VOB/BGB regime badges, fristende countdown with overdue/expiring-soon
+highlights, status change. All planned office + field-log screens now live:
 Angebote, Katalog, Rechnungen, Auftraggeber, Projekte, Arbeitszeit, Fahrtenbuch,
-Fahrtzeiten, Mängel. Two-level hierarchy (Abnahmeprotokoll→Mangel) with protocol
-inline edit, Mangel CRUD, schwere/status badges, overdue frist, status filter.
-Next: Gewährleistung screen, real Entra SSO (09), swap ASR to self-hosted
-faster-whisper, vector embedding matching.
+Fahrtzeiten, Mängel, Gewährleistung. TS clean.
+Next: real Entra SSO (09), swap ASR to self-hosted faster-whisper, vector
+embedding matching, dashboard/reporting surface.
 faster-whisper for production, vector embedding matching.
 
 ## Directive set

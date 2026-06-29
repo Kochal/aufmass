@@ -23,6 +23,7 @@ import {
   LogOut,
   Navigation,
   Receipt,
+  Shield,
   Users,
 } from "lucide-react";
 import { useAuth, canAccessOffice, canAccessField, canAccessDashboard } from "@/auth/AuthContext";
@@ -61,6 +62,7 @@ export function AppShell() {
           { to: "/office/fahrtenbuch", icon: Car, label: "Fahrtenbuch" },
           { to: "/office/fahrtzeiten", icon: Navigation, label: "Fahrtzeiten" },
           { to: "/office/mangel", icon: AlertTriangle, label: "Mängel" },
+          { to: "/office/gewaehrleistung", icon: Shield, label: "Gewährleistung" },
         ]
       : []),
     ...(canAccessField(role)

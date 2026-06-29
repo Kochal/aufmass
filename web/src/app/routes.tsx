@@ -18,6 +18,7 @@ import { ArbeitszeitList } from "@/surfaces/office/arbeitszeit";
 import { FahrtenbuchList } from "@/surfaces/office/fahrtenbuch";
 import { FahrtzeitenList } from "@/surfaces/office/fahrtzeiten";
 import { MangelList, MangelDetail } from "@/surfaces/office/mangel";
+import { GewaehrleistungList } from "@/surfaces/office/gewaehrleistung";
 import { AufmassList, AufmassReview } from "@/surfaces/field";
 import { DashboardStub } from "@/surfaces/dashboard";
 import { useAuth, canAccessOffice, canAccessField } from "@/auth/AuthContext";
@@ -53,6 +54,7 @@ export function AppRoutes() {
           <Route path="fahrtzeiten" element={<FahrtzeitenList />} />
           <Route path="mangel" element={<MangelList />} />
           <Route path="mangel/:id" element={<MangelDetail />} />
+          <Route path="gewaehrleistung" element={<GewaehrleistungList />} />
           <Route path="katalog" element={<KatalogList />} />
           <Route path="katalog/:id" element={<KatalogDetail />} />
         </Route>
