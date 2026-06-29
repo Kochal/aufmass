@@ -109,11 +109,15 @@ function EditPositionDialog({
 
   // When save-to-catalog is toggled on, generate a suggested code
   useEffect(() => {
-    if (saveToKatalog && newKatalogId) {
-      const catalogLeistungen = leistungen.filter((l) => l.leistungskatalog_id === newKatalogId);
-      setNewCode(suggestCode(catalogLeistungen));
+    if (saveToKatalog) {
+      const kid = newKatalogId || katalogList[0]?.id || "";
+      if (kid) {
+        const catalogLeistungen = leistungen.filter((l) => l.leistungskatalog_id === kid);
+        setNewCode(suggestCode(catalogLeistungen));
+        if (!newKatalogId) setNewKatalogId(kid);
+      }
     }
-  }, [saveToKatalog, newKatalogId]);
+  }, [saveToKatalog, newKatalogId, katalogList]);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -138,16 +142,19 @@ function EditPositionDialog({
     setSaveToKatalog(false);
   }
 
+  // Fall back to first catalog when newKatalogId wasn't set (e.g. katalogList loaded after dialog opened)
+  const effectiveKatalogId = newKatalogId || katalogList[0]?.id || "";
+
   const save = useMutation({
     mutationFn: async () => {
       if (!position) return;
 
       let matched_leistung_id = selectedLeistungId;
 
-      if (saveToKatalog && newKatalogId && newCode) {
+      if (saveToKatalog && effectiveKatalogId && newCode) {
         const res = await apiClient.POST("/api/leistung", {
           body: {
-            leistungskatalog_id: newKatalogId,
+            leistungskatalog_id: effectiveKatalogId,
             code: newCode,
             kurztext: form.kurztext,
             langtext: form.langtext || undefined,
@@ -312,7 +319,7 @@ function EditPositionDialog({
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Abbrechen</Button>
           <Button
-            disabled={!form.kurztext || save.isPending || (saveToKatalog && (!newCode || !newKatalogId))}
+            disabled={!form.kurztext || save.isPending || (saveToKatalog && (!newCode || !effectiveKatalogId))}
             onClick={() => save.mutate()}
           >
             Speichern
