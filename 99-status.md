@@ -3,7 +3,25 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
-- 2026-06-29: Voice Aufmaß added as co-equal capture path. New directive
+- 2026-06-29 (d): Voice form-fill implemented (directive 10). POST /api/voice/intent:
+  shared ASR (app/voice/asr.py) + Mistral intent-parse (app/voice/intent.py) routes
+  transcript to form fields, returns FieldFill candidates. useVoiceFill hook +
+  VoiceFillButton presenter. Wired into Aufmaß-entry correction form (EntryCard):
+  confirmation strip before any form state update; Speichern remains the only DB
+  gate. 17 tests green. ASR = OpenAI Whisper PoC (known US-egress divergence from
+  07b self-hosted goal).
+- 2026-06-29 (c): 07b voice Aufmaß client implemented. OpenAI Whisper API for ASR
+  (PoC, httpx, no new dep), Mistral mistral-small-latest for structuring, segment-ref
+  assignment (source_crop_ref = {start_s, end_s}). Existing _insert_entry() reused;
+  POST /api/aufmass/upload-voice added. OpenAI chosen over faster-whisper for PoC
+  simplicity (no local model, no ffmpeg); production path remains faster-whisper.
+  ASR later extracted to shared app/voice/asr.py module.
+- 2026-06-29 (b): Aufmaß backend router + field UI complete. POST /api/aufmass/upload
+  (Mistral extraction → DB write), POST /api/aufmass/upload-voice, CRUD endpoints,
+  aufmass_entry confirm/correct/delete. _insert_entry() helper reuses schema for both
+  photo and voice paths. Field surface UI: AufmassList, AufmassReview, EntryCard
+  (correction inline edit with confirm/correct/delete). E2E verified on Hetzner.
+- 2026-06-29 (a): Voice Aufmaß added as co-equal capture path. New directive
   `07b-voice-aufmass.md`: Whisper ASR + self-hosted structuring → same
   AufmassExtractionResult schema → 07 reconciler. Egress-free path (no DPA
   needed). No schema migration required (`quelle=voice` + `source_crop_ref` +
@@ -77,11 +95,14 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 7: Voice modality added (07b spec complete).** Voice is a co-equal,
-egress-free Aufmaß capture path alongside photo. `07b` directive written as spec for
-the voice client code round. Voice form-fill specced in `10`. All directives
-reconciled. Next: field Aufmaß UI (07 backend router + DB write), voice client
-code round (07b), Rechnungen UI, real Entra SSO (09).
+**Phase 8: Voice modality implemented end-to-end.** Both capture paths are live:
+photo (07a, Mistral OCR) and voice (07b, OpenAI Whisper PoC + Mistral structuring).
+Backend router complete (photo upload + voice upload + entry CRUD). Field Aufmaß
+UI complete (AufmassList, AufmassReview, EntryCard). Voice form-fill implemented
+(POST /api/voice/intent, useVoiceFill hook, confirm-before-commit). 17 tests green.
+Next: Rechnungen UI, Auftraggeber/Projekte screens, Arbeitszeit/Fahrt/Mangel
+field screens (voice-fill already wired; need dedicated UI), real Entra SSO (09),
+swap ASR to self-hosted faster-whisper for production.
 
 ## Directive set
 
@@ -94,12 +115,12 @@ code round (07b), Rechnungen UI, real Entra SSO (09).
 | `04` | Backup and archival            | Drafted                       |
 | `05` | Operational modules (spine)    | **API complete** (2026-06-25) |
 | `06` | Quotation engine               | **XRechnung e-invoice complete** (2026-06-28) |
-| `07` | Aufmaß capture and OCR         | **Vision client complete** (2026-06-29). DB layer (0020) + tests. Backend router + DB write pending. |
-| `07a` | Vision client (photo/Mistral) | **Complete** (2026-06-29). Two-step pipeline live. |
-| `07b` | Voice client (Whisper/ASR)    | **Spec written** (2026-06-29). Code round pending. |
+| `07` | Aufmaß capture and OCR         | **Complete** (2026-06-29). DB layer, vision + voice clients, backend router (upload/voice/CRUD), field UI, entry confirm/correct/delete. |
+| `07a` | Vision client (photo/Mistral) | **Complete** (2026-06-29). Two-step pipeline, bbox token-match, 19 unit tests. |
+| `07b` | Voice client (Whisper/ASR)    | **Complete** (2026-06-29). OpenAI Whisper PoC ASR (shared asr.py) + Mistral structuring. Swap to faster-whisper for production. |
 | `08` | M365 integration               | Drafted                       |
 | `09` | Security and DSGVO             | Drafted                       |
-| `10` | Application stack / dev env    | **Frontend live** (2026-06-28) |
+| `10` | Application stack / dev env    | **Voice form-fill live** (2026-06-29). Three-surface PWA, voice intent endpoint + PWA hook, wired into Aufmaß-entry correction. |
 | `99` | Status                         | This file                     |
 
 ## Locked decisions (from `00`)
@@ -153,8 +174,7 @@ a sizing benchmark, not at the design stage.
    ~~Rewrite vision_client.py~~ **Done** (2026-06-29). Two-step pipeline (raw OCR +
    mistral-small structuring), bbox token-match (22/27), 19 unit tests green.
    Known limits: OCR glyph misread + multi-line cell truncation → image-crop human
-   review. Next `07` deliverable: backend router + DB write (aufmass/aufmass_entry),
-   then field Aufmaß UI.
+   review.
 5. ~~XRechnung round~~ **Done** (2026-06-28). EN 16931 UBL 2.1 generation, KoSIT
    validation gate on both prüfen (preview) and ausstellen (final), filesystem
    write-once original store, party master data schema (adresse/bankverbindung/
@@ -162,5 +182,16 @@ a sizing benchmark, not at the design stage.
    STEUERBERATER flags in notes/quotation/2026-06-28-xrechnung-einvoice.md.
 6. ~~Phase A+B frontend~~ **Done** (2026-06-28). Three-surface PWA, office review
    screen, full E2E browser test. `nummernkreis` seed required per tenant (documented
-   in notes/ui/2026-06-28-e2e-browser-test.md). Next: field Aufmaß UI (needs 07
-   backend first), Rechnungen screen, Auftraggeber/Projekte screens, Entra SSO.
+   in notes/ui/2026-06-28-e2e-browser-test.md).
+7. ~~07b voice Aufmaß client code round~~ **Done** (2026-06-29). OpenAI Whisper
+   PoC ASR + Mistral structuring. Shared app/voice/asr.py. POST /api/aufmass/upload-voice
+   live. Known divergence: ASR is OpenAI (US egress) not self-hosted faster-whisper;
+   close before production.
+8. ~~Field Aufmaß UI~~ **Done** (2026-06-29). AufmassList, AufmassReview, EntryCard
+   (confirm/correct/delete for each entry). Source badge shows foto/voice/manual.
+9. ~~Voice form-fill (directive 10)~~ **Done** (2026-06-29). POST /api/voice/intent,
+   useVoiceFill hook, VoiceFillButton, confirmation strip in EntryCard correction
+   form. Two-gate: voice→confirm→form inputs→Speichern→DB.
+10. **Next: Rechnungen UI, Auftraggeber/Projekte screens, Arbeitszeit/Fahrt/Mangel
+    field screens with voice fill, real Entra SSO (09), swap ASR to self-hosted
+    faster-whisper (production), GAEB import/export, M365 integration (08).**
