@@ -41,11 +41,148 @@ import { usePositionKeyboard } from "./usePositionKeyboard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Keyboard, ScanSearch } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { ArrowLeft, Keyboard, Plus, ScanSearch } from "lucide-react";
 
 type LvPositionRead = components["schemas"]["LvPositionRead"];
 type CheckResultRead = components["schemas"]["CheckResultRead"];
 type LeistungRead = components["schemas"]["LeistungRead"];
+type LvRead = components["schemas"]["LvRead"];
+
+// ── Add position dialog ───────────────────────────────────────────────────────
+
+function AddPositionDialog({
+  angebotId,
+  lvList,
+  open,
+  onClose,
+}: {
+  angebotId: string;
+  lvList: LvRead[];
+  open: boolean;
+  onClose: () => void;
+}) {
+  const qc = useQueryClient();
+  const [form, setForm] = useState({
+    kurztext: "",
+    menge: "",
+    einheit: "",
+    einheitspreis: "",
+  });
+
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const add = useMutation({
+    mutationFn: async () => {
+      // Ensure an LV exists for this Angebot; create one if not
+      let lvId: string;
+      if (lvList.length > 0) {
+        lvId = lvList[0].id;
+      } else {
+        const lvRes = await apiClient.POST("/api/lv", {
+          body: { angebot_id: angebotId, source: "manual" },
+        });
+        lvId = (unwrap(lvRes) as LvRead).id;
+      }
+      const res = await apiClient.POST("/api/lv-position", {
+        body: {
+          lv_id: lvId,
+          kurztext: form.kurztext,
+          menge: form.menge || undefined,
+          einheit: form.einheit || undefined,
+          einheitspreis: form.einheitspreis || undefined,
+          source: "manual",
+          match_status: "review",
+        },
+      });
+      return unwrap(res);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["lv-position"] });
+      qc.invalidateQueries({ queryKey: ["lv", { angebot_id: angebotId }] });
+      setForm({ kurztext: "", menge: "", einheit: "", einheitspreis: "" });
+      onClose();
+    },
+    onError: (err) =>
+      toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Position hinzufügen</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div>
+            <label htmlFor="pos-kurztext" className="text-sm font-medium">Kurztext *</label>
+            <Input
+              id="pos-kurztext"
+              value={form.kurztext}
+              onChange={set("kurztext")}
+              placeholder="Wände streichen 2× Dispersionsfarbe"
+              className="mt-1"
+              autoFocus
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-1">
+              <label htmlFor="pos-menge" className="text-sm font-medium">Menge</label>
+              <Input
+                id="pos-menge"
+                value={form.menge}
+                onChange={set("menge")}
+                placeholder="42"
+                type="number"
+                step="0.001"
+                className="mt-1"
+              />
+            </div>
+            <div className="col-span-1">
+              <label htmlFor="pos-einheit" className="text-sm font-medium">Einheit</label>
+              <Input
+                id="pos-einheit"
+                value={form.einheit}
+                onChange={set("einheit")}
+                placeholder="m²"
+                className="mt-1"
+              />
+            </div>
+            <div className="col-span-1">
+              <label htmlFor="pos-ep" className="text-sm font-medium">EP (€)</label>
+              <Input
+                id="pos-ep"
+                value={form.einheitspreis}
+                onChange={set("einheitspreis")}
+                placeholder="12.50"
+                type="number"
+                step="0.01"
+                className="mt-1"
+              />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Abbrechen</Button>
+          <Button
+            disabled={!form.kurztext || add.isPending}
+            onClick={() => add.mutate()}
+          >
+            Hinzufügen
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export function AngebotReview() {
   const { id } = useParams<{ id: string }>();
@@ -54,6 +191,7 @@ export function AngebotReview() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerPositionId, setPickerPositionId] = useState<string | null>(null);
   const [resolvingFlagId, setResolvingFlagId] = useState<string | null>(null);
+  const [showAddPosition, setShowAddPosition] = useState(false);
 
   // ── Data loading ─────────────────────────────────────────────────────────
 
@@ -455,6 +593,15 @@ export function AngebotReview() {
             {catalogMatchMutation.isPending ? "Abgleich…" : "Katalog abgleichen"}
           </Button>
         )}
+        <Button
+          size="sm"
+          variant="outline"
+          className="shrink-0"
+          onClick={() => setShowAddPosition(true)}
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          Position
+        </Button>
         {/* Keyboard hint */}
         <div className="hidden lg:flex items-center gap-1 text-xs text-muted-foreground/60">
           <Keyboard className="h-3 w-3" />
@@ -465,13 +612,14 @@ export function AngebotReview() {
       {/* Position list */}
       {sortedPositions.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-3">
             <p className="text-muted-foreground text-sm">
               Keine Positionen in diesem Angebot.
             </p>
-            <p className="text-xs text-muted-foreground/60">
-              Positionen werden über GAEB-Import oder manuell angelegt.
-            </p>
+            <Button size="sm" onClick={() => setShowAddPosition(true)}>
+              <Plus className="h-4 w-4 mr-1" />
+              Position hinzufügen
+            </Button>
           </div>
         </div>
       ) : (
@@ -514,6 +662,14 @@ export function AngebotReview() {
         berechnenPending={berechnenMutation.isPending}
         pruefenPending={pruefenMutation.isPending}
         ausstellenPending={ausstellenMutation.isPending}
+      />
+
+      {/* Add position dialog */}
+      <AddPositionDialog
+        angebotId={id!}
+        lvList={lvList ?? []}
+        open={showAddPosition}
+        onClose={() => setShowAddPosition(false)}
       />
 
       {/* Catalog picker */}

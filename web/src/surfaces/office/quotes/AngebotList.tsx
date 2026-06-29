@@ -1,15 +1,7 @@
-/**
- * AngebotList — office entry point for the quotation surface.
- *
- * Shows all Angebote for the tenant, sorted newest first. Each row links to
- * the matching review screen. The status column uses the same confidence-tier
- * colour language: draft is neutral, issued is green, etc.
- *
- * Scope: Büro / Admin / Buchhaltung roles (enforced by the nav filter in
- * AppShell). Buchhaltung sees issued invoices; Büro sees everything.
- */
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
+import { Plus, ArrowRight, FileText } from "lucide-react";
 import { apiClient, unwrap } from "@/lib/api";
 import {
   Table,
@@ -22,10 +14,19 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, FileText } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Combobox } from "@/components/ui/combobox";
 import type { components } from "@/api/schema";
 
 type AngebotRead = components["schemas"]["AngebotRead"];
+type AuftraggeberRead = components["schemas"]["AuftraggeberRead"];
+type ProjektRead = components["schemas"]["ProjektRead"];
 
 const STATUS_CFG: Record<string, { label: string; variant: string }> = {
   draft: { label: "Entwurf", variant: "secondary" },
@@ -44,7 +45,117 @@ function statusBadge(status: string) {
   );
 }
 
+// ── Create dialog ─────────────────────────────────────────────────────────────
+
+function CreateAngebotDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [auftraggeberId, setAuftraggeberId] = useState("");
+  const [projektId, setProjektId] = useState("");
+
+  const { data: auftraggeber } = useQuery<AuftraggeberRead[]>({
+    queryKey: ["auftraggeber"],
+    queryFn: async () =>
+      unwrap(await apiClient.GET("/api/auftraggeber", {})) as AuftraggeberRead[],
+  });
+
+  const { data: projekte } = useQuery<ProjektRead[]>({
+    queryKey: ["projekt"],
+    queryFn: async () =>
+      unwrap(await apiClient.GET("/api/projekt", {})) as ProjektRead[],
+  });
+
+  const create = useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.POST("/api/angebot", {
+        body: {
+          auftraggeber_id: auftraggeberId,
+          projekt_id: projektId || undefined,
+          waehrung: "EUR",
+        },
+      });
+      return unwrap(res) as AngebotRead;
+    },
+    onSuccess: (angebot) => {
+      qc.invalidateQueries({ queryKey: ["angebot"] });
+      onClose();
+      setAuftraggeberId("");
+      setProjektId("");
+      navigate(`/office/angebote/${angebot.id}/review`);
+    },
+  });
+
+  const agOptions = (auftraggeber ?? []).map((a) => ({
+    value: a.id,
+    label: a.name,
+  }));
+
+  const projektOptions = (projekte ?? []).map((p) => ({
+    value: p.id,
+    label: p.name,
+  }));
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Neues Angebot</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div>
+            <label className="text-sm font-medium">Auftraggeber *</label>
+            <Combobox
+              className="mt-1"
+              options={agOptions}
+              value={auftraggeberId}
+              onChange={(v) => setAuftraggeberId(v ?? "")}
+              placeholder="Auftraggeber wählen…"
+              searchPlaceholder="Suchen…"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Projekt (optional)</label>
+            <Combobox
+              className="mt-1"
+              options={projektOptions}
+              value={projektId}
+              onChange={(v) => setProjektId(v ?? "")}
+              placeholder="Projekt wählen…"
+              searchPlaceholder="Suchen…"
+              allowClear
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Abbrechen</Button>
+          <Button
+            disabled={!auftraggeberId || create.isPending}
+            onClick={() => create.mutate()}
+          >
+            Erstellen
+          </Button>
+        </DialogFooter>
+        {create.isError && (
+          <p className="text-sm text-destructive mt-1">
+            {(create.error as Error)?.message ?? "Fehler beim Erstellen"}
+          </p>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── List ──────────────────────────────────────────────────────────────────────
+
 export function AngebotList() {
+  const [showCreate, setShowCreate] = useState(false);
+
   const { data: angebote, isLoading, error } = useQuery({
     queryKey: ["angebot"],
     queryFn: async () => {
@@ -82,7 +193,6 @@ export function AngebotList() {
 
   return (
     <div className="p-6 space-y-4">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FileText className="h-5 w-5 text-muted-foreground" />
@@ -93,11 +203,19 @@ export function AngebotList() {
             </span>
           )}
         </div>
+        <Button size="sm" onClick={() => setShowCreate(true)}>
+          <Plus className="h-4 w-4 mr-1" />
+          Neues Angebot
+        </Button>
       </div>
 
       {sorted.length === 0 ? (
-        <div className="border rounded-lg p-12 text-center space-y-2">
+        <div className="border rounded-lg p-12 text-center space-y-3">
           <p className="text-muted-foreground text-sm">Noch keine Angebote.</p>
+          <Button size="sm" onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            Neues Angebot erstellen
+          </Button>
         </div>
       ) : (
         <div className="border rounded-lg overflow-hidden">
@@ -120,6 +238,11 @@ export function AngebotList() {
           </Table>
         </div>
       )}
+
+      <CreateAngebotDialog
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+      />
     </div>
   );
 }
@@ -129,10 +252,7 @@ function AngebotRow({ angebot }: { angebot: AngebotRead }) {
   const to = `/office/angebote/${angebot.id}/review`;
 
   return (
-    <TableRow
-      className="cursor-pointer"
-      onClick={() => navigate(to)}
-    >
+    <TableRow className="cursor-pointer" onClick={() => navigate(to)}>
       <TableCell className="font-mono text-sm">
         {angebot.angebotsnummer ?? (
           <span className="text-muted-foreground italic">nicht ausgestellt</span>
