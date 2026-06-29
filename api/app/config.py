@@ -65,7 +65,7 @@ class Settings(BaseSettings):
         alias="NOMINATIM_URL",
     )
     nominatim_user_agent: str = Field(
-        default="aufmass-dev/0.1 (dev; contact: admin@example.com)",
+        default="aufmass/0.1 (aufmass-project; contact@aufmass.de)",
         alias="NOMINATIM_USER_AGENT",
     )
 
