@@ -3,6 +3,12 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-29: 07 vision_client rewrite complete. Two-step pipeline (raw OCR →
+  chat structuring) is now the primary and only path; one-step annotation path
+  retired. vision_client.py merged (two_step.py deleted). 19 unit tests pass.
+  Bbox mapping live (22/27 on sample sheet). Known limits: OCR glyph misread
+  and multi-line cell truncation require image-crop human review, not a code fix.
+  Directives 07, 07a, 99 updated.
 - 2026-06-28: 06 XRechnung e-invoice path complete. Migration 0022 adds adresse,
   bankverbindung, tenant_billing_profile tables + auftraggeber/rechnung extensions
   + core.rechnung_finalize_issue. New modules: einvoice/ubl.py (UBL 2.1 builder,
@@ -64,11 +70,10 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 5: Frontend foundation + office review slice live; E2E verified.** Phase A+B
-complete: three-surface PWA with the office quote-matching review screen running on
-Hetzner. The full berechnen→prüfen→ausstellen flow tested and passing. Next: Mistral
-vision_client.py rewrite (07), XRechnung/KoSIT round (06), field Aufmaß UI (07 backend
-first), Rechnungen UI, real Entra SSO (09).
+**Phase 6: 07 vision extraction client complete (two-step pipeline live).** Two-step
+OCR + chat structuring pipeline built and benchmarked; unit tests pass; directives
+reconciled. Next: field Aufmaß UI (07 backend router + DB write), Rechnungen UI,
+real Entra SSO (09).
 
 ## Directive set
 
@@ -81,7 +86,7 @@ first), Rechnungen UI, real Entra SSO (09).
 | `04` | Backup and archival            | Drafted                       |
 | `05` | Operational modules (spine)    | **API complete** (2026-06-25) |
 | `06` | Quotation engine               | **XRechnung e-invoice complete** (2026-06-28) |
-| `07` | Aufmaß capture and OCR         | Drafted. DB layer (0020) + tests |
+| `07` | Aufmaß capture and OCR         | **Vision client complete** (2026-06-29). DB layer (0020) + tests. Backend router + DB write pending. |
 | `08` | M365 integration               | Drafted                       |
 | `09` | Security and DSGVO             | Drafted                       |
 | `10` | Application stack / dev env    | **Frontend live** (2026-06-28) |
@@ -134,10 +139,12 @@ a sizing benchmark, not at the design stage.
 3. ~~Build the `06` quotation engine API~~ **Done** (2026-06-26). Deterministic
    core: pricing/check engine, 9 new entities, berechnen+pruefen+ausstellen+
    version endpoints, pytest green. Deferred: XRechnung+KoSIT, GAEB, PDF/matching.
-4. ~~Stand up `03` GPU host for `07` vision benchmark~~ **Unblocked** (2026-06-28):
-   Aufmaß extraction now routes to Mistral Document AI; no GPU required on the
-   critical path. Next `07` deliverable: rewrite vision_client.py + schema.py,
-   config, deps, benchmark on real sheets. Needs Mistral DPA sign-off first.
+4. ~~Stand up `03` GPU host for `07` vision benchmark~~ **Unblocked** (2026-06-28).
+   ~~Rewrite vision_client.py~~ **Done** (2026-06-29). Two-step pipeline (raw OCR +
+   mistral-small structuring), bbox token-match (22/27), 19 unit tests green.
+   Known limits: OCR glyph misread + multi-line cell truncation → image-crop human
+   review. Next `07` deliverable: backend router + DB write (aufmass/aufmass_entry),
+   then field Aufmaß UI.
 5. ~~XRechnung round~~ **Done** (2026-06-28). EN 16931 UBL 2.1 generation, KoSIT
    validation gate on both prüfen (preview) and ausstellen (final), filesystem
    write-once original store, party master data schema (adresse/bankverbindung/

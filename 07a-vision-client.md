@@ -8,6 +8,15 @@ client's output) and `03` / `09` (named processor allowlist, DPA).
 Audience: you (Claude Code) and any human contributor.
 
 ## Changelog
+- 2026-06-29: Two-step pipeline promoted to primary (and only) path. One-step
+  `document_annotation_format` retired. Rationale: table-cell `|` delimiters
+  caused the annotation model to split cross-cell expressions, producing wrong
+  arithmetic downstream. Two-step: (1) raw `ocr.process` → markdown; (2)
+  `chat.complete` with `mistral-small-latest` + JSON schema for structuring.
+  Bbox assignment via token-match against raw OCR table rows (22/27 on sample
+  sheet; non-numeric entries expected to miss). `_structure_model` provenance
+  key added. `ExtractionError` is the sole degraded path → manual review.
+  See notes/aufmass/2026-06-28-two-step-benchmark.md.
 - 2026-06-28: Pivoted from OpenAI-compatible self-hosted VLM (RunPod/Qwen2.5-VL-7B,
   proven inadequate in the 2026-06-27 PoC benchmark) to Mistral Document AI OCR 4
   (`mistral-ocr-4-0`). Interface boundary and output contract unchanged; bbox
@@ -28,13 +37,12 @@ the deterministic reconciler in `07`.
 ## Endpoint choice (Mistral Document AI)
 
 Aufmaß extraction requires a model purpose-built for dense handwritten forms:
-native bounding boxes, word-level confidence, structured output without
-free-form parsing. The 2026-06-27 PoC showed the 7B self-hosted VLM was
-fundamentally inadequate (hallucination, print-vs-handwriting confusion,
-context overflow, pixel-coord bboxes). Mistral Document AI (`mistral-ocr-4-0`)
-is EU-native (residency + sovereignty for B2G), returns native 0..1 bboxes and
-word-level confidence, supports guided decoding via Pydantic annotation, and
-has a self-hosting escape hatch. Full rationale in
+native bounding boxes, structured output without free-form parsing. The
+2026-06-27 PoC showed the 7B self-hosted VLM was fundamentally inadequate
+(hallucination, print-vs-handwriting confusion, context overflow). Mistral
+Document AI (`mistral-ocr-4-0`) is EU-native (residency + sovereignty for B2G),
+has a self-hosting escape hatch, and performs correctly on real sheets (no
+hallucination, expression trees parse correctly). Full rationale in
 `notes/aufmass/2026-06-28-mistral-document-ai-pivot.md`.
 
 **Fallback**: if Mistral is unavailable or a future benchmark favours a
@@ -46,6 +54,8 @@ the swap is one module change, not a codebase change.
 - `MISTRAL_API_KEY`: the Mistral API bearer token.
 - `MISTRAL_MODEL_ID`: pinned to `mistral-ocr-4-0` (change requires a note +
   changelog line).
+- Structuring model: `mistral-small-latest` (hardcoded in module; change requires
+  a note + changelog line).
 
 ## Interface boundary (the reason this is a module)
 
@@ -54,88 +64,103 @@ Document AI. All callers receive the same `dict` of candidates — they do not
 know or care whether the extraction came from Mistral or a self-hosted fallback.
 Swapping the endpoint is one module change, not a codebase change.
 
-## Request shape (Mistral SDK)
+## Pipeline (two-step)
 
-Use the official **`mistralai` Python SDK**, `client.ocr.process(...)`:
+The one-step `document_annotation_format` path is retired. The two-step path is
+required because `|` table-cell delimiters cause the annotation model to split
+expressions workers write across the STCK and LV-POSITION columns — producing
+two wrong entries and wrong arithmetic in the reconciler.
+
+### Step 1 — Raw OCR (`mistral-ocr-4-0`)
 
 ```python
-from mistralai import Mistral
+from mistralai.client import Mistral
 
-response = client.ocr.process(
+resp = client.ocr.process(
     model="mistral-ocr-4-0",
     document={"type": "image_url", "image_url": data_url},
-    document_annotation_format=AufmassExtractionResult,   # Pydantic model
-    document_annotation_prompt=ANNOTATION_PROMPT,
-    confidence_scores_granularity="word",
     include_blocks=True,
     extract_header=True,
 )
+markdown = resp.pages[0].markdown
 ```
 
-**`document_annotation_format`**: the `07` entry/expression-tree schema as a
-Pydantic model (`AufmassExtractionResult` with `entries: list[AufmassEntry]`).
-The SDK serialises this to a JSON schema for guided decoding — no free-form
-parsing or fence-stripping needed.
+No `document_annotation_format` or `document_annotation_prompt`. The raw page
+markdown preserves the full row text across all cells, allowing the structuring
+step to read cross-cell expressions as a unit.
 
-**`document_annotation_prompt`**: instructs the model:
-> "Extract handwritten measurements only. Ignore all printed column headers
-> (Länge / Breite / Höhe / Stück and their variations). Do not compute any
-> arithmetic — emit operands and operators as separate fields."
+### Step 2 — Chat structuring (`mistral-small-latest`)
 
-**`confidence_scores_granularity="word"`**: word-level confidence floats in
-[0, 1]. These seed the deterministic candidate-glyph reconciliation in `07`.
+```python
+resp = client.chat.complete(
+    model="mistral-small-latest",
+    messages=[
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user",   "content": f"<markdown>\n{markdown}\n</markdown>\nExtract all measurement entries as JSON."},
+    ],
+    response_format=ResponseFormat(type="json_schema", json_schema=JSONSchema(
+        name="AufmassExtractionResult",
+        schema_definition=AufmassExtractionResult.model_json_schema(),
+        strict=True,
+    )),
+    temperature=0.0,
+)
+result = AufmassExtractionResult.model_validate_json(resp.choices[0].message.content)
+```
 
-**`include_blocks=True`, `extract_header=True`**: expose block-level structure
-for label (Bauteil) extraction and sheet-header identification.
+The system prompt describes the column structure (Bauteil, LÄNGE, BREITE, HÖHE,
+STCK, ABZUG, SUMME, LV-POSITION/LEISTUNG), instructs the model that expressions
+span cells (dangling operator → next cell continues), and includes a worked
+example showing the cross-cell join pattern.
 
-## Bboxes and confidence (native — no client-side normalisation)
+### Bbox assignment (post-step)
 
-Mistral OCR 4 returns bboxes as 0..1 fractions of image width/height and
-word-level confidence as floats in [0, 1]. These are passed through directly
-to the reconciler. The pixel-coord normalisation workaround from the 7B PoC
-is dropped.
+Bboxes (0..1 fractions) are assigned after structuring by matching each entry's
+German-decimal numeric tokens against raw OCR table rows (most-matches wins),
+then computing a proportional vertical slice of the table block bbox.
+Entries with no numeric tokens (unreadable stubs, "dito") keep `bbox=None`.
+
+### Known OCR-layer limitations (neither step fixes these)
+
+- **Glyph misread** (e.g. `0,80` → `0,5`): consistent across image scales; the
+  raw OCR text already has the wrong value. Mitigation: image-crop human review.
+- **Multi-line cell truncation**: OCR collapses multi-line LV-POSITION cells to
+  one line; sub-entries on additional lines are absent from the markdown.
 
 ## Output (candidate, not truth)
 
-The `extract()` function returns a `dict` matching the `07` entry schema, plus
-provenance keys:
-- `_model`: the `MISTRAL_MODEL_ID` used.
-- `_endpoint`: `api.mistral.ai` (or the override if a self-hosted fallback is
-  active).
+`extract()` returns a `dict` matching the `07` entry schema, plus provenance keys:
+- `_model`: the OCR model (`MISTRAL_MODEL_ID`).
+- `_structure_model`: the structuring model (`mistral-small-latest`).
+- `_endpoint`: `api.mistral.ai`.
 
 The reconciler (`07`) does all arithmetic, band checks, and the accept/queue
 decision. The client must not compute, round, or "fix" anything.
 
-## Two-step fallback (benchmark-gated, not pre-built)
-
-If `document_annotation_format` underperforms on real sheets (i.e. the
-structured annotation is worse than raw OCR + a text model), a two-step path
-can be added:
-1. Raw OCR with Mistral OCR 4 (`include_blocks=True`, no annotation).
-2. A cheap Mistral text model structures the raw OCR into the entry schema.
-
-This is not pre-built — benchmark the annotation path first. Only add the
-two-step variant if the annotation step underperforms.
-
 ## Retry and error handling
 
-- Generous timeout (300s) for the API call.
+- Generous timeout (300s) applied to both API calls.
 - Retry with exponential backoff (`[5s, 15s, 45s]`) on network errors and 5xx.
+- 4xx: non-retryable, raises `ExtractionError` immediately.
 - On persistent failure: raise `ExtractionError`; the sheet routes to manual
   review. The firm is never blocked (per `03` degradation).
+- No fallback to one-step: one-step produces wrong expression trees for
+  cross-cell formulas — wrong math is worse than a loud failure.
 
 ## Provenance
 
-Record `MISTRAL_MODEL_ID` and `api.mistral.ai` with every result. Store the
-source image as an immutable `document` (`04`). Keep each entry's bbox and
-confidence (`07`).
+Record `MISTRAL_MODEL_ID`, `mistral-small-latest`, and `api.mistral.ai` with
+every result. Store the source image as an immutable `document` (`04`). Keep
+each entry's bbox and confidence (`07`).
 
 ## Compliance
 
 Mistral Document AI is on the `03` named EU-native processor allowlist.
 A signed **DPA** and **no-training tier** are required before first production
-call. **Status: DPA pending sign-off** — see
+call. **Status: DPA pending sign-off** (PoC waived) — see
 `notes/aufmass/2026-06-28-mistral-document-ai-pivot.md` and `09`.
+
+`mistral-small-latest` is a Mistral EU-native endpoint; the same DPA applies.
 
 Handwritten Aufmaß images are submitted; no other customer data is sent.
 Images may contain spatial data (room dimensions, property layouts);
@@ -145,10 +170,13 @@ minimise: submit only the image.
 
 ## Open questions
 
-1. **Annotation vs two-step quality**: benchmark `document_annotation_format`
-   against the raw-OCR + text-model path on real firm sheets before deciding
-   whether to pre-build the two-step fallback.
+1. ~~**Annotation vs two-step quality**~~: **Resolved** (2026-06-29). Two-step is
+   the primary path. See notes/aufmass/2026-06-28-two-step-benchmark.md.
 2. **Timeout / retry numbers**: tune against observed Mistral API latency on
-   real calls.
-3. **Image size budget**: confirm Mistral OCR 4's max image dimensions/bytes
-   and whether downscaling preprocessing is needed for high-res photos.
+   real calls. Current: OCR ~0.4s, structuring ~13s on the sample sheet.
+3. ~~**Image size budget**~~: **Resolved** (2026-06-28). 508 KB / 1191×1684px
+   processed fine in a single call. Monitor for very high-res photos (no limit
+   hit so far).
+4. **Multi-line cell truncation**: no solution at the structuring layer. Options:
+   targeted cell re-read with a cropped image; manual review flag when a
+   LV-POSITION cell looks truncated (length heuristic). Tracked as open.

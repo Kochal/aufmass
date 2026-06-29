@@ -15,6 +15,12 @@ extraction-and-reconciliation pipeline, and where human review is pointed.
 Audience: you (Claude Code) and any human contributor.
 
 ## Changelog
+- 2026-06-29: Section 2 updated: extraction pipeline is now two-step (raw OCR
+  → chat structuring) not one-step annotation. Word confidence does not flow
+  through to annotation entries in the two-step path; the human image-crop
+  review is the primary quality gate for ambiguous values. Known limitations
+  documented: OCR misreads (0,80→0,5) and multi-line cell truncation are
+  OCR-layer issues, not fixable by structuring step.
 - 2026-06-28: Section 2 rewritten: extraction now via Mistral Document AI
   (OCR 4, `mistral-ocr-4-0`) with document_annotation. Native bbox + word
   confidence replaces client-side normalisation. Reconciliation (§3-5)
@@ -73,31 +79,42 @@ or audio is stored as an immutable `document` (`04`).
   sample was sideways). Normalise before extraction.
 - The original image is never modified; preprocessing operates on a copy.
 
-### 2. Vision-model extraction (Mistral Document AI)
+### 2. Vision-model extraction (Mistral Document AI, two-step)
 
-Extraction uses **Mistral Document AI** (`mistral-ocr-4-0`) via
-`document_annotation_format` (the entry/expression-tree schema as a Pydantic
-model) and `document_annotation_prompt` (handwritten measurements only; ignore
-printed column headers; do not compute). Client detail is in `07a`.
+Extraction uses a **two-step pipeline**. Client detail is in `07a`.
 
-The model emits, per handwritten measurement:
+**Step 1 — Raw OCR** (`mistral-ocr-4-0`, `include_blocks=True`): converts the
+image to a page markdown table and raw block bboxes. No annotation format is
+requested — the raw markdown preserves the full row text across all cells.
 
-- the **expression** as a structured tree, not a string: operands, operator,
-  any multiplier (the "x2"), and any **written result** the builder noted;
-- **candidate readings** for uncertain glyphs (a 7 that might be a 1, a comma
-  that might sit one place over), with a **word-level confidence** score per
-  token (native from Mistral OCR 4, floats in [0, 1]);
-- an optional **label** (Bauteil) if legible;
-- the **source crop** as 0..1 bbox fractions (native from Mistral OCR 4 —
-  no client-side normalisation needed).
+**Step 2 — Chat structuring** (`mistral-small-latest`): receives the raw
+markdown and a system prompt describing the column structure (Bauteil, LÄNGE,
+BREITE, HÖHE, STCK, ABZUG, SUMME, LV-POSITION/LEISTUNG). Emits a structured
+`AufmassExtractionResult` JSON.
 
-These populate `aufmass_entry.expression`, `candidate_readings`,
-`written_result`, `source_crop_ref`, and `bauteil` (`02`). The model does no
-arithmetic and makes no final decision.
+The two-step path is required because the one-step `document_annotation_format`
+treats `|` cell delimiters as expression boundaries, splitting formulas workers
+write across the STCK and LV-POSITION columns. The chat model reads the full
+row and correctly joins cross-cell expressions.
+See `notes/aufmass/2026-06-28-two-step-benchmark.md`.
 
-Word confidence scores seed the deterministic candidate-glyph reconciliation
-(§3): when multiple glyph readings reconcile, the one with the highest total
-word confidence is preferred, reducing the surface that needs human review.
+The pipeline emits, per handwritten measurement:
+
+- the **expression** as a structured tree: operands, operator, any multiplier,
+  and any **written result** the builder noted;
+- an optional **label** (Bauteil) from the Bauteil column;
+- the **source crop** as 0..1 bbox fractions, assigned by matching the entry's
+  numeric tokens against raw OCR table rows (best-match wins).
+
+Known OCR-layer limitations (not fixable by structuring step):
+- Ambiguous glyphs (e.g. `0,80` → `0,5`) are carried over from the raw OCR
+  text unchanged. The human image-crop review (§ Verification UX) is the
+  primary quality gate.
+- Multi-line table cells are truncated by the OCR; sub-entries on additional
+  lines are not captured.
+
+These populate `aufmass_entry.expression`, `written_result`, `source_crop_ref`,
+and `bauteil` (`02`). The model does no arithmetic and makes no final decision.
 
 ### 3. Deterministic reconciliation (math as checksum)
 
@@ -189,8 +206,9 @@ re-reading digits the math already locked.
 1. **Confidence-to-action thresholds**: the exact cutoffs for auto-accept vs
    review (reconciled-and-in-band, reconciled-but-out-of-band, lone result).
    Drafted as: auto-accept only reconciled-and-in-band; everything else to
-   review. Word-level confidence from Mistral OCR 4 provides a seed for
-   per-glyph weighting; tune the thresholds on real sheets.
+   review. Word-level confidence is available in the raw OCR blocks but does
+   not flow through the two-step structuring path; the annotation-level
+   `confidence` field (LLM-assigned) is the seed. Tune on real sheets.
 2. **Multi-candidate reconciliation**: when more than one glyph combination
    reconciles to the written result, do we surface all and force a choice, or
    pick the highest-prior reading and flag? Drafted as surface-and-choose.
