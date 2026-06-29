@@ -14,6 +14,10 @@ Audience: you (Claude Code) and any human contributor.
 > the firm's Datenschutz and legal advice.
 
 ## Changelog
+- 2026-06-29: Voice recording compliance added: audio is personal data; Aufmaß
+  recordings stored as immutable document per 01/04; form-fill audio transient
+  (not stored); voice path is self-hosted (no new processor, no DPA needed);
+  dictation is not biometric ID (not Art. 9). Betriebsrat angle flagged.
 - 2026-06-28: Mistral Document AI added as a named processor (Aufmaß extraction).
   Processors section updated: DPA + no-training tier required per processor.
   See notes/aufmass/2026-06-28-mistral-document-ai-pivot.md.
@@ -135,6 +139,35 @@ must not appear on the `03` egress allowlist without all three.
   activities, Art. 30) and the technical/organisational measures (TOMs) are
   maintained as part of the documentation set below. Each named processor
   above must appear in the Verzeichnis once its DPA is in place.
+
+## Voice recording compliance
+
+Voice recordings (Aufmaß dictation and general voice form-fill) are **personal
+data** under DSGVO. Handling rules:
+
+- **Aufmaß recordings** (`07b`): stored as immutable `document` records
+  (`quelle=voice`, `source_document_id`). Retained per `01`/`04` — the audio
+  is the traceable source of a billing-feeding measurement, so it is an original,
+  not transient. It appears in the Verzeichnis as a processing activity.
+- **Form-fill audio** (`10` voice input): transient. The audio blob is sent to
+  the backend, processed to extract an intent (field + value), and discarded.
+  No audio is stored, so no retention obligation applies to the audio itself.
+  The resulting field value is stored in the relevant business record as normal.
+- **Self-hosted = egress-free**: Whisper ASR and the voice structuring model
+  are self-hosted (`03`, `07b`). No audio, transcript, or derived value leaves
+  the firm's EU/EEA server. The voice path adds **no new named processor** and
+  requires **no new DPA** — a materially lighter compliance posture than the
+  Mistral vision path.
+- **Not biometric data**: voice capture is dictation, not voiceprint
+  identification. The audio is not stored as a biometric template and is not
+  used for speaker recognition or any Art. 9 special-category processing. The
+  firm's Datenschutz should confirm this characterisation if customers (not just
+  employees) are routinely audible on recordings.
+- **Betriebsrat angle**: recording employees at the Baustelle may require a
+  Betriebsvereinbarung if a Betriebsrat exists (`09` open question 3). The same
+  gate that applies to time/mileage monitoring applies here — the voice-capture
+  feature should not be enabled for a tenant until the co-determination status
+  is confirmed.
 
 ## Verfahrensdokumentation (resolving `01`)
 

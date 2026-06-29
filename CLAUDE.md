@@ -133,9 +133,10 @@ working-time record.
   cross-cutting tables (`tenant`, `app_user`, `audit_log`, `document`,
   `edit_lock`). (`02`)
 - **Models are routed per step** behind an endpoint boundary (`03`). Aufmaß
-  extraction → Mistral Document AI (`mistral-ocr-4-0`). Embeddings / ASR →
-  self-hosted. RfP/PDF extraction routing TBD. Self-hosted and named
-  DPA-covered EU-native APIs are co-equal options per step.
+  photo extraction → Mistral Document AI (`mistral-ocr-4-0`, `07a`). Aufmaß
+  voice → Whisper ASR + self-hosted structuring (`07b`; egress-free).
+  Embeddings / ASR → self-hosted. RfP/PDF extraction routing TBD. Self-hosted
+  and named DPA-covered EU-native APIs are co-equal options per step.
 - **Originals are content-hashed** and stored write-once. (`04`)
 
 ### Stack decisions (resolved in `10-application-stack.md`)
@@ -170,7 +171,10 @@ local machine; treat local as a thin client.
 | Backup and archival                          | `04-backup-archival.md`          |
 | Projects, orders, time, mileage, warranty    | `05-operational-modules.md`      |
 | RfP ingestion and quotation                  | `06-quotation-engine.md`         |
-| Aufmaß capture and OCR                        | `07-aufmass-ocr.md`              |
+| Aufmaß capture and OCR (pipeline, reconciler) | `07-aufmass-ocr.md`              |
+| Aufmaß vision client (photo path, Mistral)   | `07a-vision-client.md`           |
+| Aufmaß voice client (voice path, Whisper)    | `07b-voice-aufmass.md`           |
+| Voice form/field filling (app-wide)          | `10-application-stack.md` §Voice |
 | M365 integration                             | `08-m365-integration.md`         |
 | Security and DSGVO                           | `09-security-dsgvo.md`           |
 | Application stack / dev env                  | `10-application-stack.md`        |

@@ -15,6 +15,10 @@ e-invoice validation and GAEB are `06`; image preprocessing is `07`; M365 is
 Audience: you (Claude Code) and any human contributor.
 
 ## Changelog
+- 2026-06-29: Voice input section added. PWA mic capture (MediaRecorder),
+  backend intent-parse endpoint (Whisper + self-hosted LLM), confirm-before-commit
+  rule, field-capture-screens-first rollout. See
+  notes/ui/2026-06-29-voice-form-filling.md.
 - 2026-06-23: Initial draft. Lanes, app-layer non-negotiables, layer
   contract, dev Compose.
 - 2026-06-24: Scaffolded the four services (`api`, `web`, `validator`, `stubs`)
@@ -84,14 +88,39 @@ the other directives make, so they are fixed here.
 
 ## Browser PWA
 
-- **Installable, camera-capable, offline-tolerant.** Field capture happens on
-  phones at the Baustelle (`07`): photographing Aufmaß sheets, large image
-  uploads, flaky site network. The PWA gives camera access, install without an
-  app store, and tolerance of poor connectivity, which is the reason for
-  choosing browser over native.
-- The two genuinely interactive screens (Aufmaß crop verification, quote
-  matching review) are why this is a real client app and not server-rendered
-  pages.
+- **Installable, camera-capable, mic-capable, offline-tolerant.** Field capture
+  happens on phones at the Baustelle (`07`): photographing Aufmaß sheets, voice
+  dictation, large uploads, flaky site network. The PWA gives camera and mic
+  access, install without an app store, and tolerance of poor connectivity.
+- The genuinely interactive screens (Aufmaß crop/audio verification, quote
+  matching review) are why this is a real client app and not server-rendered pages.
+
+### Voice input
+
+Voice is a first-class input modality for field screens — speak instead of type.
+Detail in `07b` (Aufmaß dictation) and `notes/ui/2026-06-29-voice-form-filling.md`
+(general form-fill).
+
+**Capture**: `MediaRecorder` (PWA standard API) with a push-to-talk or tap-to-talk
+trigger. Audio is captured as a blob in the browser.
+
+**Processing (server-side only)**: the browser sends the audio blob to the backend
+(`POST /api/voice/intent`). The backend calls the self-hosted Whisper endpoint
+(ASR) and a self-hosted text LLM (intent parse: which field + value). The browser
+never calls an external model API directly.
+
+**Intent parse response**: `{field: "laenge", value: "3,80", confidence: 0.94}`.
+The frontend displays the proposed value ("Länge: 3,80 m — correct?") for explicit
+confirmation before writing it to form state. Tapping "correct" fills the field;
+tapping "wrong" lets the worker re-dictate or type.
+
+**Confirm-before-commit**: voice-filled money and quantity fields are
+**candidates**, not committed values. The non-negotiable applies: no model output
+— including a voice-derived number — bypasses explicit human confirmation before
+reaching the database. The frontend still never calculates.
+
+**Rollout order**: field-capture screens first (Aufmaß capture, Arbeitszeit,
+Fahrt, Mangel notes). Office screens (Angebot, Rechnung) in a later pass.
 
 -----
 

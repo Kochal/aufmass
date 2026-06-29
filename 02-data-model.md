@@ -12,6 +12,10 @@ mechanism is pinned here so it is not reinvented per table.
 Audience: you (Claude Code) and any human contributor.
 
 ## Changelog
+- 2026-06-29: Confirmed: the voice capture path (`07b`) requires no schema
+  change. `aufmass.quelle = 'voice'`, `source_document_id`, and
+  `aufmass_entry.source_crop_ref` already cover the audio path. No migration
+  needed.
 - 2026-06-22: Initial draft. Entity catalog, tenancy, audit/immutability
   patterns, tenant tax profile.
 - 2026-06-22: Document numbering made a per-tenant configurable Nummernkreis
@@ -341,16 +345,19 @@ The schema must already hold what `07` produces, per `00`.
 
 - **aufmass**: a measurement session/sheet. `tenant_id`, `projekt_id`,
   `erfasst_von`, `erfasst_am`, `quelle` (`foto` / `voice` / `manual`),
-  `source_document_id` (the photo). Free-form layout is expected; structure
-  comes from the entries, not the sheet grid.
+  `source_document_id` (the photo or audio recording). Free-form layout is
+  expected; structure comes from the entries, not the sheet grid. The schema
+  already covers both the `07a` photo path and the `07b` voice path — no
+  migration needed for voice support.
 - **aufmass_entry**: one measured thing. `aufmass_id`, `bauteil` (label,
   may be low-confidence), `expression` (jsonb: the parsed formula tree with
   operands, operator, multipliers), `candidate_readings` (jsonb: alternative
   glyph reads for reconciliation), `written_result`, `computed_result`,
-  `reconciled bool`, `confidence`, `source_crop_ref`, `lv_position_id`
-  (nullable link back to the position it fills), `review_status`. This is
-  the home for the expression-tree + candidate + crop + confidence design
-  from the OCR discussion.
+  `reconciled bool`, `confidence`, `source_crop_ref` (0..1 bbox fractions for
+  photo entries; `{start_s, end_s}` audio segment span for voice entries),
+  `lv_position_id` (nullable link back to the position it fills),
+  `review_status`. Source-agnostic: the same columns hold both photo-derived
+  and voice-derived entries.
 
 ### Orders and materials (detailed in `05`)
 

@@ -13,6 +13,9 @@ correctness survives any model endpoint being down.
 Audience: you (Claude Code) and any human contributor.
 
 ## Changelog
+- 2026-06-29: Voice transcript-structuring model added to "Models served".
+  Voice path noted as fully self-hosted / egress-free. See
+  notes/aufmass/2026-06-29-voice-aufmass-design.md and 07b.
 - 2026-06-28: Pivot from "self-hosted only" to co-equal per-step routing.
   Mistral Document AI added to named EU-native processor allowlist (Aufmaß).
   Self-hosted GPU vision demoted to optional/fallback. Residency-vs-sovereignty
@@ -75,8 +78,13 @@ module change.
   small; CPU-or-modest-GPU.
 - **Text LLM** for PDF extraction and match rerank/confirm (`06`): routing
   TBD. Self-hosted or EU-native API, decided when the step is built.
-- **ASR** for voice Aufmaß (`07`): Whisper large-v3 (faster-whisper), German.
+- **ASR** for voice Aufmaß (`07b`): Whisper large-v3 (faster-whisper), German.
   Self-hosted.
+- **Voice structuring** (`07b`): self-hosted text LLM that converts an ASR
+  transcript into the same `AufmassExtractionResult` schema `07a` produces.
+  Model choice TBD; benchmark a German-capable model before deciding. The voice
+  path (ASR + structuring) is **fully self-hosted and egress-free** — no audio
+  or transcript leaves the firm's server, no DPA required for this path.
 
 ## Sizing and capacity
 

@@ -15,6 +15,11 @@ extraction-and-reconciliation pipeline, and where human review is pointed.
 Audience: you (Claude Code) and any human contributor.
 
 ## Changelog
+- 2026-06-29: Voice promoted to co-equal capture path (alongside photo). Added
+  `07b` cross-reference. `source_crop_ref` noted as generalised to audio segment
+  span for voice. Open question 3 (voice grammar) resolved: free-form dictation
+  + self-hosted structuring (see `07b`). See
+  notes/aufmass/2026-06-29-voice-aufmass-design.md.
 - 2026-06-29: Section 2 updated: extraction pipeline is now two-step (raw OCR
   → chat structuring) not one-step annotation. Word confidence does not flow
   through to annotation entries in the two-step path; the human image-crop
@@ -57,17 +62,24 @@ beats a fragile 99% that hides its errors.
 
 ## Capture modes (all feed one pipeline)
 
-- **Photo (primary).** The path that needs zero habit change: the crew keeps
-  scribbling on whatever paper is to hand, then photographs it. No printed
-  template is assumed; builders forget them and use scrap paper (this is why
-  the earlier pre-printed-form idea was dropped).
-- **Voice (optional).** Self-hosted German ASR (`03`). Lower friction for
-  some, but habit change is real and not assumed; offered, not required.
-- **Manual entry.** Direct structured entry on a tablet for those who prefer
-  it.
+- **Photo.** The path that needs zero habit change: the crew keeps scribbling
+  on whatever paper is to hand, then photographs it. No printed template is
+  assumed; builders forget them and use scrap paper (this is why the earlier
+  pre-printed-form idea was dropped). Extraction: `07a` (Mistral Document AI).
+- **Voice.** Self-hosted German ASR + structuring (`07b`). Co-equal with photo —
+  the worker picks per situation. Voice is lower friction when hands are full or
+  gloved; photo when background noise makes dictation impractical. Voice is also
+  the **egress-free path**: fully self-hosted, no third-party processor, no DPA
+  dependency. Extraction: `07b` (Whisper ASR + self-hosted structuring).
+- **Manual entry.** Direct structured entry on a tablet for those who prefer it.
 
-All three produce the same `aufmass_entry` rows downstream. The source photo
-or audio is stored as an immutable `document` (`04`).
+All three produce the same `aufmass_entry` rows downstream. Photo and voice path
+originals (image / audio) are stored as immutable `document`s (`04`).
+`source_crop_ref` generalises across modes: 0..1 bbox fractions for photo entries,
+`{start_s, end_s}` audio segment spans for voice entries.
+
+The reconciler (§3–5) is **source-agnostic** — it operates on the structured entry
+the client returns, not on how the entry was captured.
 
 -----
 
@@ -173,9 +185,10 @@ re-reading digits the math already locked.
 
 ## Verification UX
 
-- Each extracted number is shown next to its **source crop**. The reviewer
-  confirms or corrects in about two seconds by glancing at the crop, instead
-  of re-keying the page.
+- Each extracted number is shown next to its **source crop** — an image crop
+  (photo path) or an audio playback control spanning the matched segment (voice
+  path). The reviewer confirms or corrects in about two seconds, instead of
+  re-keying the page.
 - Reconciled, in-band values are pre-accepted and shown for a quick scan;
   proposed corrections show both the read and the reconciled value;
   low-confidence and lone-result items are highlighted.
@@ -212,9 +225,9 @@ re-reading digits the math already locked.
 2. **Multi-candidate reconciliation**: when more than one glyph combination
    reconciles to the written result, do we surface all and force a choice, or
    pick the highest-prior reading and flag? Drafted as surface-and-choose.
-3. **Voice grammar**: free-form dictation parsed by the model, or a light
-   structured prompt ("Raum, Bauteil, Länge mal Breite")? Drafted as
-   free-form to keep friction low; revisit if accuracy on site is poor.
+3. ~~**Voice grammar**~~: **Resolved** (2026-06-29). Free-form dictation with
+   a self-hosted structuring model. No rigid grammar imposed; revisit if
+   field accuracy is poor. Detail in `07b`.
 4. **Standalone Aufmaß**: measurements taken before any LV exists (small
    private jobs with no tender). Drafted as allowed, with the
    `lv_position` link left null until a quote is built.

@@ -8,6 +8,7 @@ Organised by area, newest first within each area.
 ## aufmass
 | Date | File | Summary |
 |------|------|---------|
+| 2026-06-29 | [voice-aufmass-design](aufmass/2026-06-29-voice-aufmass-design.md) | Voice as co-equal capture path: self-hosted Whisper + structuring = egress-free hedge against Mistral; pipeline shape; no schema migration needed; what would invalidate |
 | 2026-06-29 | [aufmass-router](aufmass/2026-06-29-aufmass-router.md) | Router design: upload→extract→DB write, raw_text+is_deduction in candidate_readings jsonb, transaction timing, computed_result deferred to reconciler |
 | 2026-06-28 | [two-step-benchmark](aufmass/2026-06-28-two-step-benchmark.md) | two-step (raw OCR + mistral-small structuring) vs one-step: fixes cross-cell expression split; recommend as primary path; 0,5 misread and cell truncation remain |
 | 2026-06-28 | [ocr-quality-findings](aufmass/2026-06-28-ocr-quality-findings.md) | Three structural OCR problems: 0,80→0,5 misread (both scales), expression split at cell boundary, multi-line cell truncation; two-step approach now load-bearing, not optional |
@@ -42,6 +43,7 @@ Organised by area, newest first within each area.
 ## ui
 | Date | File | Summary |
 |------|------|---------|
+| 2026-06-29 | [voice-form-filling](ui/2026-06-29-voice-form-filling.md) | Voice form/field filling: PWA mic → backend Whisper → confirm-before-commit; no money math from voice; field-capture screens first; audio not stored for form-fill |
 | 2026-06-28 | [e2e-browser-test](ui/2026-06-28-e2e-browser-test.md) | E2E browser walkthrough complete; two bugs fixed (ausstellenMutation cache, nummernkreis format); immutability trigger confirmed; nummernkreis seed requirement documented |
 | 2026-06-28 | [design-system-and-surfaces](ui/2026-06-28-design-system-and-surfaces.md) | shadcn/ui on Tailwind v4; three surfaces one design system; confidence/trust colour tokens; react-router-dom v7 + react-query v5 + openapi-fetch; dev-auth seam; office quote-review slice live |
 

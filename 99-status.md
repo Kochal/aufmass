@@ -3,6 +3,13 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-29: Voice Aufmaß added as co-equal capture path. New directive
+  `07b-voice-aufmass.md`: Whisper ASR + self-hosted structuring → same
+  AufmassExtractionResult schema → 07 reconciler. Egress-free path (no DPA
+  needed). No schema migration required (`quelle=voice` + `source_crop_ref` +
+  `source_document_id` already in place). Voice form-fill section added to 10.
+  Audio compliance added to 09. Directives 02, 03, 07, 09, 10, CLAUDE.md, 99
+  updated. Two decision notes written.
 - 2026-06-29: 07 vision_client rewrite complete. Two-step pipeline (raw OCR →
   chat structuring) is now the primary and only path; one-step annotation path
   retired. vision_client.py merged (two_step.py deleted). 19 unit tests pass.
@@ -70,10 +77,11 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 6: 07 vision extraction client complete (two-step pipeline live).** Two-step
-OCR + chat structuring pipeline built and benchmarked; unit tests pass; directives
-reconciled. Next: field Aufmaß UI (07 backend router + DB write), Rechnungen UI,
-real Entra SSO (09).
+**Phase 7: Voice modality added (07b spec complete).** Voice is a co-equal,
+egress-free Aufmaß capture path alongside photo. `07b` directive written as spec for
+the voice client code round. Voice form-fill specced in `10`. All directives
+reconciled. Next: field Aufmaß UI (07 backend router + DB write), voice client
+code round (07b), Rechnungen UI, real Entra SSO (09).
 
 ## Directive set
 
@@ -87,6 +95,8 @@ real Entra SSO (09).
 | `05` | Operational modules (spine)    | **API complete** (2026-06-25) |
 | `06` | Quotation engine               | **XRechnung e-invoice complete** (2026-06-28) |
 | `07` | Aufmaß capture and OCR         | **Vision client complete** (2026-06-29). DB layer (0020) + tests. Backend router + DB write pending. |
+| `07a` | Vision client (photo/Mistral) | **Complete** (2026-06-29). Two-step pipeline live. |
+| `07b` | Voice client (Whisper/ASR)    | **Spec written** (2026-06-29). Code round pending. |
 | `08` | M365 integration               | Drafted                       |
 | `09` | Security and DSGVO             | Drafted                       |
 | `10` | Application stack / dev env    | **Frontend live** (2026-06-28) |
