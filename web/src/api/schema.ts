@@ -4,6 +4,162 @@
  */
 
 export interface paths {
+    "/api/aufmass/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Aufmass
+         * @description Upload a handwritten Aufmaß sheet photo, run Mistral extraction,
+         *     archive the original and return the aufmass with all extracted entries.
+         *
+         *     Requires MISTRAL_API_KEY (returns 503 if absent). The extraction call
+         *     (~14s) runs before any DB write to avoid a long open transaction.
+         */
+        post: operations["upload_aufmass_api_aufmass_upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/aufmass": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Aufmass
+         * @description List aufmass sessions. Returns records without embedded entries (use
+         *     GET /api/aufmass/{id} for the full sheet + entries).
+         */
+        get: operations["list_aufmass_api_aufmass_get"];
+        put?: never;
+        /**
+         * Create Aufmass
+         * @description Create a manual aufmass session. Entries are added separately via
+         *     POST /api/aufmass-entry. No image upload or extraction call is made.
+         */
+        post: operations["create_aufmass_api_aufmass_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/aufmass/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Aufmass
+         * @description Get an aufmass sheet with all its entries embedded.
+         */
+        get: operations["get_aufmass_api_aufmass__id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Aufmass */
+        delete: operations["delete_aufmass_api_aufmass__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/aufmass-entry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Aufmass Entries */
+        get: operations["list_aufmass_entries_api_aufmass_entry_get"];
+        put?: never;
+        /**
+         * Create Aufmass Entry
+         * @description Add a single entry to a manual aufmass or for testing purposes.
+         */
+        post: operations["create_aufmass_entry_api_aufmass_entry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/aufmass-entry/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Aufmass Entry */
+        get: operations["get_aufmass_entry_api_aufmass_entry__id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Aufmass Entry */
+        delete: operations["delete_aufmass_entry_api_aufmass_entry__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/aufmass-entry/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Confirm Aufmass Entry
+         * @description Mark an entry as human-confirmed (review_status → 'confirmed').
+         *
+         *     The prüfbarkeit floor trigger blocks confirmation of billing-linked
+         *     foto/voice entries that have no source_crop_ref; that is a 409.
+         */
+        patch: operations["confirm_aufmass_entry_api_aufmass_entry__id__confirm_patch"];
+        trace?: never;
+    };
+    "/api/aufmass-entry/{id}/correct": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Correct Aufmass Entry
+         * @description Apply a human correction and set review_status → 'corrected'.
+         *
+         *     Only the fields present in the body (non-None) are updated; existing
+         *     values are preserved for fields not provided.
+         */
+        patch: operations["correct_aufmass_entry_api_aufmass_entry__id__correct_patch"];
+        trace?: never;
+    };
     "/api/auftraggeber": {
         parameters: {
             query?: never;
@@ -1628,6 +1784,177 @@ export interface components {
             /** Projekt Id */
             projekt_id?: string | null;
         };
+        /** AufmassCreate */
+        AufmassCreate: {
+            /**
+             * Projekt Id
+             * Format: uuid
+             */
+            projekt_id: string;
+        };
+        /** AufmassEntryConfirm */
+        AufmassEntryConfirm: {
+            /** Row Version */
+            row_version: number;
+        };
+        /** AufmassEntryCorrect */
+        AufmassEntryCorrect: {
+            /** Row Version */
+            row_version: number;
+            /** Written Result */
+            written_result?: number | string | null;
+            /** Computed Result */
+            computed_result?: number | string | null;
+            /** Bauteil */
+            bauteil?: string | null;
+            /** Einheit */
+            einheit?: string | null;
+            /** Lv Position Id */
+            lv_position_id?: string | null;
+        };
+        /**
+         * AufmassEntryCreate
+         * @description For adding entries to a manual aufmass (quelle='manual').
+         *     Also used by tests to exercise the CRUD + review flow without Mistral.
+         */
+        AufmassEntryCreate: {
+            /**
+             * Aufmass Id
+             * Format: uuid
+             */
+            aufmass_id: string;
+            /** Bauteil */
+            bauteil?: string | null;
+            /** Written Result */
+            written_result?: number | string | null;
+            /** Einheit */
+            einheit?: string | null;
+            /**
+             * Confidence
+             * @default 0
+             */
+            confidence: number;
+            /**
+             * Is Deduction
+             * @default false
+             */
+            is_deduction: boolean;
+            /**
+             * Raw Text
+             * @default
+             */
+            raw_text: string;
+        };
+        /** AufmassEntryRead */
+        AufmassEntryRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Aufmass Id
+             * Format: uuid
+             */
+            aufmass_id: string;
+            /** Bauteil */
+            bauteil?: string | null;
+            /** Expression */
+            expression?: unknown | null;
+            /** Candidate Readings */
+            candidate_readings?: unknown | null;
+            /** Written Result */
+            written_result?: string | null;
+            /** Computed Result */
+            computed_result?: string | null;
+            /** Einheit */
+            einheit?: string | null;
+            /** Reconciled */
+            reconciled: boolean;
+            /** Confidence */
+            confidence?: string | null;
+            /** Source Crop Ref */
+            source_crop_ref?: unknown | null;
+            /** Lv Position Id */
+            lv_position_id?: string | null;
+            /** Review Status */
+            review_status: string;
+        };
+        /** AufmassRead */
+        AufmassRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Projekt Id
+             * Format: uuid
+             */
+            projekt_id: string;
+            /** Erfasst Von */
+            erfasst_von?: string | null;
+            /**
+             * Erfasst Am
+             * Format: date-time
+             */
+            erfasst_am: string;
+            /** Quelle */
+            quelle: string;
+            /** Source Document Id */
+            source_document_id?: string | null;
+            /**
+             * Entries
+             * @default []
+             */
+            entries: components["schemas"]["AufmassEntryRead"][];
+        };
         /** AuftraggeberCreate */
         AuftraggeberCreate: {
             /** Name */
@@ -1963,6 +2290,16 @@ export interface components {
             summe?: number | string | null;
             /** Auftragsbestaetigung Document Id */
             auftragsbestaetigung_document_id?: string | null;
+        };
+        /** Body_upload_aufmass_api_aufmass_upload_post */
+        Body_upload_aufmass_api_aufmass_upload_post: {
+            /**
+             * Projekt Id
+             * Format: uuid
+             */
+            projekt_id: string;
+            /** Image */
+            image: string;
         };
         /** CheckResultRead */
         CheckResultRead: {
@@ -3465,6 +3802,390 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    upload_aufmass_api_aufmass_upload_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_aufmass_api_aufmass_upload_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AufmassRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_aufmass_api_aufmass_get: {
+        parameters: {
+            query?: {
+                projekt_id?: string | null;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AufmassRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_aufmass_api_aufmass_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AufmassCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AufmassRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_aufmass_api_aufmass__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AufmassRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_aufmass_api_aufmass__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_aufmass_entries_api_aufmass_entry_get: {
+        parameters: {
+            query: {
+                aufmass_id: string;
+            };
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AufmassEntryRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_aufmass_entry_api_aufmass_entry_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AufmassEntryCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AufmassEntryRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_aufmass_entry_api_aufmass_entry__id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AufmassEntryRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_aufmass_entry_api_aufmass_entry__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_aufmass_entry_api_aufmass_entry__id__confirm_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AufmassEntryConfirm"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AufmassEntryRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    correct_aufmass_entry_api_aufmass_entry__id__correct_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AufmassEntryCorrect"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AufmassEntryRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_auftraggeber_api_auftraggeber_get: {
         parameters: {
             query?: never;
