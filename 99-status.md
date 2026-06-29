@@ -3,6 +3,13 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-29 (l): Mängel screen live. MangelList: Abnahmeprotokoll list with
+  projekt filter; create navigates to detail. MangelDetail: protocol header
+  (inline edit), Mängel CRUD (create/edit/soft-delete for offen entries),
+  schwere badges (gering/mittel/schwer), status badges + filter, overdue frist
+  highlight, behoben_am field conditional on status. protokoll_document_id
+  preserved but attachment deferred to directive 04 round. TS clean.
+  See notes/ui/2026-06-29-mangel-screen.md.
 - 2026-06-29 (k): Fahrtenbuch + Fahrtzeiten screens live. FahrtenbuchList:
   Fahrzeug CRUD (create/edit/soft-delete), Privatnutzung badge. FahrtzeitenList:
   trip log mirroring Arbeitszeit pattern — freigabe_status/projekt filters,
@@ -140,11 +147,12 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 14: Fahrtenbuch + Fahrtzeiten screens live.** Fahrzeug CRUD (create/
-edit/soft-delete, Privatnutzung flag) + FahrtzeitenList (trip log with freigabe/
-korrektur, km total, Von→Nach display). All planned field-log screens (Arbeitszeit,
-Fahrtenbuch, Fahrtzeiten) now complete. 119 tests green.
-Next: Mangel/Gewährleistung screen, real Entra SSO (09), swap ASR to self-hosted
+**Phase 15: Mängel screen live.** All operational office screens now complete:
+Angebote, Katalog, Rechnungen, Auftraggeber, Projekte, Arbeitszeit, Fahrtenbuch,
+Fahrtzeiten, Mängel. Two-level hierarchy (Abnahmeprotokoll→Mangel) with protocol
+inline edit, Mangel CRUD, schwere/status badges, overdue frist, status filter.
+Next: Gewährleistung screen, real Entra SSO (09), swap ASR to self-hosted
+faster-whisper, vector embedding matching.
 faster-whisper for production, vector embedding matching.
 
 ## Directive set

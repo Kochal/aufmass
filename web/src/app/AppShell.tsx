@@ -12,6 +12,7 @@
  */
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
+  AlertTriangle,
   BookOpen,
   Car,
   Clock,
@@ -59,6 +60,7 @@ export function AppShell() {
           { to: "/office/arbeitszeit", icon: Clock, label: "Arbeitszeit" },
           { to: "/office/fahrtenbuch", icon: Car, label: "Fahrtenbuch" },
           { to: "/office/fahrtzeiten", icon: Navigation, label: "Fahrtzeiten" },
+          { to: "/office/mangel", icon: AlertTriangle, label: "Mängel" },
         ]
       : []),
     ...(canAccessField(role)
