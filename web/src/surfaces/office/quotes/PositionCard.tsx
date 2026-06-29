@@ -64,6 +64,20 @@ export function PositionCard({
     : undefined;
   const isConfirmed = position.match_status === "confirmed";
   const isUnmatched = !position.matched_leistung_id;
+  const isManualEntry = isUnmatched && position.source === "manual";
+
+  // Row sum: prefer the engine-computed gesamtpreis; fall back to a live preview
+  const gesamtpreisEngine = position.gesamtpreis ?? null;
+  const gesamtpreisPreview =
+    !gesamtpreisEngine && position.menge && position.einheitspreis
+      ? String(
+          Math.round(
+            parseFloat(position.menge) * parseFloat(position.einheitspreis) * 100,
+          ) / 100,
+        )
+      : null;
+  const displayGesamtpreis = gesamtpreisEngine ?? gesamtpreisPreview;
+  const isPreview = !gesamtpreisEngine && gesamtpreisPreview !== null;
 
   // Scroll active card into view when keyboard navigates to it
   useEffect(() => {
@@ -186,7 +200,13 @@ export function PositionCard({
             )}
           </div>
 
-          {isUnmatched ? (
+          {isManualEntry ? (
+            // Manual position without catalog link — show kurztext as its own entry
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground italic">Eigener Eintrag</p>
+              <p className="text-sm leading-snug line-clamp-1">{position.kurztext}</p>
+            </div>
+          ) : isUnmatched ? (
             <p className="text-xs text-muted-foreground italic">
               Kein Katalogeintrag zugewiesen
             </p>
@@ -201,31 +221,32 @@ export function PositionCard({
                   {matchedLeistung.kurztext}
                 </p>
               </div>
-
-              {/* Price — shown only, never computed here */}
-              {position.einheitspreis && (
-                <div className="text-xs space-y-0.5">
-                  <p className="font-mono">
-                    {formatEuro(position.einheitspreis)}/{position.einheit ?? matchedLeistung.einheit}
-                    {position.gesamtpreis && (
-                      <span className="text-muted-foreground ml-2">
-                        = {formatEuro(position.gesamtpreis)}
-                      </span>
-                    )}
-                  </p>
-                  {position.pricing_rule && (
-                    <p className="text-muted-foreground text-[10px] font-mono">
-                      Formel: {position.pricing_rule}
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
           ) : (
             // matched_leistung_id set but not in our leistung map yet (loading)
             <p className="text-xs text-muted-foreground font-mono">
               {position.matched_leistung_id?.slice(0, 8)}…
             </p>
+          )}
+
+          {/* Row sum — always show if we have EP + Menge */}
+          {position.einheitspreis && (
+            <div className="text-xs space-y-0.5">
+              <p className="font-mono">
+                {formatEuro(position.einheitspreis)}/{position.einheit ?? (matchedLeistung?.einheit ?? "St")}
+                {displayGesamtpreis && (
+                  <span className="text-muted-foreground ml-2">
+                    {isPreview ? "≈ " : "= "}
+                    {formatEuro(displayGesamtpreis)}
+                  </span>
+                )}
+              </p>
+              {position.pricing_rule && (
+                <p className="text-muted-foreground text-[10px] font-mono">
+                  Formel: {position.pricing_rule}
+                </p>
+              )}
+            </div>
           )}
 
           {/* Check flags */}

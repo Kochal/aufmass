@@ -346,6 +346,7 @@ function AddPositionDialog({
   const qc = useQueryClient();
   const [form, setForm] = useState({
     kurztext: "",
+    langtext: "",
     menge: "",
     einheit: "",
     einheitspreis: "",
@@ -370,6 +371,7 @@ function AddPositionDialog({
         body: {
           lv_id: lvId,
           kurztext: form.kurztext,
+          langtext: form.langtext || undefined,
           menge: form.menge || undefined,
           einheit: form.einheit || undefined,
           einheitspreis: form.einheitspreis || undefined,
@@ -382,7 +384,7 @@ function AddPositionDialog({
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lv-position"] });
       qc.invalidateQueries({ queryKey: ["lv", { angebot_id: angebotId }] });
-      setForm({ kurztext: "", menge: "", einheit: "", einheitspreis: "" });
+      setForm({ kurztext: "", langtext: "", menge: "", einheit: "", einheitspreis: "" });
       onClose();
     },
     onError: (err) =>
@@ -405,6 +407,16 @@ function AddPositionDialog({
               placeholder="Wände streichen 2× Dispersionsfarbe"
               className="mt-1"
               autoFocus
+            />
+          </div>
+          <div>
+            <label htmlFor="pos-langtext" className="text-sm font-medium">Positionstext</label>
+            <Input
+              id="pos-langtext"
+              value={form.langtext}
+              onChange={set("langtext")}
+              placeholder="Detaillierte Beschreibung der Leistung…"
+              className="mt-1"
             />
           </div>
           <div className="grid grid-cols-3 gap-3">
@@ -466,7 +478,7 @@ export function AngebotReview() {
   const [pickerPositionId, setPickerPositionId] = useState<string | null>(null);
   const [resolvingFlagId, setResolvingFlagId] = useState<string | null>(null);
   const [showAddPosition, setShowAddPosition] = useState(false);
-  const [editPosition, setEditPosition] = useState<LvPositionRead | null>(null);
+  const [editPositionId, setEditPositionId] = useState<string | null>(null);
 
   // ── Data loading ─────────────────────────────────────────────────────────
 
@@ -771,6 +783,43 @@ export function AngebotReview() {
       toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
   });
 
+  const bulkAcceptMutation = useMutation({
+    mutationFn: async () => {
+      const confirmable = sortedPositions.filter(
+        (p) =>
+          p.match_status !== "confirmed" &&
+          (p.matched_leistung_id !== null || p.source === "manual"),
+      );
+      await Promise.all(
+        confirmable.map((pos) =>
+          apiClient.PUT("/api/lv-position/{id}", {
+            params: { path: { id: pos.id } },
+            body: {
+              row_version: pos.row_version,
+              oz: pos.oz,
+              kurztext: pos.kurztext,
+              langtext: pos.langtext,
+              menge: pos.menge,
+              einheit: pos.einheit,
+              einheitspreis: pos.einheitspreis,
+              matched_leistung_id: pos.matched_leistung_id,
+              match_confidence: pos.match_confidence,
+              match_status: "confirmed",
+              source: pos.source,
+              position_nr: pos.position_nr,
+            },
+          }),
+        ),
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["lv-position"] });
+      toast.success("Alle Positionen bestätigt.");
+    },
+    onError: (err) =>
+      toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
+  });
+
   const handleAccept = useCallback(
     (index: number) => {
       const pos = sortedPositions[index];
@@ -881,6 +930,21 @@ export function AngebotReview() {
             {catalogMatchMutation.isPending ? "Abgleich…" : "Katalog abgleichen"}
           </Button>
         )}
+        {sortedPositions.some(
+          (p) =>
+            p.match_status !== "confirmed" &&
+            (p.matched_leistung_id !== null || p.source === "manual"),
+        ) && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="shrink-0"
+            onClick={() => bulkAcceptMutation.mutate()}
+            disabled={bulkAcceptMutation.isPending}
+          >
+            {bulkAcceptMutation.isPending ? "…" : "Alle annehmen"}
+          </Button>
+        )}
         <Button
           size="sm"
           variant="outline"
@@ -928,7 +992,7 @@ export function AngebotReview() {
                   setActiveIndex(index);
                   handleOpenPicker(index);
                 }}
-                onEdit={() => setEditPosition(position)}
+                onEdit={() => setEditPositionId(position.id)}
                 onDelete={() => deletePositionMutation.mutate(position.id)}
                 onResolveFlag={(check) => resolveFlagMutation.mutate(check)}
                 resolvingFlagId={resolvingFlagId}
@@ -954,13 +1018,13 @@ export function AngebotReview() {
         ausstellenPending={ausstellenMutation.isPending}
       />
 
-      {/* Edit position dialog */}
+      {/* Edit position dialog — always looks up the live position from cache so row_version is never stale */}
       <EditPositionDialog
-        position={editPosition}
+        position={editPositionId ? (sortedPositions.find((p) => p.id === editPositionId) ?? null) : null}
         leistungen={allLeistungen}
         katalogList={katalogList ?? []}
-        open={editPosition !== null}
-        onClose={() => setEditPosition(null)}
+        open={editPositionId !== null}
+        onClose={() => setEditPositionId(null)}
       />
 
       {/* Add position dialog */}
