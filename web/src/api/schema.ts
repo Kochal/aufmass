@@ -1638,6 +1638,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/geocode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Geocode
+         * @description Forward address query to Nominatim; return trimmed suggestions.
+         *
+         *     Parameters
+         *     ----------
+         *     q            free-text address query
+         *     countrycodes comma-separated ISO alpha-2 codes to bias results (default: DACH)
+         */
+        get: operations["geocode_api_geocode_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -2972,6 +2997,21 @@ export interface components {
             value: string;
             /** Confidence */
             confidence: number;
+        };
+        /** GeocodeResult */
+        GeocodeResult: {
+            /** Label */
+            label: string;
+            /** Strasse */
+            strasse?: string | null;
+            /** Hausnummer */
+            hausnummer?: string | null;
+            /** Plz */
+            plz?: string | null;
+            /** Ort */
+            ort?: string | null;
+            /** Land */
+            land?: string | null;
         };
         /** GewaehrleistungCreate */
         GewaehrleistungCreate: {
@@ -9690,6 +9730,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VoiceIntentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    geocode_api_geocode_get: {
+        parameters: {
+            query: {
+                q: string;
+                countrycodes?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeocodeResult"][];
                 };
             };
             /** @description Validation Error */

@@ -57,6 +57,18 @@ class Settings(BaseSettings):
 
     m365_endpoint: str = Field(default="http://stubs:9000/m365", alias="M365_ENDPOINT")
 
+    # Nominatim geocoding proxy (UI Round 3 / directive 09 Datenschutz caveat).
+    # Public OSM Nominatim — no DPA; dev/demo only. Swap URL to self-hosted
+    # Photon/Nominatim for production (see notes/infra/2026-06-29-nominatim-geocoding.md).
+    nominatim_url: str = Field(
+        default="https://nominatim.openstreetmap.org",
+        alias="NOMINATIM_URL",
+    )
+    nominatim_user_agent: str = Field(
+        default="aufmass-dev/0.1 (dev; contact: admin@example.com)",
+        alias="NOMINATIM_USER_AGENT",
+    )
+
     env: str = Field(default="dev", alias="ENV")
 
     @property

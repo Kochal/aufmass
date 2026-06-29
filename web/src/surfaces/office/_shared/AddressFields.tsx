@@ -1,5 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { MapPin } from "lucide-react";
 import { apiClient, unwrap } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Combobox } from "@/components/ui/combobox";
@@ -7,6 +8,7 @@ import { COUNTRY_OPTIONS } from "@/lib/countries";
 import type { components } from "@/api/schema";
 
 type AdresseRead = components["schemas"]["AdresseRead"];
+type GeocodeResult = components["schemas"]["GeocodeResult"];
 
 // ── Address state ─────────────────────────────────────────────────────────────
 
@@ -95,6 +97,21 @@ export function useAdresseLoad(adresseId: string | null | undefined) {
   });
 }
 
+// ── Geocode suggestions hook ──────────────────────────────────────────────────
+
+function useGeocodeSuggestions(query: string, enabled: boolean) {
+  return useQuery<GeocodeResult[]>({
+    queryKey: ["geocode", query],
+    queryFn: async () =>
+      unwrap(await apiClient.GET("/api/geocode", {
+        params: { query: { q: query } },
+      })) as GeocodeResult[],
+    enabled: enabled && query.length >= 3,
+    staleTime: 30_000,
+    gcTime: 60_000,
+  });
+}
+
 // ── AddressFields component ───────────────────────────────────────────────────
 
 interface AddressFieldsProps {
@@ -104,22 +121,91 @@ interface AddressFieldsProps {
 }
 
 export function AddressFields({ state, onChange, idPrefix = "addr" }: AddressFieldsProps) {
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [geocodeEnabled, setGeocodeEnabled] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   function set(key: keyof AddressState, value: string) {
     onChange({ ...state, [key]: value });
   }
 
+  function handleStrasseChange(value: string) {
+    set("strasse", value);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (value.length >= 3) {
+      timerRef.current = setTimeout(() => {
+        setDebouncedQuery(value);
+        setGeocodeEnabled(true);
+        setShowSuggestions(true);
+      }, 400);
+    } else {
+      setShowSuggestions(false);
+      setGeocodeEnabled(false);
+    }
+  }
+
+  const { data: suggestions } = useGeocodeSuggestions(debouncedQuery, geocodeEnabled);
+
+  function applySuggestion(hit: GeocodeResult) {
+    onChange({
+      ...state,
+      strasse: hit.strasse ?? state.strasse,
+      hausnummer: hit.hausnummer ?? state.hausnummer,
+      plz: hit.plz ?? state.plz,
+      ort: hit.ort ?? state.ort,
+      land: hit.land ?? state.land,
+    });
+    setShowSuggestions(false);
+    setGeocodeEnabled(false);
+  }
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const visibleSuggestions = showSuggestions && suggestions && suggestions.length > 0
+    ? suggestions
+    : [];
+
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-3">
-        <div className="col-span-2">
+      {/* Straße + Hausnr with autocomplete */}
+      <div className="grid grid-cols-3 gap-3" ref={containerRef}>
+        <div className="col-span-2 relative">
           <label htmlFor={`${idPrefix}-strasse`} className="text-sm font-medium">Straße</label>
           <Input
             id={`${idPrefix}-strasse`}
             value={state.strasse}
-            onChange={(e) => set("strasse", e.target.value)}
+            onChange={(e) => handleStrasseChange(e.target.value)}
+            onFocus={() => { if (debouncedQuery.length >= 3 && suggestions?.length) setShowSuggestions(true); }}
             placeholder="Musterstraße"
             className="mt-1"
+            autoComplete="off"
           />
+          {visibleSuggestions.length > 0 && (
+            <div className="absolute z-50 left-0 right-0 top-full mt-1 rounded-md border bg-popover shadow-md max-h-60 overflow-y-auto">
+              {visibleSuggestions.map((hit, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="flex items-start gap-2 w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                  onMouseDown={(e) => { e.preventDefault(); applySuggestion(hit); }}
+                >
+                  <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground" />
+                  <span className="line-clamp-2 text-xs leading-snug">{hit.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div>
           <label htmlFor={`${idPrefix}-hn`} className="text-sm font-medium">Hausnr.</label>

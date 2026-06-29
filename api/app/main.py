@@ -20,7 +20,7 @@ from .routers import (
     abnahmeprotokoll, adresse, angebot, app_user, arbeitszeit, aufmass, aufmass_entry,
     auftraggeber, bankverbindung,
     bestellung, bestellposition, check_result, dashboard, fahrt, fahrzeug, gaeb,
-    gewaehrleistung, kontakt, leistung, leistungskatalog, lieferant, lv,
+    geocode, gewaehrleistung, kontakt, leistung, leistungskatalog, lieferant, lv,
     lv_position, mangel, mangel_foto, material, projekt, rechnung, rechnung_position,
     tenant_billing_profile, tenant_tax_profile, voice,
 )
@@ -83,6 +83,7 @@ app.include_router(rechnung_position.router)
 app.include_router(check_result.router)
 app.include_router(dashboard.router)
 app.include_router(voice.router)
+app.include_router(geocode.router)
 
 
 @app.get("/health", tags=["ops"])
