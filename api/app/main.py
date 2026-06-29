@@ -21,7 +21,7 @@ from .routers import (
     auftraggeber, bankverbindung,
     bestellung, bestellposition, check_result, dashboard, fahrt, fahrzeug, gaeb,
     gewaehrleistung, kontakt, leistung, leistungskatalog, lieferant, lv,
-    lv_position, mangel, material, projekt, rechnung, rechnung_position,
+    lv_position, mangel, mangel_foto, material, projekt, rechnung, rechnung_position,
     tenant_billing_profile, tenant_tax_profile, voice,
 )
 
@@ -70,6 +70,7 @@ app.include_router(bestellung.router)
 app.include_router(bestellposition.router)
 app.include_router(abnahmeprotokoll.router)
 app.include_router(mangel.router)
+app.include_router(mangel_foto.router)
 app.include_router(gewaehrleistung.router)
 app.include_router(tenant_tax_profile.router)
 app.include_router(leistungskatalog.router)

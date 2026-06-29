@@ -3,6 +3,21 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-29 (p): UI overhaul rounds 1–2 complete. Round 1a: clickable rows on
+  all list screens (useNavigate + onClick on TableRow). Round 1b: all 41 native
+  <select> across 14 files replaced with Combobox (Popover+Command, searchable,
+  allowClear for filters; @radix-ui/react-popover added). Round 1c: migration
+  0024 (hausnummer on adresse, telefon on auftraggeber, adresse_id FK on
+  lieferant, baustellen_adresse_id FK on projekt); shared AddressFields component
+  + useAdresseUpsert hook; country combobox (ISO 3166-1 alpha-2, DE/AT/CH
+  pinned); AuftraggeberDetail: structured address + phone + Ansprechpartner
+  section (list/add/edit/delete via /api/kontakt); LieferantList: address in
+  create/edit dialog; ProjektDetail: Baustellenadresse section. Round 2: migration
+  0025 (mangel_foto table); mangel_foto router (upload/list/image-serve/
+  soft-delete); useImageObjectUrl hook (objectURL via fetch+auth headers);
+  MangelFotoDialog per row (camera button → photo strip + upload). TS clean.
+  See notes/ui/2026-06-29-mangel-fotos.md.
+  Round 3 (Nominatim geocoding) pending.
 - 2026-06-29 (o): Gewährleistung auto-expiry live. Migration 0023 adds
   core.expire_gewaehrleistung() — SECURITY DEFINER (runs as maler superuser,
   bypasses FORCE RLS), sets actor 'system:expire_gewaehrleistung', cross-tenant
@@ -169,6 +184,14 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
+**Phase 19: UI overhaul rounds 1–2 complete.** Clickable rows everywhere;
+searchable Combobox replaces all 41 native selects; structured address with house
+number, country combobox, phone on Auftraggeber/Lieferant/Projekt; Ansprechpartner
+CRUD on Auftraggeber; Mängel photo upload/view/delete per defect item (camera icon
+→ dialog, objectURL serving, write-once archive). Migrations 0024–0025 applied.
+TS clean. Next: Round 3 Nominatim geocoding, then real Entra SSO (09), swap ASR
+to self-hosted faster-whisper.
+
 **Phase 18: Owner dashboard live.** GET /api/dashboard — single-query CTE endpoint
 (projekte by status, Mängel offen/schwer/überfällig, Gewährleistung laufend/
 ablaufend/überfällig, Rechnungen/Angebote Entwurf, Freigabe-queue Arbeitszeit +
@@ -176,7 +199,6 @@ Fahrt, Bestellungen offen, Finanzsumme). Frontend: 4 sections (Projekte,
 Handlungsbedarf, Gewährleistung, Finanzen) — stat cards with urgency colouring
 (red/orange/muted for zeros), linked to source screens, auto-refresh 60 s.
 Nav "Übersicht" stub removed. TS clean.
-Next: real Entra SSO (09), swap ASR to self-hosted faster-whisper.
 
 **Phase 17: All directive-05 UI complete.** Bestellungen screens live:
 LieferantList, MaterialList, BestellungList, BestellungDetail (status lifecycle,

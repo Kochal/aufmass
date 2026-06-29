@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Pencil, Trash2, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, ClipboardCheck, Camera, X, ImageOff } from "lucide-react";
 import { toast } from "sonner";
-import { apiClient, unwrap } from "@/lib/api";
+import { apiClient, unwrap, getAuthHeaders } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +24,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { components } from "@/api/schema";
+
+type MangelFotoRead = components["schemas"]["MangelFotoRead"];
 
 type AbnahmeprotokollRead = components["schemas"]["AbnahmeprotokollRead"];
 type MangelRead = components["schemas"]["MangelRead"];
@@ -297,6 +299,185 @@ function EditMangelDialog({
   );
 }
 
+// ── Image objectURL hook ──────────────────────────────────────────────────────
+
+function useImageObjectUrl(fotoId: string | null) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!fotoId) return;
+    let revoked = false;
+    setError(false);
+    fetch(`/api/mangel-foto/${fotoId}/image`, { headers: getAuthHeaders() })
+      .then((r) => {
+        if (!r.ok) throw new Error(`${r.status}`);
+        return r.blob();
+      })
+      .then((blob) => {
+        if (revoked) return;
+        const objUrl = URL.createObjectURL(blob);
+        setUrl(objUrl);
+      })
+      .catch(() => { if (!revoked) setError(true); });
+    return () => {
+      revoked = true;
+      setUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null; });
+    };
+  }, [fotoId]);
+
+  return { url, error };
+}
+
+// ── Thumbnail ─────────────────────────────────────────────────────────────────
+
+function FotoThumbnail({ foto, onDelete }: { foto: MangelFotoRead; onDelete: () => void }) {
+  const { url, error } = useImageObjectUrl(foto.id);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  return (
+    <div className="relative group w-24 h-24 rounded-md overflow-hidden border bg-muted shrink-0">
+      {url ? (
+        <img src={url} alt={foto.beschriftung ?? "Foto"} className="w-full h-full object-cover" />
+      ) : error ? (
+        <div className="flex items-center justify-center w-full h-full text-muted-foreground">
+          <ImageOff className="h-6 w-6" />
+        </div>
+      ) : (
+        <div className="flex items-center justify-center w-full h-full">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+        </div>
+      )}
+      {foto.beschriftung && (
+        <div className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-[10px] px-1 py-0.5 truncate">
+          {foto.beschriftung}
+        </div>
+      )}
+      {!confirmDelete ? (
+        <button
+          type="button"
+          onClick={() => setConfirmDelete(true)}
+          className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 rounded-full p-0.5 text-white hover:bg-destructive"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      ) : (
+        <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-1 p-1">
+          <span className="text-white text-[10px] text-center">Löschen?</span>
+          <div className="flex gap-1">
+            <button type="button" onClick={onDelete}
+              className="text-[10px] bg-destructive text-white rounded px-1.5 py-0.5">Ja</button>
+            <button type="button" onClick={() => setConfirmDelete(false)}
+              className="text-[10px] bg-white text-black rounded px-1.5 py-0.5">Nein</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Mangel foto dialog ────────────────────────────────────────────────────────
+
+function MangelFotoDialog({ mangel, onClose }: { mangel: { id: string; beschreibung: string }; onClose: () => void }) {
+  const qc = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const { data: fotos } = useQuery<MangelFotoRead[]>({
+    queryKey: ["mangel-foto", mangel.id],
+    queryFn: async () => unwrap(await apiClient.GET("/api/mangel/{mangel_id}/foto", {
+      params: { path: { mangel_id: mangel.id } },
+    })) as MangelFotoRead[],
+  });
+
+  const deleteFoto = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiClient.DELETE("/api/mangel-foto/{id}", {
+        params: { path: { id } },
+      });
+      if (res.error) throw new Error(JSON.stringify(res.error));
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["mangel-foto", mangel.id] }),
+    onError: (err) => toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
+  });
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const resp = await fetch(`/api/mangel/${mangel.id}/foto`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: formData,
+      });
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        throw new Error((body as { detail?: string }).detail ?? `HTTP ${resp.status}`);
+      }
+      qc.invalidateQueries({ queryKey: ["mangel-foto", mangel.id] });
+      toast.success("Foto hochgeladen.");
+    } catch (err) {
+      toast.error(`Upload fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="line-clamp-1">Fotos — {mangel.beschreibung}</DialogTitle>
+        </DialogHeader>
+        <div className="py-2">
+          {!fotos ? (
+            <div className="flex gap-3">
+              {[...Array(2)].map((_, i) => <Skeleton key={i} className="w-24 h-24 rounded-md" />)}
+            </div>
+          ) : fotos.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              Noch keine Fotos für diesen Mangel.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {fotos.map((f) => (
+                <FotoThumbnail
+                  key={f.id}
+                  foto={f}
+                  onDelete={() => deleteFoto.mutate(f.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        <DialogFooter className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <Button
+            variant="outline"
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Camera className="h-4 w-4 mr-1" />
+            {uploading ? "Wird hochgeladen…" : "Foto hinzufügen"}
+          </Button>
+          <Button variant="outline" onClick={onClose}>Schließen</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Edit Abnahmeprotokoll section ─────────────────────────────────────────────
 
 function AbnahmeHeader({
@@ -406,6 +587,7 @@ export function MangelDetail() {
   const [showCreate, setShowCreate] = useState(false);
   const [editMangel, setEditMangel] = useState<MangelRead | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MangelRead | null>(null);
+  const [fotoMangel, setFotoMangel] = useState<MangelRead | null>(null);
   const [statusFilter, setStatusFilter] = useState("");
 
   const { data: protokoll, isLoading: loadingProto } = useQuery<AbnahmeprotokollRead>({
@@ -581,6 +763,11 @@ export function MangelDetail() {
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Button size="icon" variant="ghost" className="h-7 w-7"
+                        title="Fotos"
+                        onClick={() => setFotoMangel(m)}>
+                        <Camera className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7"
                         onClick={() => setEditMangel(m)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
@@ -626,6 +813,10 @@ export function MangelDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {fotoMangel && (
+        <MangelFotoDialog mangel={fotoMangel} onClose={() => setFotoMangel(null)} />
+      )}
     </div>
   );
 }

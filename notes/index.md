@@ -43,6 +43,7 @@ Organised by area, newest first within each area.
 
 ## ui
 | Date | File | Summary |
+| 2026-06-29 | [mangel-fotos](ui/2026-06-29-mangel-fotos.md) | Round 2: mangel_foto table + router (upload/list/image-serve/soft-delete); useImageObjectUrl hook; FotoThumbnail inline delete; MangelFotoDialog per row; upload via native fetch+FormData |
 | 2026-06-29 | [dashboard](ui/2026-06-29-dashboard.md) | Owner dashboard: GET /api/dashboard CTE query → 4-section stat-card UI (Projekte/Handlungsbedarf/Gewährleistung/Finanzen); urgency colouring; linked to source screens; 60 s auto-refresh |
 |------|------|---------|
 | 2026-06-29 | [bestellungen-screen](ui/2026-06-29-bestellungen-screen.md) | LieferantList + MaterialList (catalog with lieferant link) + BestellungList + BestellungDetail (status lifecycle, Stornieren with reason, position CRUD locked to entwurf/bestellt, material pre-fill) |

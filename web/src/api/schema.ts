@@ -895,6 +895,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mangel/{mangel_id}/foto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Mangel Fotos */
+        get: operations["list_mangel_fotos_api_mangel__mangel_id__foto_get"];
+        put?: never;
+        /**
+         * Upload Mangel Foto
+         * @description Upload a photo for a Mangel. Validates image MIME, archives the original
+         *     write-once, creates a mangel_foto row, returns the row.
+         */
+        post: operations["upload_mangel_foto_api_mangel__mangel_id__foto_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mangel-foto/{id}/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Serve Mangel Foto
+         * @description Stream the archived image bytes for a mangel_foto row.
+         *
+         *     Reads document.storage_ref → filesystem via read_original(). The browser
+         *     never fetches from external storage — all traffic stays on the EU server.
+         */
+        get: operations["serve_mangel_foto_api_mangel_foto__id__image_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mangel-foto/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Mangel Foto
+         * @description Soft-delete a mangel_foto row. The document original is never deleted.
+         */
+        delete: operations["delete_mangel_foto_api_mangel_foto__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/gewaehrleistung": {
         parameters: {
             query?: never;
@@ -2581,6 +2646,13 @@ export interface components {
             /** Image */
             image: string;
         };
+        /** Body_upload_mangel_foto_api_mangel__mangel_id__foto_post */
+        Body_upload_mangel_foto_api_mangel__mangel_id__foto_post: {
+            /** Image */
+            image: string;
+            /** Beschriftung */
+            beschriftung?: string | null;
+        };
         /** Body_voice_intent_api_voice_intent_post */
         Body_voice_intent_api_voice_intent_post: {
             /** Audio */
@@ -3469,6 +3541,49 @@ export interface components {
             schwere?: ("gering" | "mittel" | "schwer") | null;
             /** Frist */
             frist?: string | null;
+        };
+        /** MangelFotoRead */
+        MangelFotoRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Created By */
+            created_by: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Updated By */
+            updated_by: string;
+            /** Row Version */
+            row_version: number;
+            /** Deleted At */
+            deleted_at?: string | null;
+            /**
+             * Mangel Id
+             * Format: uuid
+             */
+            mangel_id: string;
+            /**
+             * Document Id
+             * Format: uuid
+             */
+            document_id: string;
+            /** Beschriftung */
+            beschriftung?: string | null;
         };
         /** MangelRead */
         MangelRead: {
@@ -7432,6 +7547,144 @@ export interface operations {
         };
     };
     delete_mangel_api_mangel__id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_mangel_fotos_api_mangel__mangel_id__foto_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                mangel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MangelFotoRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_mangel_foto_api_mangel__mangel_id__foto_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                mangel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_mangel_foto_api_mangel__mangel_id__foto_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MangelFotoRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    serve_mangel_foto_api_mangel_foto__id__image_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-tenant-id"?: string | null;
+                "x-user-id"?: string | null;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_mangel_foto_api_mangel_foto__id__delete: {
         parameters: {
             query?: never;
             header?: {
