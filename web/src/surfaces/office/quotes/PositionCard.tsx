@@ -25,11 +25,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, CheckCheck, Pencil, Trash2 } from "lucide-react";
 
-// Units that are almost certainly OCR/voice typos
+// Units that are almost certainly typos (m2/m3 are accepted keyboard shorthand for m²/m³)
 const UNIT_TYPOS: Record<string, string> = {
   m1: "m oder lm",
-  m2: "m²",
-  m3: "m³",
 };
 
 type LvPositionRead = components["schemas"]["LvPositionRead"];
