@@ -3,6 +3,13 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-29 (i): Rechnungen screen live (RechnungList + RechnungDetail). Full
+  berechnen→prüfen→ausstellen workflow in the UI: positions CRUD (draft only),
+  Nachlass/Zuschlag inputs, prüfen runs KoSIT+EN16931 checks inline with
+  pass/fail display, ausstellen gated on hard-check pass. Issued view shows
+  XRechnung artifact ID + rechnungs/faelligkeits/leistungsdatum. ComingSoon
+  helper removed from routes.tsx — all office routes are now live.
+  See notes/ui/2026-06-29-rechnungen-screen.md.
 - 2026-06-29 (h): Projekte screen live (ProjektList + ProjektDetail). Status
   filter on list; color-coded status badges (10 statuses); inline status change
   via PATCH /{id}/status; Projektdaten form (name, auftraggeber, site_adresse,
@@ -122,13 +129,14 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 11: Projekte + Auftraggeber screens live.** Core office CRUD complete:
-Angebote (review/GAEB/XRechnung), Katalog, Auftraggeber, Projekte. Projekte
-screen includes inline status lifecycle (10 statuses), linked Angebote panel,
-regime/Abrechnungsart/Termine. 119 tests green.
-Next: Rechnungen UI, Arbeitszeit/Fahrt/Mangel field screens (voice-fill already
-wired; need dedicated UI), real Entra SSO (09), swap ASR to self-hosted
-faster-whisper for production, vector embedding matching.
+**Phase 12: Rechnungen screen live — all office surfaces complete.** Full billing
+workflow in the UI: positions CRUD, berechnen, prüfen (KoSIT/EN16931 inline),
+ausstellen (gated on hard checks). All office routes now live — ComingSoon
+removed. Screens: Angebote, Katalog, Auftraggeber, Projekte, Rechnungen.
+119 tests green.
+Next: Arbeitszeit/Fahrt/Mangel field screens (voice-fill already wired; need
+dedicated UI), real Entra SSO (09), swap ASR to self-hosted faster-whisper for
+production, vector embedding matching.
 
 ## Directive set
 

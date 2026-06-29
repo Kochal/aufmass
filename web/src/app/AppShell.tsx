@@ -18,6 +18,7 @@ import {
   HardHat,
   LayoutDashboard,
   LogOut,
+  Receipt,
   Users,
 } from "lucide-react";
 import { useAuth, canAccessOffice, canAccessField, canAccessDashboard } from "@/auth/AuthContext";
@@ -49,7 +50,7 @@ export function AppShell() {
           { to: "/office/angebote", icon: FileText, label: "Angebote" },
           // Rechnungen, Auftraggeber, Projekte — reserved, stub
           { to: "/office/katalog", icon: BookOpen, label: "Katalog" },
-          { to: "/office/rechnungen", icon: FileText, label: "Rechnungen", stub: true },
+          { to: "/office/rechnungen", icon: Receipt, label: "Rechnungen" },
           { to: "/office/auftraggeber", icon: Users, label: "Auftraggeber" },
           { to: "/office/projekte", icon: FolderOpen, label: "Projekte" },
         ]

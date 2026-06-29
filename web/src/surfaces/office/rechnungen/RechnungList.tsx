@@ -1,0 +1,247 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Receipt } from "lucide-react";
+import { apiClient, unwrap } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { components } from "@/api/schema";
+
+type RechnungRead = components["schemas"]["RechnungRead"];
+type AuftraggeberRead = components["schemas"]["AuftraggeberRead"];
+type ProjektRead = components["schemas"]["ProjektRead"];
+
+const STATUS_LABELS: Record<string, string> = {
+  draft: "Entwurf",
+  issued: "Ausgestellt",
+  storniert: "Storniert",
+};
+const STATUS_COLORS: Record<string, string> = {
+  draft: "bg-muted text-muted-foreground",
+  issued: "bg-green-100 text-green-800",
+  storniert: "bg-red-100 text-red-700",
+};
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[status] ?? "bg-muted text-muted-foreground"}`}
+    >
+      {STATUS_LABELS[status] ?? status}
+    </span>
+  );
+}
+
+function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string) => void }) {
+  const qc = useQueryClient();
+  const [auftraggeberId, setAuftraggeberId] = useState("");
+  const [projektId, setProjektId] = useState("");
+
+  const { data: auftraggeber } = useQuery<AuftraggeberRead[]>({
+    queryKey: ["auftraggeber"],
+    queryFn: async () => unwrap(await apiClient.GET("/api/auftraggeber")) as AuftraggeberRead[],
+  });
+  const { data: projekte } = useQuery<ProjektRead[]>({
+    queryKey: ["projekt", ""],
+    queryFn: async () => unwrap(await apiClient.GET("/api/projekt", {})) as ProjektRead[],
+  });
+
+  const filteredProjekte = projektId || !auftraggeberId
+    ? projekte
+    : projekte?.filter((p) => p.auftraggeber_id === auftraggeberId);
+
+  const create = useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.POST("/api/rechnung", {
+        body: {
+          auftraggeber_id: auftraggeberId || null,
+          projekt_id: projektId || null,
+          waehrung: "EUR",
+        },
+      });
+      return unwrap(res) as RechnungRead;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["rechnung"] });
+      setAuftraggeberId("");
+      setProjektId("");
+      onClose(data.id);
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Neue Rechnung</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div>
+            <label htmlFor="rech-ag" className="text-sm font-medium">Auftraggeber</label>
+            <select
+              id="rech-ag"
+              value={auftraggeberId}
+              onChange={(e) => { setAuftraggeberId(e.target.value); setProjektId(""); }}
+              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="">— kein —</option>
+              {auftraggeber?.map((ag) => (
+                <option key={ag.id} value={ag.id}>{ag.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="rech-proj" className="text-sm font-medium">Projekt</label>
+            <select
+              id="rech-proj"
+              value={projektId}
+              onChange={(e) => setProjektId(e.target.value)}
+              className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="">— kein —</option>
+              {filteredProjekte?.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onClose()}>Abbrechen</Button>
+          <Button disabled={create.isPending} onClick={() => create.mutate()}>Anlegen</Button>
+        </DialogFooter>
+        {create.isError && (
+          <p className="text-sm text-destructive mt-2">
+            {(create.error as Error)?.message ?? "Fehler"}
+          </p>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function RechnungList() {
+  const [showCreate, setShowCreate] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("");
+
+  const { data: rechnungen, isLoading } = useQuery<RechnungRead[]>({
+    queryKey: ["rechnung", statusFilter],
+    queryFn: async () => {
+      const res = await apiClient.GET("/api/rechnung", {
+        params: statusFilter ? { query: { status: statusFilter } } : {},
+      });
+      return unwrap(res) as RechnungRead[];
+    },
+  });
+
+  const { data: auftraggeber } = useQuery<AuftraggeberRead[]>({
+    queryKey: ["auftraggeber"],
+    queryFn: async () => unwrap(await apiClient.GET("/api/auftraggeber")) as AuftraggeberRead[],
+  });
+  const { data: projekte } = useQuery<ProjektRead[]>({
+    queryKey: ["projekt", ""],
+    queryFn: async () => unwrap(await apiClient.GET("/api/projekt", {})) as ProjektRead[],
+  });
+
+  const agMap = new Map(auftraggeber?.map((ag) => [ag.id, ag.name]) ?? []);
+  const projMap = new Map(projekte?.map((p) => [p.id, p.name]) ?? []);
+
+  return (
+    <div className="p-6 max-w-5xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Receipt className="h-5 w-5 text-muted-foreground" />
+          <h1 className="text-xl font-semibold">Rechnungen</h1>
+          {rechnungen && (
+            <span className="text-sm text-muted-foreground">({rechnungen.length})</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-8 rounded-md border border-input bg-transparent px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value="">Alle Status</option>
+            <option value="draft">Entwurf</option>
+            <option value="issued">Ausgestellt</option>
+          </select>
+          <Button size="sm" onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            Neue Rechnung
+          </Button>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-2">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+        </div>
+      ) : !rechnungen?.length ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
+          <Receipt className="h-10 w-10 text-muted-foreground/40" />
+          <p className="text-muted-foreground">
+            {statusFilter ? `Keine ${STATUS_LABELS[statusFilter] ?? statusFilter}-Rechnungen.` : "Noch keine Rechnungen angelegt."}
+          </p>
+          {!statusFilter && (
+            <Button variant="outline" size="sm" onClick={() => setShowCreate(true)}>
+              <Plus className="h-4 w-4 mr-1" />Erste Rechnung anlegen
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="border rounded-md">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-36">Rechnungsnr.</TableHead>
+                <TableHead>Auftraggeber</TableHead>
+                <TableHead>Projekt</TableHead>
+                <TableHead className="w-28 text-right">Brutto</TableHead>
+                <TableHead className="w-28">Status</TableHead>
+                <TableHead className="w-24">Datum</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rechnungen.map((r) => (
+                <TableRow key={r.id} className="cursor-pointer hover:bg-accent/50">
+                  <TableCell className="font-mono text-xs">
+                    <Link to={`/office/rechnungen/${r.id}`} className="block w-full hover:underline">
+                      {r.rechnungsnummer ?? "Entwurf"}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-sm">{r.auftraggeber_id ? agMap.get(r.auftraggeber_id) ?? "—" : "—"}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{r.projekt_id ? projMap.get(r.projekt_id) ?? "—" : "—"}</TableCell>
+                  <TableCell className="text-right font-mono text-sm">
+                    {r.summe_brutto ? `${parseFloat(r.summe_brutto).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €` : "—"}
+                  </TableCell>
+                  <TableCell><StatusBadge status={r.status} /></TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{r.rechnungsdatum ?? "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      <CreateDialog
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+      />
+    </div>
+  );
+}

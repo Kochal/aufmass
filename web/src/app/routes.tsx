@@ -13,22 +13,10 @@ import { AngebotReview } from "@/surfaces/office/quotes/AngebotReview";
 import { KatalogList, KatalogDetail } from "@/surfaces/office/katalog";
 import { AuftraggeberList, AuftraggeberDetail } from "@/surfaces/office/auftraggeber";
 import { ProjektList, ProjektDetail } from "@/surfaces/office/projekte";
+import { RechnungList, RechnungDetail } from "@/surfaces/office/rechnungen";
 import { AufmassList, AufmassReview } from "@/surfaces/field";
 import { DashboardStub } from "@/surfaces/dashboard";
 import { useAuth, canAccessOffice, canAccessField } from "@/auth/AuthContext";
-
-/** Simple stub for routes that are reserved but not yet built. */
-function ComingSoon({ name }: { name: string }) {
-  return (
-    <div className="flex h-full items-center justify-center">
-      <div className="text-center space-y-2">
-        <p className="text-2xl">🚧</p>
-        <p className="text-lg font-medium">{name}</p>
-        <p className="text-sm text-muted-foreground">Kommt bald</p>
-      </div>
-    </div>
-  );
-}
 
 /** Redirect to the right landing page for the active role. */
 function RoleRedirect() {
@@ -50,10 +38,8 @@ export function AppRoutes() {
         <Route path="office">
           <Route path="angebote" element={<AngebotList />} />
           <Route path="angebote/:id/review" element={<AngebotReview />} />
-          <Route
-            path="rechnungen"
-            element={<ComingSoon name="Rechnungen" />}
-          />
+          <Route path="rechnungen" element={<RechnungList />} />
+          <Route path="rechnungen/:id" element={<RechnungDetail />} />
           <Route path="auftraggeber" element={<AuftraggeberList />} />
           <Route path="auftraggeber/:id" element={<AuftraggeberDetail />} />
           <Route path="projekte" element={<ProjektList />} />
