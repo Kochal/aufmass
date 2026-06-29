@@ -1,0 +1,1 @@
+export { LieferantList } from "./LieferantList";

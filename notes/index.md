@@ -44,6 +44,7 @@ Organised by area, newest first within each area.
 ## ui
 | Date | File | Summary |
 |------|------|---------|
+| 2026-06-29 | [bestellungen-screen](ui/2026-06-29-bestellungen-screen.md) | LieferantList + MaterialList (catalog with lieferant link) + BestellungList + BestellungDetail (status lifecycle, Stornieren with reason, position CRUD locked to entwurf/bestellt, material pre-fill) |
 | 2026-06-29 | [gewaehrleistung-screen](ui/2026-06-29-gewaehrleistung-screen.md) | GewaehrleistungList: flat list, overdue/expiring-soon highlights, regime badges (VOB/BGB), fristende countdown, status filter + create/edit/delete |
 | 2026-06-29 | [mangel-screen](ui/2026-06-29-mangel-screen.md) | MangelList (Abnahmeprotokoll list, projekt filter) + MangelDetail (protocol header edit + Mängel CRUD, schwere/status badges, overdue frist highlight, status filter) |
 | 2026-06-29 | [fahrtenbuch-fahrtzeiten-screen](ui/2026-06-29-fahrtenbuch-fahrtzeiten-screen.md) | FahrtenbuchList (Fahrzeug CRUD, privat flag) + FahrtzeitenList (trip log, freigabe/korrektur, km total, Von→Nach) |

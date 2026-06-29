@@ -19,6 +19,9 @@ import { FahrtenbuchList } from "@/surfaces/office/fahrtenbuch";
 import { FahrtzeitenList } from "@/surfaces/office/fahrtzeiten";
 import { MangelList, MangelDetail } from "@/surfaces/office/mangel";
 import { GewaehrleistungList } from "@/surfaces/office/gewaehrleistung";
+import { LieferantList } from "@/surfaces/office/lieferanten";
+import { MaterialList } from "@/surfaces/office/material";
+import { BestellungList, BestellungDetail } from "@/surfaces/office/bestellungen";
 import { AufmassList, AufmassReview } from "@/surfaces/field";
 import { DashboardStub } from "@/surfaces/dashboard";
 import { useAuth, canAccessOffice, canAccessField } from "@/auth/AuthContext";
@@ -55,6 +58,10 @@ export function AppRoutes() {
           <Route path="mangel" element={<MangelList />} />
           <Route path="mangel/:id" element={<MangelDetail />} />
           <Route path="gewaehrleistung" element={<GewaehrleistungList />} />
+          <Route path="lieferanten" element={<LieferantList />} />
+          <Route path="material" element={<MaterialList />} />
+          <Route path="bestellungen" element={<BestellungList />} />
+          <Route path="bestellungen/:id" element={<BestellungDetail />} />
           <Route path="katalog" element={<KatalogList />} />
           <Route path="katalog/:id" element={<KatalogDetail />} />
         </Route>

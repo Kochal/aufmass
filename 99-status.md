@@ -3,6 +3,15 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-29 (n): Bestellungen screens live. LieferantList (CRUD, USt-IdNr,
+  Zahlungsziel). MaterialList (catalog: Bezeichnung/Einheit/Standard-Lieferant/
+  Standardpreis). BestellungList (status+projekt filters, create→navigate to
+  detail). BestellungDetail: header with full status lifecycle (entwurf→bestellt→
+  teilgeliefert/geliefert; Stornieren with audited reason via set_reason());
+  Bestellpositionen CRUD locked to entwurf/bestellt, Material lookup pre-fills
+  position; client-side Gesamt + Summe row. GoBD document field shown as ref
+  (upload deferred to directive 04). TS clean. Directive 05 changelog updated.
+  See notes/ui/2026-06-29-bestellungen-screen.md.
 - 2026-06-29 (m): Gewährleistung screen live (GewaehrleistungList). Flat list
   with status filter. Regime badges (VOB § 13 / BGB § 634a), fristende countdown
   with overdue (red) / expiring-soon (orange, ≤90 days) highlights. Create uses
@@ -153,11 +162,12 @@ Current phase and what is settled versus open. Updated in place.
 
 ## Phase
 
-**Phase 16: All directive-05 screens complete.** Gewährleistung screen live —
-flat list, VOB/BGB regime badges, fristende countdown with overdue/expiring-soon
-highlights, status change. All planned office + field-log screens now live:
+**Phase 17: All directive-05 UI complete.** Bestellungen screens live:
+LieferantList, MaterialList, BestellungList, BestellungDetail (status lifecycle,
+Stornieren with audit reason, Bestellposition CRUD, Material pre-fill).
+Full office surface now covers all entities from directives 05 and 06:
 Angebote, Katalog, Rechnungen, Auftraggeber, Projekte, Arbeitszeit, Fahrtenbuch,
-Fahrtzeiten, Mängel, Gewährleistung. TS clean.
+Fahrtzeiten, Mängel, Gewährleistung, Lieferanten, Material, Bestellungen. TS clean.
 Next: real Entra SSO (09), swap ASR to self-hosted faster-whisper, vector
 embedding matching, dashboard/reporting surface.
 faster-whisper for production, vector embedding matching.

@@ -22,6 +22,14 @@ Audience: you (Claude Code) and any human contributor.
   (default) plus an `abnahme_mode` toggle for simple date-plus-document.
 - 2026-06-23: Implemented as migrations `0008`–`0014` with a guarantee test
   suite (`tests/operations_test.sql`).
+- 2026-06-29: All operational UI screens live in `web/src/surfaces/office/`:
+  Auftraggeber, Projekte, Arbeitszeit, Fahrtenbuch, Fahrtzeiten, Mängel
+  (Abnahmeprotokoll + Mangel), Gewährleistung, Lieferanten, Material,
+  Bestellungen (with Bestellpositionen). Status lifecycle with PATCH /{id}/status
+  and audited Stornieren (reason field → set_reason() in router). Position CRUD
+  locked to entwurf/bestellt; Material lookup pre-fills position fields.
+  auftragsbestaetigung_document_id shown as reference; full upload deferred to
+  directive 04 object store round.
 - 2026-06-25: Full HTTP surface built in `api/app/routers/`. All 13 entities
   covered (see `notes/operations/2026-06-25-api-layer-decisions.md`). Generated
   TypeScript client at `web/src/api/schema.ts`. Decisions now true: project numbers

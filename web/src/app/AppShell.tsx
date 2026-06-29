@@ -14,6 +14,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   BookOpen,
+  Building2,
   Car,
   Clock,
   FileText,
@@ -22,8 +23,10 @@ import {
   LayoutDashboard,
   LogOut,
   Navigation,
+  Package,
   Receipt,
   Shield,
+  ShoppingCart,
   Users,
 } from "lucide-react";
 import { useAuth, canAccessOffice, canAccessField, canAccessDashboard } from "@/auth/AuthContext";
@@ -63,6 +66,9 @@ export function AppShell() {
           { to: "/office/fahrtzeiten", icon: Navigation, label: "Fahrtzeiten" },
           { to: "/office/mangel", icon: AlertTriangle, label: "Mängel" },
           { to: "/office/gewaehrleistung", icon: Shield, label: "Gewährleistung" },
+          { to: "/office/lieferanten", icon: Building2, label: "Lieferanten" },
+          { to: "/office/material", icon: Package, label: "Material" },
+          { to: "/office/bestellungen", icon: ShoppingCart, label: "Bestellungen" },
         ]
       : []),
     ...(canAccessField(role)
