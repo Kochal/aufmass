@@ -17,7 +17,7 @@
  * `value` prop.  The caller should add key={position.id} when reusing for
  * different positions so the seed resets.
  */
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { formatMenge } from "@/lib/utils";
 import { evaluateExpression, isExpression } from "@/lib/calc";
@@ -38,18 +38,12 @@ interface MengeInputProps {
 }
 
 export function MengeInput({ value, formula, onChange, id, placeholder = "z. B. 2*(8+9)", className }: MengeInputProps) {
-  // Local display state: what the user is actually typing
+  // Local display state — fully owned by this component.
+  // The parent receives resolved values via onChange; it never pushes expr back in.
+  // To reset on a new position, the parent must pass key={position.id}.
   const [expr, setExpr] = useState(() => formula ?? value);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-
-  // Re-seed when the parent changes the backing value (e.g. applyLeistung fills einheitspreis)
-  // but only if the user isn't actively editing (expr matches old value/formula).
-  useEffect(() => {
-    setExpr(formula ?? value);
-  }, [formula, value]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Note: intentionally broad deps — when the dialog re-opens for a different
-  // position, the parent should pass key={position.id} to force a full remount.
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value;

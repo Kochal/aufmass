@@ -266,6 +266,7 @@ function EditPositionDialog({
               <div>
                 <label htmlFor="edit-menge" className="text-sm font-medium">Menge</label>
                 <MengeInput
+                  key={position?.id ?? ""}
                   id="edit-menge"
                   value={form.menge}
                   formula={form.menge_formel}
