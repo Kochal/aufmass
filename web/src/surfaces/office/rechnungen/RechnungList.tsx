@@ -24,6 +24,7 @@ import {
 import type { components } from "@/api/schema";
 
 type RechnungRead = components["schemas"]["RechnungRead"];
+type AngebotRead = components["schemas"]["AngebotRead"];
 type AuftraggeberRead = components["schemas"]["AuftraggeberRead"];
 type ProjektRead = components["schemas"]["ProjektRead"];
 
@@ -50,28 +51,58 @@ function StatusBadge({ status }: { status: string }) {
 
 function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string) => void }) {
   const qc = useQueryClient();
+  const [direktrechnung, setDirektrechnung] = useState(false);
+  const [angebotId, setAngebotId] = useState("");
   const [auftraggeberId, setAuftraggeberId] = useState("");
   const [projektId, setProjektId] = useState("");
 
+  const { data: issuedAngebote } = useQuery<AngebotRead[]>({
+    queryKey: ["angebot", { status: "issued" }],
+    queryFn: async () =>
+      unwrap(await apiClient.GET("/api/angebot", { params: { query: { status: "issued" } } })) as AngebotRead[],
+    enabled: open && !direktrechnung,
+  });
   const { data: auftraggeber } = useQuery<AuftraggeberRead[]>({
     queryKey: ["auftraggeber"],
     queryFn: async () => unwrap(await apiClient.GET("/api/auftraggeber")) as AuftraggeberRead[],
+    enabled: open,
   });
   const { data: projekte } = useQuery<ProjektRead[]>({
     queryKey: ["projekt", ""],
     queryFn: async () => unwrap(await apiClient.GET("/api/projekt", {})) as ProjektRead[],
+    enabled: open,
   });
 
-  const filteredProjekte = projektId || !auftraggeberId
+  const agMap = new Map(auftraggeber?.map((ag) => [ag.id, ag.name]) ?? []);
+  const projMap = new Map(projekte?.map((p) => [p.id, p.name]) ?? []);
+
+  const angebotOptions = (issuedAngebote ?? []).map((a) => {
+    const ag = agMap.get(a.auftraggeber_id) ?? a.auftraggeber_id;
+    const label = a.angebotsnummer ? `${a.angebotsnummer} — ${ag}` : ag;
+    return { value: a.id, label };
+  });
+
+  const filteredProjekte = !auftraggeberId
     ? projekte
     : projekte?.filter((p) => p.auftraggeber_id === auftraggeberId);
 
+  const selectedAngebot = issuedAngebote?.find((a) => a.id === angebotId);
+
+  function reset() {
+    setDirektrechnung(false);
+    setAngebotId("");
+    setAuftraggeberId("");
+    setProjektId("");
+  }
+
   const create = useMutation({
     mutationFn: async () => {
+      const ag = direktrechnung ? auftraggeberId : selectedAngebot?.auftraggeber_id ?? "";
+      const proj = direktrechnung ? projektId : selectedAngebot?.projekt_id ?? null;
       const res = await apiClient.POST("/api/rechnung", {
         body: {
-          auftraggeber_id: auftraggeberId || null,
-          projekt_id: projektId || null,
+          auftraggeber_id: ag || null,
+          projekt_id: proj || null,
           waehrung: "EUR",
         },
       });
@@ -79,45 +110,94 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string)
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["rechnung"] });
-      setAuftraggeberId("");
-      setProjektId("");
+      reset();
       onClose(data.id);
     },
   });
 
+  const canCreate = direktrechnung
+    ? true
+    : angebotId !== "";
+
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose(); } }}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Neue Rechnung</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3 py-2">
-          <div>
-            <label htmlFor="rech-ag" className="text-sm font-medium">Auftraggeber</label>
-            <Combobox
-              className="mt-1"
-              options={auftraggeber?.map((ag) => ({ value: ag.id, label: ag.name })) ?? []}
-              value={auftraggeberId}
-              onChange={(v) => { setAuftraggeberId(v); setProjektId(""); }}
-              placeholder="— kein —"
-              allowClear
+        <div className="space-y-4 py-2">
+          {!direktrechnung ? (
+            <div>
+              <label className="text-sm font-medium">Angebot</label>
+              {issuedAngebote?.length === 0 ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Keine ausgestellten Angebote vorhanden.
+                </p>
+              ) : (
+                <Combobox
+                  className="mt-1"
+                  options={angebotOptions}
+                  value={angebotId}
+                  onChange={setAngebotId}
+                  placeholder="Angebot auswählen …"
+                />
+              )}
+              {selectedAngebot && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {agMap.get(selectedAngebot.auftraggeber_id) ?? ""}
+                  {selectedAngebot.projekt_id
+                    ? ` · ${projMap.get(selectedAngebot.projekt_id) ?? selectedAngebot.projekt_id}`
+                    : ""}
+                </p>
+              )}
+            </div>
+          ) : (
+            <>
+              <div>
+                <label className="text-sm font-medium">Auftraggeber</label>
+                <Combobox
+                  className="mt-1"
+                  options={auftraggeber?.map((ag) => ({ value: ag.id, label: ag.name })) ?? []}
+                  value={auftraggeberId}
+                  onChange={(v) => { setAuftraggeberId(v); setProjektId(""); }}
+                  placeholder="— kein —"
+                  allowClear
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Projekt</label>
+                <Combobox
+                  className="mt-1"
+                  options={filteredProjekte?.map((p) => ({ value: p.id, label: p.name })) ?? []}
+                  value={projektId}
+                  onChange={setProjektId}
+                  placeholder="— kein —"
+                  allowClear
+                />
+              </div>
+            </>
+          )}
+
+          <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={direktrechnung}
+              onChange={(e) => {
+                setDirektrechnung(e.target.checked);
+                setAngebotId("");
+                setAuftraggeberId("");
+                setProjektId("");
+              }}
+              className="rounded"
             />
-          </div>
-          <div>
-            <label htmlFor="rech-proj" className="text-sm font-medium">Projekt</label>
-            <Combobox
-              className="mt-1"
-              options={filteredProjekte?.map((p) => ({ value: p.id, label: p.name })) ?? []}
-              value={projektId}
-              onChange={(v) => setProjektId(v)}
-              placeholder="— kein —"
-              allowClear
-            />
-          </div>
+            <span className="text-sm text-muted-foreground">Direktrechnung (ohne Angebot)</span>
+          </label>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onClose()}>Abbrechen</Button>
-          <Button disabled={create.isPending} onClick={() => create.mutate()}>Anlegen</Button>
+          <Button variant="outline" onClick={() => { reset(); onClose(); }}>Abbrechen</Button>
+          <Button disabled={create.isPending || !canCreate} onClick={() => create.mutate()}>
+            Anlegen
+          </Button>
         </DialogFooter>
         {create.isError && (
           <p className="text-sm text-destructive mt-2">
