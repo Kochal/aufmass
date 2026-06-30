@@ -3,6 +3,16 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-30 (t): Menge calculator. Migration 0026 adds lv_position.menge_formel
+  (text, additive). Backend: menge_formel in LvPositionCreate/Update/Read,
+  INSERT+UPDATE SQL wired. Frontend: calc.ts — safe recursive-descent parser
+  (no eval/Function), German comma normalised, guards div-by-zero + unbalanced
+  parens, rounds to 3dp. MengeInput.tsx — text Input wrapper; evaluates on
+  every keystroke; shows "= 11,333" preview for expressions, amber error for
+  invalid. Plain numbers: formula=null, no preview. acceptMutation,
+  setMatchMutation, bulkAcceptMutation all preserve menge_formel so confirming
+  a position does not null out the formula. TS clean.
+  See notes/ui/2026-06-30-menge-calculator.md.
 - 2026-06-30 (s): AngebotReview position UX — second pass. Delete moved from
   EditPositionDialog to PositionCard left-pane hover controls (inline Ja/Nein
   confirm, no dialog). EditPositionDialog: Leistung autosuggest (client-side,
