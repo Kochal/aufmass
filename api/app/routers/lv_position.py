@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -10,6 +11,14 @@ from ..errors import db_errors, require_row
 from ..schemas.lv_position import LvPositionCreate, LvPositionRead, LvPositionUpdate
 
 router = APIRouter(prefix="/api/lv-position", tags=["LVPosition"])
+
+_CENT = Decimal("0.01")
+
+
+def _gesamtpreis(menge: Decimal | None, einheitspreis: Decimal | None) -> Decimal | None:
+    if menge is None or einheitspreis is None:
+        return None
+    return (menge * einheitspreis).quantize(_CENT, rounding=ROUND_HALF_UP)
 
 _SELECT_ALIVE = "select * from lv_position where deleted_at is null"
 
@@ -44,9 +53,9 @@ def create_lv_position(
         row = conn.execute(
             "insert into lv_position("
             "  tenant_id, lv_id, oz, kurztext, langtext, menge, menge_formel, einheit,"
-            "  einheitspreis, matched_leistung_id, match_confidence, match_status,"
-            "  source, position_nr"
-            ") values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) returning *",
+            "  einheitspreis, gesamtpreis, matched_leistung_id, match_confidence,"
+            "  match_status, source, position_nr"
+            ") values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) returning *",
             (
                 str(principal.tenant_id),
                 str(body.lv_id),
@@ -57,6 +66,7 @@ def create_lv_position(
                 body.menge_formel,
                 body.einheit,
                 body.einheitspreis,
+                _gesamtpreis(body.menge, body.einheitspreis),
                 str(body.matched_leistung_id) if body.matched_leistung_id else None,
                 body.match_confidence,
                 body.match_status,
@@ -74,8 +84,8 @@ def update_lv_position(
     with db_errors():
         row = conn.execute(
             "update lv_position set oz=%s, kurztext=%s, langtext=%s, menge=%s, menge_formel=%s,"
-            "  einheit=%s, einheitspreis=%s, matched_leistung_id=%s, match_confidence=%s,"
-            "  match_status=%s, source=%s, position_nr=%s "
+            "  einheit=%s, einheitspreis=%s, gesamtpreis=%s, matched_leistung_id=%s,"
+            "  match_confidence=%s, match_status=%s, source=%s, position_nr=%s "
             "where id=%s and deleted_at is null and row_version=%s returning *",
             (
                 body.oz,
@@ -85,6 +95,7 @@ def update_lv_position(
                 body.menge_formel,
                 body.einheit,
                 body.einheitspreis,
+                _gesamtpreis(body.menge, body.einheitspreis),
                 str(body.matched_leistung_id) if body.matched_leistung_id else None,
                 body.match_confidence,
                 body.match_status,
