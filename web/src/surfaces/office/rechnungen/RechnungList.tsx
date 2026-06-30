@@ -55,10 +55,10 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string)
   const [auftraggeberId, setAuftraggeberId] = useState("");
   const [projektId, setProjektId] = useState("");
 
-  const { data: issuedAngebote } = useQuery<AngebotRead[]>({
-    queryKey: ["angebot", { status: "issued" }],
+  const { data: angebote } = useQuery<AngebotRead[]>({
+    queryKey: ["angebot", { forRechnung: true }],
     queryFn: async () =>
-      unwrap(await apiClient.GET("/api/angebot", { params: { query: { status: "issued" } } })) as AngebotRead[],
+      unwrap(await apiClient.GET("/api/angebot", {})) as AngebotRead[],
     enabled: open,
   });
   const { data: auftraggeber } = useQuery<AuftraggeberRead[]>({
@@ -72,10 +72,13 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string)
     enabled: open,
   });
 
-  // Derive allowed sets from issued Angebote (for the non-Direktrechnung path)
-  const allowedAgIds = new Set((issuedAngebote ?? []).map((a) => a.auftraggeber_id));
+  // Derive allowed sets from active Angebote (excludes cancelled/superseded)
+  const activeAngebote = (angebote ?? []).filter(
+    (a) => a.status !== "cancelled" && a.status !== "superseded",
+  );
+  const allowedAgIds = new Set(activeAngebote.map((a) => a.auftraggeber_id));
   const allowedProjIds = new Set(
-    (issuedAngebote ?? [])
+    activeAngebote
       .filter((a) => a.auftraggeber_id === auftraggeberId && a.projekt_id)
       .map((a) => a.projekt_id as string),
   );
