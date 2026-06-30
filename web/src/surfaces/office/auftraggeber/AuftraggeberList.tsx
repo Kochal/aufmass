@@ -34,6 +34,7 @@ const TYP_LABELS: Record<AuftraggeberTyp, string> = {
 };
 
 function CreateDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [typ, setTyp] = useState<AuftraggeberTyp>("gewerblich");
@@ -43,13 +44,14 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: () => void })
       const res = await apiClient.POST("/api/auftraggeber", {
         body: { name, typ, eas_scheme: "EM" },
       });
-      return unwrap(res);
+      return unwrap(res) as AuftraggeberRead;
     },
-    onSuccess: () => {
+    onSuccess: (ag) => {
       qc.invalidateQueries({ queryKey: ["auftraggeber"] });
       setName("");
       setTyp("gewerblich");
       onClose();
+      navigate(`/office/auftraggeber/${ag.id}`);
     },
   });
 
