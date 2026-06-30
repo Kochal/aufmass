@@ -12,6 +12,8 @@ mechanism is pinned here so it is not reinvented per table.
 Audience: you (Claude Code) and any human contributor.
 
 ## Changelog
+- 2026-06-30: Migration 0026: `lv_position.menge_formel text` — stores the raw
+  arithmetic expression that produced the `menge` value (traceability).
 - 2026-06-29: Confirmed: the voice capture path (`07b`) requires no schema
   change. `aufmass.quelle = 'voice'`, `source_document_id`, and
   `aufmass_entry.source_crop_ref` already cover the audio path. No migration
@@ -332,10 +334,11 @@ business table and not repeated.
   per incoming tender. `angebot_id` nullable (a received tender may exist
   before a quote), source (`gaeb` / `pdf` / `manual`), `gaeb_artifact_id`.
 - **lv_position**: `lv_id`, `oz` (Ordnungszahl), `kurztext`, `langtext`,
-  `menge`, `einheit`, `einheitspreis`, `gesamtpreis` (engine-computed),
-  `matched_leistung_id`, `match_confidence`, `match_status`
-  (auto / review / confirmed). Low confidence is queued, never auto-priced
-  (`00`).
+  `menge`, `menge_formel` (raw arithmetic expression, e.g. `2*(8+9)/3`, source
+  for the `menge` value — non-negotiable #6), `einheit`, `einheitspreis`,
+  `gesamtpreis` (engine-computed), `matched_leistung_id`, `match_confidence`,
+  `match_status` (auto / review / confirmed). Low confidence is queued, never
+  auto-priced (`00`). Migration: `0026`.
 - **gaeb_artifact** / **document** reference: the original GAEB/PDF kept
   unaltered (`04`).
 

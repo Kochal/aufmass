@@ -43,10 +43,10 @@ def create_lv_position(
     with db_errors():
         row = conn.execute(
             "insert into lv_position("
-            "  tenant_id, lv_id, oz, kurztext, langtext, menge, einheit,"
+            "  tenant_id, lv_id, oz, kurztext, langtext, menge, menge_formel, einheit,"
             "  einheitspreis, matched_leistung_id, match_confidence, match_status,"
             "  source, position_nr"
-            ") values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) returning *",
+            ") values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) returning *",
             (
                 str(principal.tenant_id),
                 str(body.lv_id),
@@ -54,6 +54,7 @@ def create_lv_position(
                 body.kurztext,
                 body.langtext,
                 body.menge,
+                body.menge_formel,
                 body.einheit,
                 body.einheitspreis,
                 str(body.matched_leistung_id) if body.matched_leistung_id else None,
@@ -72,15 +73,16 @@ def update_lv_position(
 ):
     with db_errors():
         row = conn.execute(
-            "update lv_position set oz=%s, kurztext=%s, langtext=%s, menge=%s, einheit=%s,"
-            "  einheitspreis=%s, matched_leistung_id=%s, match_confidence=%s, match_status=%s,"
-            "  source=%s, position_nr=%s "
+            "update lv_position set oz=%s, kurztext=%s, langtext=%s, menge=%s, menge_formel=%s,"
+            "  einheit=%s, einheitspreis=%s, matched_leistung_id=%s, match_confidence=%s,"
+            "  match_status=%s, source=%s, position_nr=%s "
             "where id=%s and deleted_at is null and row_version=%s returning *",
             (
                 body.oz,
                 body.kurztext,
                 body.langtext,
                 body.menge,
+                body.menge_formel,
                 body.einheit,
                 body.einheitspreis,
                 str(body.matched_leistung_id) if body.matched_leistung_id else None,

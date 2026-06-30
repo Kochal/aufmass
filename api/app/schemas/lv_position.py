@@ -12,6 +12,7 @@ class LvPositionCreate(_Base):
     kurztext: str | None = None
     langtext: str | None = None
     menge: Decimal | None = None
+    menge_formel: str | None = None
     einheit: str | None = None
     einheitspreis: Decimal | None = None
     matched_leistung_id: UUID | None = None
@@ -27,6 +28,7 @@ class LvPositionUpdate(_Base):
     kurztext: str | None = None
     langtext: str | None = None
     menge: Decimal | None = None
+    menge_formel: str | None = None
     einheit: str | None = None
     einheitspreis: Decimal | None = None
     matched_leistung_id: UUID | None = None
@@ -42,6 +44,7 @@ class LvPositionRead(ReadBase):
     kurztext: str | None = None
     langtext: str | None = None
     menge: Decimal | None = None
+    menge_formel: str | None = None
     einheit: str | None = None
     einheitspreis: Decimal | None = None
     gesamtpreis: Decimal | None = None

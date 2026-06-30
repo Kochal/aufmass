@@ -50,6 +50,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Combobox } from "@/components/ui/combobox";
+import { MengeInput } from "./MengeInput";
 import { ArrowLeft, Keyboard, Plus, ScanSearch, Search } from "lucide-react";
 
 type LvPositionRead = components["schemas"]["LvPositionRead"];
@@ -83,7 +84,7 @@ function EditPositionDialog({
   onClose: () => void;
 }) {
   const qc = useQueryClient();
-  const [form, setForm] = useState({ kurztext: "", langtext: "", menge: "", einheit: "", einheitspreis: "" });
+  const [form, setForm] = useState({ kurztext: "", langtext: "", menge: "", menge_formel: null as string | null, einheit: "", einheitspreis: "" });
   const [leistungSearch, setLeistungSearch] = useState("");
   const [selectedLeistungId, setSelectedLeistungId] = useState<string | null>(null);
   const [saveToKatalog, setSaveToKatalog] = useState(false);
@@ -96,6 +97,7 @@ function EditPositionDialog({
         kurztext: position.kurztext ?? "",
         langtext: position.langtext ?? "",
         menge: position.menge ?? "",
+        menge_formel: position.menge_formel ?? null,
         einheit: position.einheit ?? "",
         einheitspreis: position.einheitspreis ?? "",
       });
@@ -174,6 +176,7 @@ function EditPositionDialog({
           kurztext: form.kurztext,
           langtext: form.langtext || undefined,
           menge: form.menge || undefined,
+          menge_formel: form.menge_formel || undefined,
           einheit: form.einheit || undefined,
           einheitspreis: form.einheitspreis || undefined,
           matched_leistung_id,
@@ -262,7 +265,13 @@ function EditPositionDialog({
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label htmlFor="edit-menge" className="text-sm font-medium">Menge</label>
-                <Input id="edit-menge" value={form.menge} onChange={set("menge")} type="number" step="0.001" className="mt-1" />
+                <MengeInput
+                  id="edit-menge"
+                  value={form.menge}
+                  formula={form.menge_formel}
+                  onChange={(menge, formula) => setForm((f) => ({ ...f, menge, menge_formel: formula }))}
+                  className="mt-1"
+                />
               </div>
               <div>
                 <label htmlFor="edit-einheit" className="text-sm font-medium">Einheit</label>
@@ -350,6 +359,7 @@ function AddPositionDialog({
     kurztext: "",
     langtext: "",
     menge: "",
+    menge_formel: null as string | null,
     einheit: "",
     einheitspreis: "",
   });
@@ -396,6 +406,7 @@ function AddPositionDialog({
           kurztext: form.kurztext,
           langtext: form.langtext || undefined,
           menge: form.menge || undefined,
+          menge_formel: form.menge_formel || undefined,
           einheit: form.einheit || undefined,
           einheitspreis: form.einheitspreis || undefined,
           matched_leistung_id: selectedLeistungId || undefined,
@@ -409,7 +420,7 @@ function AddPositionDialog({
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lv-position"] });
       qc.invalidateQueries({ queryKey: ["lv", { angebot_id: angebotId }] });
-      setForm({ kurztext: "", langtext: "", menge: "", einheit: "", einheitspreis: "" });
+      setForm({ kurztext: "", langtext: "", menge: "", menge_formel: null, einheit: "", einheitspreis: "" });
       setLeistungSearch("");
       setSelectedLeistungId(null);
       onClose();
@@ -498,13 +509,12 @@ function AddPositionDialog({
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-1">
                 <label htmlFor="pos-menge" className="text-sm font-medium">Menge</label>
-                <Input
+                <MengeInput
                   id="pos-menge"
                   value={form.menge}
-                  onChange={set("menge")}
+                  formula={form.menge_formel}
+                  onChange={(menge, formula) => setForm((f) => ({ ...f, menge, menge_formel: formula }))}
                   placeholder="42"
-                  type="number"
-                  step="0.001"
                   className="mt-1"
                 />
               </div>
@@ -679,6 +689,7 @@ export function AngebotReview() {
           kurztext: position.kurztext,
           langtext: position.langtext,
           menge: position.menge,
+          menge_formel: position.menge_formel,
           einheit: position.einheit,
           einheitspreis: position.einheitspreis,
           matched_leistung_id: position.matched_leistung_id,
@@ -724,6 +735,7 @@ export function AngebotReview() {
           kurztext: position.kurztext,
           langtext: position.langtext,
           menge: position.menge,
+          menge_formel: position.menge_formel,
           einheit: position.einheit,
           einheitspreis: leistung.einheitspreis ?? position.einheitspreis,
           matched_leistung_id: leistung.id,
@@ -877,6 +889,7 @@ export function AngebotReview() {
               kurztext: pos.kurztext,
               langtext: pos.langtext,
               menge: pos.menge,
+              menge_formel: pos.menge_formel,
               einheit: pos.einheit,
               einheitspreis: pos.einheitspreis,
               matched_leistung_id: pos.matched_leistung_id,

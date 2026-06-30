@@ -3408,6 +3408,8 @@ export interface components {
             langtext?: string | null;
             /** Menge */
             menge?: number | string | null;
+            /** Menge Formel */
+            menge_formel?: string | null;
             /** Einheit */
             einheit?: string | null;
             /** Einheitspreis */
@@ -3469,6 +3471,8 @@ export interface components {
             langtext?: string | null;
             /** Menge */
             menge?: string | null;
+            /** Menge Formel */
+            menge_formel?: string | null;
             /** Einheit */
             einheit?: string | null;
             /** Einheitspreis */
@@ -3500,6 +3504,8 @@ export interface components {
             langtext?: string | null;
             /** Menge */
             menge?: number | string | null;
+            /** Menge Formel */
+            menge_formel?: string | null;
             /** Einheit */
             einheit?: string | null;
             /** Einheitspreis */
