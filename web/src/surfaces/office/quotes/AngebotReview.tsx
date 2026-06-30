@@ -280,7 +280,14 @@ function EditPositionDialog({
               </div>
               <div>
                 <label htmlFor="edit-ep" className="text-sm font-medium">EP (€)</label>
-                <Input id="edit-ep" value={form.einheitspreis} onChange={set("einheitspreis")} type="number" step="0.01" className="mt-1" />
+                <Input
+                  id="edit-ep"
+                  value={form.einheitspreis.replace(".", ",")}
+                  onChange={(e) => setForm((f) => ({ ...f, einheitspreis: e.target.value.replace(",", ".") }))}
+                  placeholder="12,50"
+                  inputMode="decimal"
+                  className="mt-1"
+                />
               </div>
             </div>
           </div>
@@ -532,11 +539,10 @@ function AddPositionDialog({
                 <label htmlFor="pos-ep" className="text-sm font-medium">EP (€)</label>
                 <Input
                   id="pos-ep"
-                  value={form.einheitspreis}
-                  onChange={set("einheitspreis")}
-                  placeholder="12.50"
-                  type="number"
-                  step="0.01"
+                  value={form.einheitspreis.replace(".", ",")}
+                  onChange={(e) => setForm((f) => ({ ...f, einheitspreis: e.target.value.replace(",", ".") }))}
+                  placeholder="12,50"
+                  inputMode="decimal"
                   className="mt-1"
                 />
               </div>
