@@ -262,18 +262,18 @@ function EditPositionDialog({
               <label htmlFor="edit-langtext" className="text-sm font-medium">Langtext</label>
               <Input id="edit-langtext" value={form.langtext} onChange={set("langtext")} className="mt-1" />
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label htmlFor="edit-menge" className="text-sm font-medium">Menge</label>
-                <MengeInput
-                  key={position?.id ?? ""}
-                  id="edit-menge"
-                  value={form.menge}
-                  formula={form.menge_formel}
-                  onChange={(menge, formula) => setForm((f) => ({ ...f, menge, menge_formel: formula }))}
-                  className="mt-1"
-                />
-              </div>
+            <div>
+              <label htmlFor="edit-menge" className="text-sm font-medium">Menge</label>
+              <MengeInput
+                key={position?.id ?? ""}
+                id="edit-menge"
+                value={form.menge}
+                formula={form.menge_formel}
+                onChange={(menge, formula) => setForm((f) => ({ ...f, menge, menge_formel: formula }))}
+                className="mt-1"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="edit-einheit" className="text-sm font-medium">Einheit</label>
                 <Input id="edit-einheit" value={form.einheit} onChange={set("einheit")} placeholder="m²" className="mt-1" />
@@ -507,19 +507,18 @@ function AddPositionDialog({
                 className="mt-1"
               />
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-1">
-                <label htmlFor="pos-menge" className="text-sm font-medium">Menge</label>
-                <MengeInput
-                  id="pos-menge"
-                  value={form.menge}
-                  formula={form.menge_formel}
-                  onChange={(menge, formula) => setForm((f) => ({ ...f, menge, menge_formel: formula }))}
-                  placeholder="42"
-                  className="mt-1"
-                />
-              </div>
-              <div className="col-span-1">
+            <div>
+              <label htmlFor="pos-menge" className="text-sm font-medium">Menge</label>
+              <MengeInput
+                id="pos-menge"
+                value={form.menge}
+                formula={form.menge_formel}
+                onChange={(menge, formula) => setForm((f) => ({ ...f, menge, menge_formel: formula }))}
+                className="mt-1"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
                 <label htmlFor="pos-einheit" className="text-sm font-medium">Einheit</label>
                 <Input
                   id="pos-einheit"
@@ -529,7 +528,7 @@ function AddPositionDialog({
                   className="mt-1"
                 />
               </div>
-              <div className="col-span-1">
+              <div>
                 <label htmlFor="pos-ep" className="text-sm font-medium">EP (€)</label>
                 <Input
                   id="pos-ep"

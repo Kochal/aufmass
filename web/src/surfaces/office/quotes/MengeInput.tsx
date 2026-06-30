@@ -1,43 +1,26 @@
-/**
- * MengeInput — controlled Menge field with a live arithmetic calculator.
- *
- * The user types a free-text expression like "2 * (8+9) / 3".  The component
- * evaluates it client-side (no API call), shows a live preview `= 11,333`, and
- * calls onChange with the resolved decimal string + the original formula so both
- * can be persisted (non-negotiable #6: every value traceable to its source).
- *
- * Behaviour:
- *   - empty input        → onChange("", null)
- *   - plain number       → onChange(number_str, null)  — no formula to store
- *   - valid expression   → onChange(result_str, expr)  + preview shown
- *   - invalid expression → onChange("", null)  + amber error shown
- *   - German comma (3,5) → normalised to 3.5 by the parser
- *
- * The component is seeded once on mount via the `formula` prop (if set) or the
- * `value` prop.  The caller should add key={position.id} when reusing for
- * different positions so the seed resets.
- */
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { X } from "lucide-react";
 import { formatMenge } from "@/lib/utils";
 import { evaluateExpression, isExpression } from "@/lib/calc";
 import { cn } from "@/lib/utils";
 
 interface MengeInputProps {
-  /** Current resolved decimal value (from DB / form state). */
   value: string;
-  /** Persisted formula, if any (from DB / form state). */
   formula: string | null;
-  /** Called whenever the user changes the field.
-   *  menge = resolved decimal string ("" when invalid or empty).
-   *  formula = raw expression string, or null for plain numbers / empty. */
   onChange: (menge: string, formula: string | null) => void;
   id?: string;
   placeholder?: string;
   className?: string;
 }
 
-export function MengeInput({ value, formula, onChange, id, placeholder = "z. B. 2*(8+9)", className }: MengeInputProps) {
+const TEXTAREA_BASE =
+  "flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors " +
+  "placeholder:text-muted-foreground " +
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 " +
+  "disabled:cursor-not-allowed disabled:opacity-50 " +
+  "resize-y min-h-[5rem] pr-7 font-mono";
+
+export function MengeInput({ value, formula, onChange, id, placeholder = "z. B.\n3,5 * 2,8\n+ 4,2 * 1,6", className }: MengeInputProps) {
   // Local display state — fully owned by this component.
   // The parent receives resolved values via onChange; it never pushes expr back in.
   // To reset on a new position, the parent must pass key={position.id}.
@@ -45,7 +28,7 @@ export function MengeInput({ value, formula, onChange, id, placeholder = "z. B. 
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const raw = e.target.value;
     setExpr(raw);
 
@@ -61,7 +44,7 @@ export function MengeInput({ value, formula, onChange, id, placeholder = "z. B. 
     if (err) {
       setError(err);
       setPreview(null);
-      onChange("", null); // don't persist a stale number from the previous valid state
+      onChange("", null);
       return;
     }
 
@@ -84,17 +67,40 @@ export function MengeInput({ value, formula, onChange, id, placeholder = "z. B. 
     }
   }
 
+  function handleClear() {
+    setExpr("");
+    setError(null);
+    setPreview(null);
+    onChange("", null);
+  }
+
   return (
     <div className={cn("space-y-0.5", className)}>
-      <Input
-        id={id}
-        value={expr}
-        onChange={handleChange}
-        placeholder={placeholder}
-        className={cn(error && "border-amber-500 focus-visible:ring-amber-500")}
-        autoComplete="off"
-        inputMode="decimal"
-      />
+      <div className="relative">
+        <textarea
+          id={id}
+          value={expr}
+          onChange={handleChange}
+          placeholder={placeholder}
+          rows={3}
+          spellCheck={false}
+          autoComplete="off"
+          className={cn(TEXTAREA_BASE, error && "border-amber-500 focus-visible:ring-amber-500")}
+        />
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={handleClear}
+          tabIndex={-1}
+          aria-label="Leeren"
+          className={cn(
+            "absolute right-2 top-2 text-muted-foreground hover:text-foreground",
+            !expr && "invisible",
+          )}
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
       {preview && !error && (
         <p className="text-xs text-muted-foreground font-mono pl-1">= {preview}</p>
       )}
