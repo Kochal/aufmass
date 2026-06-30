@@ -3,6 +3,20 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-30 (u): Menge calculator follow-up fixes. (1) MengeInput: useEffect
+  that re-seeded expr from value/formula props caused field to clear mid-typing
+  when evaluator returned error on incomplete expression (e.g. "16,419*") —
+  removed; expr is now fully local state. (2) MengeInput switched from single-line
+  Input to resizable textarea (rows=3, resize-y, monospace) supporting multi-line
+  expressions; newlines treated as whitespace by tokeniser. Layout: Menge
+  full-width above Einheit+EP row. (3) EP field: type="number" → type="text"
+  with German comma normalisation (display . as ,, store as .). (4) Initial
+  preview: lazy useState initialisers evaluate the seed formula on mount so
+  "= 41,704" appears immediately when reopening a saved formula. (5)
+  berechnenMutation.onSuccess: added invalidateQueries(["lv-position"]) — the
+  engine writes gesamtpreis back to lv_position rows (bumps row_version), so
+  without this the cards didn't refresh and subsequent PUTs threw stale_row_version.
+  See notes/ui/2026-06-30-menge-calculator.md.
 - 2026-06-30 (t): Menge calculator. Migration 0026 adds lv_position.menge_formel
   (text, additive). Backend: menge_formel in LvPositionCreate/Update/Read,
   INSERT+UPDATE SQL wired. Frontend: calc.ts — safe recursive-descent parser
