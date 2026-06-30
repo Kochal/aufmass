@@ -1,19 +1,9 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Users } from "lucide-react";
 import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Combobox } from "@/components/ui/combobox";
 import {
   Table,
   TableBody,
@@ -33,91 +23,28 @@ const TYP_LABELS: Record<AuftraggeberTyp, string> = {
   oeffentlich: "Öffentlich",
 };
 
-function CreateDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
-  const [name, setName] = useState("");
-  const [typ, setTyp] = useState<AuftraggeberTyp>("gewerblich");
-
-  const create = useMutation({
-    mutationFn: async () => {
-      const res = await apiClient.POST("/api/auftraggeber", {
-        body: { name, typ, eas_scheme: "EM" },
-      });
-      return unwrap(res) as AuftraggeberRead;
-    },
-    onSuccess: (ag) => {
-      qc.invalidateQueries({ queryKey: ["auftraggeber"] });
-      setName("");
-      setTyp("gewerblich");
-      onClose();
-      navigate(`/office/auftraggeber/${ag.id}`);
-    },
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Neuer Auftraggeber</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
-          <div>
-            <label htmlFor="ag-name" className="text-sm font-medium">
-              Name <span className="text-destructive">*</span>
-            </label>
-            <Input
-              id="ag-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="z.B. Mustermann GmbH"
-              autoFocus
-              onKeyDown={(e) => e.key === "Enter" && name && create.mutate()}
-            />
-          </div>
-          <div>
-            <label htmlFor="ag-typ" className="text-sm font-medium">
-              Typ
-            </label>
-            <Combobox
-              className="mt-1"
-              options={[
-                { value: "gewerblich", label: "Gewerblich" },
-                { value: "privat", label: "Privat" },
-                { value: "oeffentlich", label: "Öffentlich" },
-              ]}
-              value={typ}
-              onChange={(v) => setTyp(v as AuftraggeberTyp)}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Abbrechen
-          </Button>
-          <Button disabled={!name || create.isPending} onClick={() => create.mutate()}>
-            Anlegen
-          </Button>
-        </DialogFooter>
-        {create.isError && (
-          <p className="text-sm text-destructive mt-2">
-            {(create.error as Error)?.message ?? "Fehler beim Anlegen"}
-          </p>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 export function AuftraggeberList() {
   const navigate = useNavigate();
-  const [showCreate, setShowCreate] = useState(false);
+  const qc = useQueryClient();
 
   const { data: auftraggeber, isLoading } = useQuery<AuftraggeberRead[]>({
     queryKey: ["auftraggeber"],
     queryFn: async () => {
       const res = await apiClient.GET("/api/auftraggeber");
       return unwrap(res) as AuftraggeberRead[];
+    },
+  });
+
+  const createAndOpen = useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.POST("/api/auftraggeber", {
+        body: { name: "Neuer Auftraggeber", eas_scheme: "EM" },
+      });
+      return unwrap(res) as AuftraggeberRead;
+    },
+    onSuccess: (ag) => {
+      qc.invalidateQueries({ queryKey: ["auftraggeber"] });
+      navigate(`/office/auftraggeber/${ag.id}`);
     },
   });
 
@@ -132,7 +59,7 @@ export function AuftraggeberList() {
             <span className="text-sm text-muted-foreground">({auftraggeber.length})</span>
           )}
         </div>
-        <Button size="sm" onClick={() => setShowCreate(true)}>
+        <Button size="sm" disabled={createAndOpen.isPending} onClick={() => createAndOpen.mutate()}>
           <Plus className="h-4 w-4 mr-1" />
           Neu anlegen
         </Button>
@@ -149,7 +76,7 @@ export function AuftraggeberList() {
         <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
           <Users className="h-10 w-10 text-muted-foreground/40" />
           <p className="text-muted-foreground">Noch keine Auftraggeber angelegt.</p>
-          <Button variant="outline" size="sm" onClick={() => setShowCreate(true)}>
+          <Button variant="outline" size="sm" disabled={createAndOpen.isPending} onClick={() => createAndOpen.mutate()}>
             <Plus className="h-4 w-4 mr-1" />
             Ersten Auftraggeber anlegen
           </Button>
@@ -186,7 +113,6 @@ export function AuftraggeberList() {
         </div>
       )}
 
-      <CreateDialog open={showCreate} onClose={() => setShowCreate(false)} />
     </div>
   );
 }
