@@ -20,13 +20,21 @@ const TEXTAREA_BASE =
   "disabled:cursor-not-allowed disabled:opacity-50 " +
   "resize-y min-h-[5rem] pr-7 font-mono";
 
+function evalSeed(seed: string): { preview: string | null; error: string | null } {
+  if (!seed.trim()) return { preview: null, error: null };
+  const { value: result, error: err } = evaluateExpression(seed);
+  if (err) return { preview: null, error: err };
+  if (result === null) return { preview: null, error: null };
+  if (isExpression(seed)) return { preview: formatMenge(String(result), undefined), error: null };
+  return { preview: null, error: null };
+}
+
 export function MengeInput({ value, formula, onChange, id, placeholder = "z. B.\n3,5 * 2,8\n+ 4,2 * 1,6", className }: MengeInputProps) {
   // Local display state — fully owned by this component.
-  // The parent receives resolved values via onChange; it never pushes expr back in.
-  // To reset on a new position, the parent must pass key={position.id}.
+  // Seeded once on mount; parent uses key={position.id} to remount for a different position.
   const [expr, setExpr] = useState(() => formula ?? value);
-  const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => evalSeed(formula ?? value).error);
+  const [preview, setPreview] = useState<string | null>(() => evalSeed(formula ?? value).preview);
 
   function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const raw = e.target.value;
