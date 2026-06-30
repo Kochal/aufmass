@@ -3,6 +3,12 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-30 (v): Inline gesamtpreis on position save. lv_position router now
+  computes gesamtpreis = ROUND(menge × einheitspreis, 2) (Python Decimal,
+  ROUND_HALF_UP) on every INSERT and UPDATE. Card shows = Betrag immediately
+  after saving a position — no Berechnen click needed for position-level sums.
+  Berechnen still owns Angebot-level netto/MwSt/brutto totals and will
+  overwrite gesamtpreis if position-level surcharges are introduced later.
 - 2026-06-30 (u): Menge calculator follow-up fixes. (1) MengeInput: useEffect
   that re-seeded expr from value/formula props caused field to clear mid-typing
   when evaluator returned error on incomplete expression (e.g. "16,419*") —

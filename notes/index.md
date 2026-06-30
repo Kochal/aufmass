@@ -20,6 +20,7 @@ Organised by area, newest first within each area.
 ## quotation
 | Date | File | Summary |
 |------|------|---------|
+| 2026-06-30 | [inline-gesamtpreis](quotation/2026-06-30-inline-gesamtpreis.md) | gesamtpreis computed inline on position save (menge×EP, Decimal ROUND_HALF_UP); Berechnen still owns Angebot-level totals |
 | 2026-06-29 | [catalog-matching](quotation/2026-06-29-catalog-matching.md) | String-similarity scan (partial): token-Jaccard + SequenceMatcher, auto@0.80/review@0.55; runs on GAEB import + on-demand button; full embedding path deferred (GPU + DPA pending) |
 | 2026-06-28 | [xrechnung-einvoice](quotation/2026-06-28-xrechnung-einvoice.md) | XRechnung UBL 2.1 + KoSIT gate live: issue-flow restructure, party master data (adresse/bankverbindung/billing-profile), unit codes, filesystem write-once store, Steuerberater flags |
 | 2026-06-26 | [quotation-engine-api](quotation/2026-06-26-quotation-engine-api.md) | 06 app layer complete: pricing engine (Decimal/HALF_UP), checks engine, 9 entities, berechnen→pruefen→ausstellen→version flow; deferred: XRechnung/KoSIT, GAEB, PDF matching |
