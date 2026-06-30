@@ -14,6 +14,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -58,20 +59,66 @@ function CreateAngebotDialog({
   const qc = useQueryClient();
   const [auftraggeberId, setAuftraggeberId] = useState("");
   const [projektId, setProjektId] = useState("");
+  const [newAgMode, setNewAgMode] = useState(false);
+  const [newAgName, setNewAgName] = useState("");
+  const [newProjMode, setNewProjMode] = useState(false);
+  const [newProjName, setNewProjName] = useState("");
 
   const { data: auftraggeber } = useQuery<AuftraggeberRead[]>({
     queryKey: ["auftraggeber"],
     queryFn: async () =>
       unwrap(await apiClient.GET("/api/auftraggeber", {})) as AuftraggeberRead[],
+    enabled: open,
   });
 
   const { data: projekte } = useQuery<ProjektRead[]>({
-    queryKey: ["projekt"],
+    queryKey: ["projekt", ""],
     queryFn: async () =>
       unwrap(await apiClient.GET("/api/projekt", {})) as ProjektRead[],
+    enabled: open,
   });
 
-  const create = useMutation({
+  function reset() {
+    setAuftraggeberId("");
+    setProjektId("");
+    setNewAgMode(false);
+    setNewAgName("");
+    setNewProjMode(false);
+    setNewProjName("");
+  }
+
+  const createAg = useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.POST("/api/auftraggeber", {
+        body: { name: newAgName.trim(), eas_scheme: "EM" },
+      });
+      return unwrap(res) as AuftraggeberRead;
+    },
+    onSuccess: (ag) => {
+      qc.invalidateQueries({ queryKey: ["auftraggeber"] });
+      setAuftraggeberId(ag.id);
+      setProjektId("");
+      setNewAgName("");
+      setNewAgMode(false);
+    },
+  });
+
+  const createProj = useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.POST("/api/projekt", {
+        body: { auftraggeber_id: auftraggeberId, name: newProjName.trim() },
+      });
+      return unwrap(res) as ProjektRead;
+    },
+    onSuccess: (proj) => {
+      qc.invalidateQueries({ queryKey: ["projekt", ""] });
+      setProjektId(proj.id);
+      setNewProjName("");
+      setNewProjMode(false);
+    },
+  });
+
+  const createAngebot = useMutation({
     mutationFn: async () => {
       const res = await apiClient.POST("/api/angebot", {
         body: {
@@ -84,66 +131,123 @@ function CreateAngebotDialog({
     },
     onSuccess: (angebot) => {
       qc.invalidateQueries({ queryKey: ["angebot"] });
+      reset();
       onClose();
-      setAuftraggeberId("");
-      setProjektId("");
       navigate(`/office/angebote/${angebot.id}/review`);
     },
   });
 
-  const agOptions = (auftraggeber ?? []).map((a) => ({
-    value: a.id,
-    label: a.name,
-  }));
+  const agOptions = (auftraggeber ?? []).map((a) => ({ value: a.id, label: a.name }));
 
-  const projektOptions = (projekte ?? []).map((p) => ({
-    value: p.id,
-    label: p.name,
-  }));
+  const projektOptions = (projekte ?? [])
+    .filter((p) => !auftraggeberId || p.auftraggeber_id === auftraggeberId)
+    .map((p) => ({ value: p.id, label: p.name }));
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose(); } }}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Neues Angebot</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
+          {/* Auftraggeber */}
           <div>
-            <label className="text-sm font-medium">Auftraggeber *</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-sm font-medium">Auftraggeber *</label>
+              <button
+                type="button"
+                onClick={() => { setNewAgMode((m) => !m); setNewAgName(""); }}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Plus className="h-3 w-3" />
+                Neu
+              </button>
+            </div>
             <Combobox
-              className="mt-1"
               options={agOptions}
               value={auftraggeberId}
-              onChange={(v) => setAuftraggeberId(v ?? "")}
+              onChange={(v) => { setAuftraggeberId(v ?? ""); setProjektId(""); setNewProjMode(false); }}
               placeholder="Auftraggeber wählen…"
               searchPlaceholder="Suchen…"
             />
+            {newAgMode && (
+              <div className="mt-2 flex gap-2">
+                <Input
+                  autoFocus
+                  value={newAgName}
+                  onChange={(e) => setNewAgName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && newAgName.trim()) createAg.mutate(); if (e.key === "Escape") setNewAgMode(false); }}
+                  placeholder="Name des Auftraggebers"
+                  className="h-8 text-sm flex-1"
+                />
+                <Button
+                  size="sm"
+                  className="h-8"
+                  disabled={!newAgName.trim() || createAg.isPending}
+                  onClick={() => createAg.mutate()}
+                >
+                  Anlegen
+                </Button>
+              </div>
+            )}
           </div>
+
+          {/* Projekt */}
           <div>
-            <label className="text-sm font-medium">Projekt (optional)</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-sm font-medium">Projekt (optional)</label>
+              <button
+                type="button"
+                disabled={!auftraggeberId}
+                onClick={() => { setNewProjMode((m) => !m); setNewProjName(""); }}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
+              >
+                <Plus className="h-3 w-3" />
+                Neu
+              </button>
+            </div>
             <Combobox
-              className="mt-1"
               options={projektOptions}
               value={projektId}
               onChange={(v) => setProjektId(v ?? "")}
-              placeholder="Projekt wählen…"
+              placeholder={auftraggeberId ? "Projekt wählen…" : "Erst Auftraggeber wählen"}
               searchPlaceholder="Suchen…"
               allowClear
             />
+            {newProjMode && (
+              <div className="mt-2 flex gap-2">
+                <Input
+                  autoFocus
+                  value={newProjName}
+                  onChange={(e) => setNewProjName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && newProjName.trim()) createProj.mutate(); if (e.key === "Escape") setNewProjMode(false); }}
+                  placeholder="Projektname"
+                  className="h-8 text-sm flex-1"
+                />
+                <Button
+                  size="sm"
+                  className="h-8"
+                  disabled={!newProjName.trim() || createProj.isPending}
+                  onClick={() => createProj.mutate()}
+                >
+                  Anlegen
+                </Button>
+              </div>
+            )}
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Abbrechen</Button>
+          <Button variant="outline" onClick={() => { reset(); onClose(); }}>Abbrechen</Button>
           <Button
-            disabled={!auftraggeberId || create.isPending}
-            onClick={() => create.mutate()}
+            disabled={!auftraggeberId || createAngebot.isPending}
+            onClick={() => createAngebot.mutate()}
           >
             Erstellen
           </Button>
         </DialogFooter>
-        {create.isError && (
+        {createAngebot.isError && (
           <p className="text-sm text-destructive mt-1">
-            {(create.error as Error)?.message ?? "Fehler beim Erstellen"}
+            {(createAngebot.error as Error)?.message ?? "Fehler beim Erstellen"}
           </p>
         )}
       </DialogContent>

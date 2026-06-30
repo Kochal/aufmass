@@ -55,12 +55,11 @@ export function AppShell() {
       : []),
     ...(canAccessOffice(role)
       ? [
-          { to: "/office/angebote", icon: FileText, label: "Angebote" },
-          // Rechnungen, Auftraggeber, Projekte — reserved, stub
-          { to: "/office/katalog", icon: BookOpen, label: "Katalog" },
-          { to: "/office/rechnungen", icon: Receipt, label: "Rechnungen" },
           { to: "/office/auftraggeber", icon: Users, label: "Auftraggeber" },
           { to: "/office/projekte", icon: FolderOpen, label: "Projekte" },
+          { to: "/office/angebote", icon: FileText, label: "Angebote" },
+          { to: "/office/rechnungen", icon: Receipt, label: "Rechnungen" },
+          { to: "/office/katalog", icon: BookOpen, label: "Katalog" },
           { to: "/office/arbeitszeit", icon: Clock, label: "Arbeitszeit" },
           { to: "/office/fahrtenbuch", icon: Car, label: "Fahrtenbuch" },
           { to: "/office/fahrtzeiten", icon: Navigation, label: "Fahrtzeiten" },
