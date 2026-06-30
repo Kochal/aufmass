@@ -3,6 +3,17 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-06-30 (w): Auto-refresh angebot totals on position save. Added
+  `_refresh_angebot_totals(conn, lv_id)` to `lv_position.py`: after every
+  INSERT, UPDATE, or soft-DELETE it re-sums position gesamtpreise and rewrites
+  `angebot.summe_netto/summe_brutto` using `pricing.price_document()` (draft
+  only, no row_version check). Fixes "1 unresolved hard check failure" on
+  Ausstellen after editing a position post-Berechnen — the arithmetic check
+  now always sees current totals. Frontend: all position mutation success (and
+  409 error) handlers now also invalidate `["angebot", angebotId]` so Berechnen
+  gets a fresh row_version after position saves. Existing stale angebote: run
+  Berechnen once to resync, then Prüfen + Ausstellen work.
+  See notes/quotation/2026-06-30-inline-gesamtpreis.md.
 - 2026-06-30 (v): Inline gesamtpreis on position save. lv_position router now
   computes gesamtpreis = ROUND(menge × einheitspreis, 2) (Python Decimal,
   ROUND_HALF_UP) on every INSERT and UPDATE. Card shows = Betrag immediately

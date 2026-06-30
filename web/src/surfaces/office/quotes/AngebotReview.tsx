@@ -71,12 +71,14 @@ function suggestCode(leistungen: LeistungRead[]): string {
 }
 
 function EditPositionDialog({
+  angebotId,
   position,
   leistungen,
   katalogList,
   open,
   onClose,
 }: {
+  angebotId: string;
   position: LvPositionRead | null;
   leistungen: LeistungRead[];
   katalogList: LeistungskatalogRead[];
@@ -190,6 +192,7 @@ function EditPositionDialog({
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lv-position"] });
+      qc.invalidateQueries({ queryKey: ["angebot", angebotId] });
       if (saveToKatalog) qc.invalidateQueries({ queryKey: ["leistung"] });
       onClose();
     },
@@ -427,6 +430,7 @@ function AddPositionDialog({
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lv-position"] });
+      qc.invalidateQueries({ queryKey: ["angebot", angebotId] });
       qc.invalidateQueries({ queryKey: ["lv", { angebot_id: angebotId }] });
       setForm({ kurztext: "", langtext: "", menge: "", menge_formel: null, einheit: "", einheitspreis: "" });
       setLeistungSearch("");
@@ -709,6 +713,7 @@ export function AngebotReview() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lv-position"] });
+      qc.invalidateQueries({ queryKey: ["angebot", id] });
       // Advance to next position
       setActiveIndex((i) => Math.min(i + 1, sortedPositions.length - 1));
     },
@@ -716,6 +721,7 @@ export function AngebotReview() {
       const status = (err as { status?: number }).status;
       if (status === 409) {
         qc.invalidateQueries({ queryKey: ["lv-position"] });
+        qc.invalidateQueries({ queryKey: ["angebot", id] });
         toast.error("Wurde zwischenzeitlich geändert — Daten wurden neu geladen.");
       } else {
         toast.error(
@@ -755,12 +761,14 @@ export function AngebotReview() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lv-position"] });
+      qc.invalidateQueries({ queryKey: ["angebot", id] });
       toast.success("Leistung zugewiesen und bestätigt.");
     },
     onError: (err) => {
       const status = (err as { status?: number }).status;
       if (status === 409) {
         qc.invalidateQueries({ queryKey: ["lv-position"] });
+        qc.invalidateQueries({ queryKey: ["angebot", id] });
         toast.error("Wurde zwischenzeitlich geändert — Daten wurden neu geladen.");
       } else {
         toast.error(
@@ -874,7 +882,10 @@ export function AngebotReview() {
         params: { path: { id: positionId } },
       });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["lv-position"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["lv-position"] });
+      qc.invalidateQueries({ queryKey: ["angebot", id] });
+    },
     onError: (err) =>
       toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
   });
@@ -911,6 +922,7 @@ export function AngebotReview() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["lv-position"] });
+      qc.invalidateQueries({ queryKey: ["angebot", id] });
       toast.success("Alle Positionen bestätigt.");
     },
     onError: (err) =>
@@ -1117,6 +1129,7 @@ export function AngebotReview() {
 
       {/* Edit position dialog — always looks up the live position from cache so row_version is never stale */}
       <EditPositionDialog
+        angebotId={id!}
         position={editPositionId ? (sortedPositions.find((p) => p.id === editPositionId) ?? null) : null}
         leistungen={allLeistungen}
         katalogList={katalogList ?? []}
