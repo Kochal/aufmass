@@ -828,6 +828,7 @@ export function AngebotReview() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["angebot", id] });
+      qc.invalidateQueries({ queryKey: ["lv-position"] });
       toast.success("Berechnet.");
     },
     onError: (err) => toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
