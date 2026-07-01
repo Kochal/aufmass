@@ -10,6 +10,7 @@ from .common import ReadBase, _Base
 class RechnungCreate(_Base):
     auftraggeber_id: UUID | None = None
     projekt_id: UUID | None = None
+    angebot_id: UUID | None = None
     waehrung: str = "EUR"
 
 
@@ -30,6 +31,7 @@ class RechnungBerechnen(_Base):
 class RechnungRead(ReadBase):
     auftraggeber_id: UUID | None = None
     projekt_id: UUID | None = None
+    angebot_id: UUID | None = None
     rechnungsnummer: str | None = None
     status: str
     document_group_id: UUID

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CheckCircle2, XCircle, Plus, Trash2, FileDown } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Plus, Trash2, FileDown, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ type RechnungPositionRead = components["schemas"]["RechnungPositionRead"];
 type CheckResultRead = components["schemas"]["CheckResultRead"];
 type AuftraggeberRead = components["schemas"]["AuftraggeberRead"];
 type ProjektRead = components["schemas"]["ProjektRead"];
+type AngebotRead = components["schemas"]["AngebotRead"];
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -128,6 +129,97 @@ function AddPositionDialog({
   );
 }
 
+// ── Edit-position dialog ──────────────────────────────────────────────────────
+
+function EditPositionDialog({
+  position,
+  open,
+  onClose,
+}: {
+  position: RechnungPositionRead;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const qc = useQueryClient();
+  const [bezeichnung, setBezeichnung] = useState(position.bezeichnung ?? "");
+  const [einheit, setEinheit] = useState(position.einheit ?? "");
+  const [menge, setMenge] = useState(position.menge ?? "");
+  const [ep, setEp] = useState(position.einheitspreis ?? "");
+
+  useEffect(() => {
+    if (open) {
+      setBezeichnung(position.bezeichnung ?? "");
+      setEinheit(position.einheit ?? "");
+      setMenge(position.menge ?? "");
+      setEp(position.einheitspreis ?? "");
+    }
+  }, [open, position]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const res = await apiClient.PUT("/api/rechnung-position/{id}", {
+        params: { path: { id: position.id } },
+        body: {
+          row_version: position.row_version,
+          bezeichnung,
+          einheit: einheit || null,
+          menge: menge || null,
+          einheitspreis: ep || null,
+          menge_tender: position.menge_tender ?? null,
+          menge_aufmass: position.menge_aufmass ?? null,
+          vob_2_3_flag: position.vob_2_3_flag ?? false,
+          position_nr: position.position_nr ?? null,
+          lv_position_id: position.lv_position_id ?? null,
+          leistung_id: position.leistung_id ?? null,
+        },
+      });
+      return unwrap(res);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["rechnung-position", position.rechnung_id] });
+      onClose();
+    },
+    onError: (err) => toast.error(`Fehler: ${err instanceof Error ? err.message : String(err)}`),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader><DialogTitle>Position bearbeiten</DialogTitle></DialogHeader>
+        <div className="space-y-3 py-2">
+          <div>
+            <label htmlFor="edit-bez" className="text-sm font-medium">Bezeichnung</label>
+            <Input id="edit-bez" value={bezeichnung} onChange={(e) => setBezeichnung(e.target.value)} autoFocus />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label htmlFor="edit-einh" className="text-sm font-medium">Einheit</label>
+              <Input id="edit-einh" value={einheit} onChange={(e) => setEinheit(e.target.value)} placeholder="m²" />
+            </div>
+            <div>
+              <label htmlFor="edit-menge" className="text-sm font-medium">Menge</label>
+              <Input id="edit-menge" value={menge} onChange={(e) => setMenge(e.target.value)} placeholder="0,000" />
+              {position.menge_tender && (
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Angebot: {parseFloat(position.menge_tender).toLocaleString("de-DE", { minimumFractionDigits: 3 })}
+                </p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="edit-ep" className="text-sm font-medium">EP (netto)</label>
+              <Input id="edit-ep" value={ep} onChange={(e) => setEp(e.target.value)} placeholder="0,00" />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Abbrechen</Button>
+          <Button disabled={!bezeichnung || save.isPending} onClick={() => save.mutate()}>Speichern</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Check result row ──────────────────────────────────────────────────────────
 
 const RULE_LABELS: Record<string, string> = {
@@ -190,6 +282,7 @@ export function RechnungDetail() {
   const qc = useQueryClient();
 
   const [showAddPos, setShowAddPos] = useState(false);
+  const [editingPos, setEditingPos] = useState<RechnungPositionRead | null>(null);
   const [nachlassBetrag, setNachlassBetrag] = useState("");
   const [zuschlagBetrag, setZuschlagBetrag] = useState("");
   const [checkResults, setCheckResults] = useState<CheckResultRead[] | null>(null);
@@ -212,8 +305,14 @@ export function RechnungDetail() {
     queryFn: async () => unwrap(await apiClient.GET("/api/auftraggeber")) as AuftraggeberRead[],
   });
   const { data: projekte } = useQuery<ProjektRead[]>({
-    queryKey: ["projekt", ""],
+    queryKey: ["projekt"],
     queryFn: async () => unwrap(await apiClient.GET("/api/projekt", {})) as ProjektRead[],
+  });
+  const { data: linkedAngebot } = useQuery<AngebotRead>({
+    queryKey: ["angebot", rechnung?.angebot_id],
+    queryFn: async () =>
+      unwrap(await apiClient.GET("/api/angebot/{id}", { params: { path: { id: rechnung!.angebot_id! } } })) as AngebotRead,
+    enabled: !!rechnung?.angebot_id,
   });
 
   const agMap = new Map(auftraggeber?.map((ag) => [ag.id, ag]) ?? []);
@@ -343,6 +442,17 @@ export function RechnungDetail() {
             {proj ? ` · ${proj.name}` : ""}
             {rechnung.rechnungsdatum ? ` · ${rechnung.rechnungsdatum}` : ""}
           </p>
+          {linkedAngebot && (
+            <p className="text-xs text-muted-foreground/70 mt-0.5">
+              Aus Angebot{" "}
+              <Link
+                to={`/office/angebote/${linkedAngebot.id}/review`}
+                className="underline hover:text-foreground"
+              >
+                {linkedAngebot.angebotsnummer ?? linkedAngebot.id.slice(0, 8) + "…"}
+              </Link>
+            </p>
+          )}
         </div>
       </div>
 
@@ -369,43 +479,66 @@ export function RechnungDetail() {
                     <TableHead className="w-8">#</TableHead>
                     <TableHead>Bezeichnung</TableHead>
                     <TableHead className="w-16">Einheit</TableHead>
-                    <TableHead className="w-20 text-right">Menge</TableHead>
+                    <TableHead className="w-24 text-right">Menge</TableHead>
                     <TableHead className="w-24 text-right">EP netto</TableHead>
                     <TableHead className="w-24 text-right">Gesamt</TableHead>
-                    {isDraft && <TableHead className="w-8" />}
+                    {isDraft && <TableHead className="w-14" />}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {positions.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {p.position_nr ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-sm">{p.bezeichnung}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{p.einheit ?? "—"}</TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        {p.menge ? parseFloat(p.menge).toLocaleString("de-DE", { minimumFractionDigits: 3 }) : "—"}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm">
-                        {p.einheitspreis ? `${fmt(p.einheitspreis)} €` : "—"}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm font-medium">
-                        {p.gesamtpreis ? `${fmt(p.gesamtpreis)} €` : "—"}
-                      </TableCell>
-                      {isDraft && (
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                            onClick={() => deletePosMutation.mutate(p.id)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                  {positions.map((p) => {
+                    const mengeChanged =
+                      p.menge_tender &&
+                      p.menge &&
+                      parseFloat(p.menge) !== parseFloat(p.menge_tender);
+                    return (
+                      <TableRow key={p.id}>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {p.position_nr ?? "—"}
                         </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
+                        <TableCell className="text-sm">{p.bezeichnung}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{p.einheit ?? "—"}</TableCell>
+                        <TableCell className="text-right font-mono text-sm">
+                          <span className={mengeChanged ? "text-amber-700" : ""}>
+                            {p.menge ? parseFloat(p.menge).toLocaleString("de-DE", { minimumFractionDigits: 3 }) : "—"}
+                          </span>
+                          {mengeChanged && (
+                            <span className="block text-[10px] text-muted-foreground/60 font-sans">
+                              Angebot: {parseFloat(p.menge_tender!).toLocaleString("de-DE", { minimumFractionDigits: 3 })}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-sm">
+                          {p.einheitspreis ? `${fmt(p.einheitspreis)} €` : "—"}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-sm font-medium">
+                          {p.gesamtpreis ? `${fmt(p.gesamtpreis)} €` : "—"}
+                        </TableCell>
+                        {isDraft && (
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                                onClick={() => setEditingPos(p)}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                onClick={() => deletePosMutation.mutate(p.id)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -590,6 +723,14 @@ export function RechnungDetail() {
         open={showAddPos}
         onClose={() => setShowAddPos(false)}
       />
+      {editingPos && (
+        <EditPositionDialog
+          key={editingPos.id}
+          position={editingPos}
+          open={!!editingPos}
+          onClose={() => setEditingPos(null)}
+        />
+      )}
     </div>
   );
 }

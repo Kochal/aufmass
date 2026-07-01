@@ -157,17 +157,63 @@ def create_rechnung(
     principal: Principal = Depends(get_principal),
     conn: Connection = Depends(db_session),
 ):
+    auftraggeber_id = body.auftraggeber_id
+    projekt_id = body.projekt_id
+
+    if body.angebot_id:
+        angebot = conn.execute(
+            "select auftraggeber_id, projekt_id from angebot "
+            "where id=%s and deleted_at is null",
+            (str(body.angebot_id),),
+        ).fetchone()
+        if angebot is None:
+            raise HTTPException(404, detail="Angebot not found")
+        auftraggeber_id = angebot["auftraggeber_id"]
+        projekt_id = angebot["projekt_id"]
+
     with db_errors():
         row = conn.execute(
-            "insert into rechnung(tenant_id, auftraggeber_id, projekt_id, waehrung) "
-            "values (%s,%s,%s,%s) returning *",
+            "insert into rechnung(tenant_id, auftraggeber_id, projekt_id, angebot_id, waehrung) "
+            "values (%s,%s,%s,%s,%s) returning *",
             (
                 str(principal.tenant_id),
-                str(body.auftraggeber_id) if body.auftraggeber_id else None,
-                str(body.projekt_id) if body.projekt_id else None,
+                str(auftraggeber_id) if auftraggeber_id else None,
+                str(projekt_id) if projekt_id else None,
+                str(body.angebot_id) if body.angebot_id else None,
                 body.waehrung,
             ),
         ).fetchone()
+
+    if body.angebot_id:
+        lv_positions = conn.execute(
+            "select p.* from lv_position p "
+            "join lv l on l.id = p.lv_id "
+            "where l.angebot_id=%s and p.deleted_at is null and l.deleted_at is null "
+            "order by p.oz",
+            (str(body.angebot_id),),
+        ).fetchall()
+        for i, p in enumerate(lv_positions, 1):
+            conn.execute(
+                "insert into rechnung_position("
+                "  tenant_id, rechnung_id, position_nr, bezeichnung, einheit,"
+                "  einheitspreis, menge_tender, menge, vob_2_3_flag,"
+                "  lv_position_id, leistung_id"
+                ") values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+                (
+                    str(principal.tenant_id),
+                    str(row["id"]),
+                    i,
+                    p["kurztext"],
+                    p["einheit"],
+                    p["einheitspreis"],
+                    p["menge"],
+                    p["menge"],
+                    False,
+                    str(p["id"]),
+                    str(p["matched_leistung_id"]) if p.get("matched_leistung_id") else None,
+                ),
+            )
+
     return row
 
 

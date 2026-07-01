@@ -3915,6 +3915,8 @@ export interface components {
             auftraggeber_id?: string | null;
             /** Projekt Id */
             projekt_id?: string | null;
+            /** Angebot Id */
+            angebot_id?: string | null;
             /**
              * Waehrung
              * @default EUR
@@ -4074,6 +4076,8 @@ export interface components {
             auftraggeber_id?: string | null;
             /** Projekt Id */
             projekt_id?: string | null;
+            /** Angebot Id */
+            angebot_id?: string | null;
             /** Rechnungsnummer */
             rechnungsnummer?: string | null;
             /** Status */

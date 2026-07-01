@@ -53,11 +53,12 @@ function StatusBadge({ status }: { status: string }) {
 function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string) => void }) {
   const qc = useQueryClient();
   const [direktrechnung, setDirektrechnung] = useState(false);
+  const [angebotId, setAngebotId] = useState("");
   const [auftraggeberId, setAuftraggeberId] = useState("");
   const [projektId, setProjektId] = useState("");
 
   const { data: angebote } = useQuery<AngebotRead[]>({
-    queryKey: ["angebot", { forRechnung: true }],
+    queryKey: ["angebot"],
     queryFn: async () => unwrap(await apiClient.GET("/api/angebot", {})) as AngebotRead[],
     enabled: open,
   });
@@ -72,31 +73,34 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string)
     enabled: open,
   });
 
+  const agMap = new Map((auftraggeber ?? []).map((ag) => [ag.id, ag.name]));
+  const projMap = new Map((projekte ?? []).map((p) => [p.id, p.name]));
+
   const activeAngebote = (angebote ?? []).filter(
     (a) => a.status !== "cancelled" && a.status !== "superseded",
   );
-  const allowedAgIds = new Set(activeAngebote.map((a) => a.auftraggeber_id));
-  const allowedProjIds = new Set(
-    activeAngebote
-      .filter((a) => a.auftraggeber_id === auftraggeberId && a.projekt_id)
-      .map((a) => a.projekt_id as string),
-  );
+  const angebotOptions = activeAngebote.map((a) => {
+    const ag = agMap.get(a.auftraggeber_id) ?? "—";
+    const proj = a.projekt_id ? projMap.get(a.projekt_id) : null;
+    const nr = a.angebotsnummer ?? new Date(a.created_at).toLocaleDateString("de-DE");
+    return { value: a.id, label: proj ? `${ag} / ${proj} — ${nr}` : `${ag} — ${nr}` };
+  });
 
-  const agOptions = direktrechnung
-    ? (auftraggeber ?? []).map((ag) => ({ value: ag.id, label: ag.name }))
-    : (auftraggeber ?? []).filter((ag) => allowedAgIds.has(ag.id)).map((ag) => ({ value: ag.id, label: ag.name }));
+  const selectedAngebot = angebote?.find((a) => a.id === angebotId);
 
-  const projOptions = direktrechnung
-    ? (projekte ?? []).filter((p) => !auftraggeberId || p.auftraggeber_id === auftraggeberId).map((p) => ({ value: p.id, label: p.name }))
-    : (projekte ?? []).filter((p) => allowedProjIds.has(p.id)).map((p) => ({ value: p.id, label: p.name }));
-
-  function reset() { setDirektrechnung(false); setAuftraggeberId(""); setProjektId(""); }
+  function reset() {
+    setDirektrechnung(false);
+    setAngebotId("");
+    setAuftraggeberId("");
+    setProjektId("");
+  }
 
   const create = useMutation({
     mutationFn: async () => {
-      const res = await apiClient.POST("/api/rechnung", {
-        body: { auftraggeber_id: auftraggeberId || null, projekt_id: projektId || null, waehrung: "EUR" },
-      });
+      const body = direktrechnung
+        ? { auftraggeber_id: auftraggeberId || null, projekt_id: projektId || null, waehrung: "EUR" }
+        : { angebot_id: angebotId || null, waehrung: "EUR" };
+      const res = await apiClient.POST("/api/rechnung", { body });
       return unwrap(res) as RechnungRead;
     },
     onSuccess: (data) => {
@@ -106,24 +110,54 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string)
     },
   });
 
+  const canCreate = direktrechnung ? true : !!angebotId;
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose(); } }}>
       <DialogContent className="max-w-sm">
         <DialogHeader><DialogTitle>Neue Rechnung</DialogTitle></DialogHeader>
         <div className="space-y-4 py-2">
-          <div>
-            <label className="text-sm font-medium">Auftraggeber</label>
-            <Combobox className="mt-1" options={agOptions} value={auftraggeberId} onChange={(v) => { setAuftraggeberId(v); setProjektId(""); }} placeholder="Auftraggeber auswählen …" allowClear />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Projekt</label>
-            <Combobox className="mt-1" options={projOptions} value={projektId} onChange={setProjektId} placeholder="— kein —" allowClear />
-          </div>
-          <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
+          {!direktrechnung ? (
+            <div>
+              <label className="text-sm font-medium">Angebot *</label>
+              <Combobox
+                className="mt-1"
+                options={angebotOptions}
+                value={angebotId}
+                onChange={(v) => setAngebotId(v ?? "")}
+                placeholder="Angebot auswählen…"
+                searchPlaceholder="Suchen…"
+                allowClear
+              />
+              {selectedAngebot && (
+                <div className="mt-2 text-xs text-muted-foreground space-y-0.5 pl-1">
+                  <div>Auftraggeber: <span className="text-foreground">{agMap.get(selectedAngebot.auftraggeber_id) ?? "—"}</span></div>
+                  {selectedAngebot.projekt_id && (
+                    <div>Projekt: <span className="text-foreground">{projMap.get(selectedAngebot.projekt_id) ?? "—"}</span></div>
+                  )}
+                  <div className="text-[11px] text-muted-foreground/60">
+                    Positionen werden aus dem Angebot importiert und können angepasst werden.
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div>
+                <label className="text-sm font-medium">Auftraggeber</label>
+                <Combobox className="mt-1" options={(auftraggeber ?? []).map((ag) => ({ value: ag.id, label: ag.name }))} value={auftraggeberId} onChange={(v) => { setAuftraggeberId(v); setProjektId(""); }} placeholder="Auftraggeber auswählen…" allowClear />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Projekt</label>
+                <Combobox className="mt-1" options={(projekte ?? []).filter((p) => !auftraggeberId || p.auftraggeber_id === auftraggeberId).map((p) => ({ value: p.id, label: p.name }))} value={projektId} onChange={setProjektId} placeholder="— kein —" allowClear />
+              </div>
+            </>
+          )}
+          <label className="flex items-center gap-2 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={direktrechnung}
-              onChange={(e) => { setDirektrechnung(e.target.checked); setAuftraggeberId(""); setProjektId(""); }}
+              onChange={(e) => { setDirektrechnung(e.target.checked); setAngebotId(""); setAuftraggeberId(""); setProjektId(""); }}
               className="rounded"
             />
             <span className="text-sm text-muted-foreground">Direktrechnung (ohne Angebot)</span>
@@ -131,7 +165,7 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string)
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => { reset(); onClose(); }}>Abbrechen</Button>
-          <Button disabled={create.isPending} onClick={() => create.mutate()}>Anlegen</Button>
+          <Button disabled={!canCreate || create.isPending} onClick={() => create.mutate()}>Anlegen</Button>
         </DialogFooter>
         {create.isError && (
           <p className="text-sm text-destructive mt-2">{(create.error as Error)?.message ?? "Fehler"}</p>
