@@ -79,3 +79,35 @@ Semantic after fix:
 - Manual position (any price, with or without catalog) → `confirmed` immediately
 - Editing menge/EP on a confirmed position → stays `confirmed`
 - Reassigning catalog entry on any position → `confirmed`
+
+## List tables — sort, search, Auftraggeber/Projekt columns
+
+All four main lists now share a uniform interaction pattern:
+
+**Sort**: clicking a column header sorts ascending; clicking again reverses to
+descending. The active column shows ↑/↓; inactive columns show ↕ (30% opacity).
+Implemented via shared `SortHead` component at
+`web/src/components/ui/sort-head.tsx` — takes `col`, `label`, `sortCol`,
+`sortDir`, `onSort`, optional `className` and `align` (`"start"` | `"end"`).
+
+**Search**: a search box in each header bar filters the already-loaded data.
+Count in the heading shows `n / total` when a search or filter is active.
+Fields searched per list:
+- Angebote: Angebotsnummer, Auftraggeber name, Projekt name
+- Auftraggeber: name, Kundennummer, Leitweg-ID
+- Projekte: name, Nummer, Auftraggeber name
+- Rechnungen: Rechnungsnummer, Auftraggeber name, Projekt name
+
+**Status filter** (Projekte, Rechnungen): the Combobox dropdown remains but
+filtering switched from server-side query param to client-side so it composes
+with search and sort without extra API calls. Query key simplified from
+`["projekt", statusFilter]` → `["projekt"]` (always fetch all).
+
+**AngebotList new columns**: Auftraggeber and Projekt added as the first two
+columns. AngebotList now fetches auftraggeber and projekte alongside angebote
+(both already in cache via other screens), builds agMap/projMap for name
+resolution, and uses them in both the filter pass and the table rows. Version
+column dropped from the list (still visible in detail page).
+
+Default sort: Angebote by `created_at` desc, Auftraggeber by `name` asc,
+Projekte by `name` asc, Rechnungen by `rechnungsdatum` desc.

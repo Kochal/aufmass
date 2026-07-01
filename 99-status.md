@@ -3,6 +3,16 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-07-01 (aa): List tables — sort, search, Auftraggeber/Projekt columns.
+  All four main lists (Angebote, Auftraggeber, Projekte, Rechnungen) now have:
+  column-header sort (click for asc, again for desc, ↕ when unsorted) and a
+  search box filtering across relevant text fields. Count shows `n / total`
+  when active. Status filter in Projekte/Rechnungen switched from server-side
+  query param to client-side (fetches all, filters locally) so it composes
+  with sort and search. AngebotList gained Auftraggeber and Projekt columns
+  (Auftraggeber/Projekt fetched alongside; agMap/projMap for name resolution).
+  Shared `SortHead` component at `web/src/components/ui/sort-head.tsx`.
+  See notes/ui/2026-07-01-workflow-ux-improvements.md.
 - 2026-07-01 (z): match_status fix — manual entries always confirmed; edits
   preserve status. `AddPositionDialog` changed from `selectedLeistungId ?
   "confirmed" : "review"` to always `"confirmed"` (source=manual, user wrote
