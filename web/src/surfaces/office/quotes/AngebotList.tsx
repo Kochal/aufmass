@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
-import { Plus, ArrowRight, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, FileText, Search, ArrowRight } from "lucide-react";
 import { apiClient, unwrap } from "@/lib/api";
 import {
   Table,
@@ -23,6 +23,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Combobox } from "@/components/ui/combobox";
+import { SortHead } from "@/components/ui/sort-head";
 import type { components } from "@/api/schema";
 
 type AngebotRead = components["schemas"]["AngebotRead"];
@@ -38,23 +39,13 @@ const STATUS_CFG: Record<string, { label: string; variant: string }> = {
 
 function statusBadge(status: string) {
   const cfg = STATUS_CFG[status] ?? { label: status, variant: "outline" };
-  return (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    <Badge variant={cfg.variant as any} className="text-xs">
-      {cfg.label}
-    </Badge>
-  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return <Badge variant={cfg.variant as any} className="text-xs">{cfg.label}</Badge>;
 }
 
 // ── Create dialog ─────────────────────────────────────────────────────────────
 
-function CreateAngebotDialog({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
+function CreateAngebotDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [auftraggeberId, setAuftraggeberId] = useState("");
@@ -72,19 +63,16 @@ function CreateAngebotDialog({
   });
 
   const { data: projekte } = useQuery<ProjektRead[]>({
-    queryKey: ["projekt", ""],
+    queryKey: ["projekt"],
     queryFn: async () =>
       unwrap(await apiClient.GET("/api/projekt", {})) as ProjektRead[],
     enabled: open,
   });
 
   function reset() {
-    setAuftraggeberId("");
-    setProjektId("");
-    setNewAgMode(false);
-    setNewAgName("");
-    setNewProjMode(false);
-    setNewProjName("");
+    setAuftraggeberId(""); setProjektId("");
+    setNewAgMode(false); setNewAgName("");
+    setNewProjMode(false); setNewProjName("");
   }
 
   const createAg = useMutation({
@@ -111,7 +99,7 @@ function CreateAngebotDialog({
       return unwrap(res) as ProjektRead;
     },
     onSuccess: (proj) => {
-      qc.invalidateQueries({ queryKey: ["projekt", ""] });
+      qc.invalidateQueries({ queryKey: ["projekt"] });
       setProjektId(proj.id);
       setNewProjName("");
       setNewProjMode(false);
@@ -121,11 +109,7 @@ function CreateAngebotDialog({
   const createAngebot = useMutation({
     mutationFn: async () => {
       const res = await apiClient.POST("/api/angebot", {
-        body: {
-          auftraggeber_id: auftraggeberId,
-          projekt_id: projektId || undefined,
-          waehrung: "EUR",
-        },
+        body: { auftraggeber_id: auftraggeberId, projekt_id: projektId || undefined, waehrung: "EUR" },
       });
       return unwrap(res) as AngebotRead;
     },
@@ -138,7 +122,6 @@ function CreateAngebotDialog({
   });
 
   const agOptions = (auftraggeber ?? []).map((a) => ({ value: a.id, label: a.name }));
-
   const projektOptions = (projekte ?? [])
     .filter((p) => !auftraggeberId || p.auftraggeber_id === auftraggeberId)
     .map((p) => ({ value: p.id, label: p.name }));
@@ -146,11 +129,8 @@ function CreateAngebotDialog({
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose(); } }}>
       <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Neues Angebot</DialogTitle>
-        </DialogHeader>
+        <DialogHeader><DialogTitle>Neues Angebot</DialogTitle></DialogHeader>
         <div className="space-y-3 py-2">
-          {/* Auftraggeber */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-sm font-medium">Auftraggeber *</label>
@@ -159,8 +139,7 @@ function CreateAngebotDialog({
                 onClick={() => { setNewAgMode((m) => !m); setNewAgName(""); }}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
               >
-                <Plus className="h-3 w-3" />
-                Neu
+                <Plus className="h-3 w-3" />Neu
               </button>
             </div>
             <Combobox
@@ -180,19 +159,13 @@ function CreateAngebotDialog({
                   placeholder="Name des Auftraggebers"
                   className="h-8 text-sm flex-1"
                 />
-                <Button
-                  size="sm"
-                  className="h-8"
-                  disabled={!newAgName.trim() || createAg.isPending}
-                  onClick={() => createAg.mutate()}
-                >
+                <Button size="sm" className="h-8" disabled={!newAgName.trim() || createAg.isPending} onClick={() => createAg.mutate()}>
                   Anlegen
                 </Button>
               </div>
             )}
           </div>
 
-          {/* Projekt */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-sm font-medium">Projekt (optional)</label>
@@ -202,8 +175,7 @@ function CreateAngebotDialog({
                 onClick={() => { setNewProjMode((m) => !m); setNewProjName(""); }}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
               >
-                <Plus className="h-3 w-3" />
-                Neu
+                <Plus className="h-3 w-3" />Neu
               </button>
             </div>
             <Combobox
@@ -224,12 +196,7 @@ function CreateAngebotDialog({
                   placeholder="Projektname"
                   className="h-8 text-sm flex-1"
                 />
-                <Button
-                  size="sm"
-                  className="h-8"
-                  disabled={!newProjName.trim() || createProj.isPending}
-                  onClick={() => createProj.mutate()}
-                >
+                <Button size="sm" className="h-8" disabled={!newProjName.trim() || createProj.isPending} onClick={() => createProj.mutate()}>
                   Anlegen
                 </Button>
               </div>
@@ -238,10 +205,7 @@ function CreateAngebotDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => { reset(); onClose(); }}>Abbrechen</Button>
-          <Button
-            disabled={!auftraggeberId || createAngebot.isPending}
-            onClick={() => createAngebot.mutate()}
-          >
+          <Button disabled={!auftraggeberId || createAngebot.isPending} onClick={() => createAngebot.mutate()}>
             Erstellen
           </Button>
         </DialogFooter>
@@ -258,23 +222,77 @@ function CreateAngebotDialog({
 // ── List ──────────────────────────────────────────────────────────────────────
 
 export function AngebotList() {
+  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
+  const [search, setSearch] = useState("");
+  const [sortCol, setSortCol] = useState("created_at");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  function toggleSort(col: string) {
+    if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortCol(col); setSortDir("asc"); }
+  }
 
   const { data: angebote, isLoading, error } = useQuery({
     queryKey: ["angebot"],
-    queryFn: async () => {
-      const res = await apiClient.GET("/api/angebot", {});
-      return unwrap(res);
-    },
+    queryFn: async () => unwrap(await apiClient.GET("/api/angebot", {})),
+  });
+
+  const { data: auftraggeber } = useQuery<AuftraggeberRead[]>({
+    queryKey: ["auftraggeber"],
+    queryFn: async () => unwrap(await apiClient.GET("/api/auftraggeber", {})) as AuftraggeberRead[],
+  });
+
+  const { data: projekte } = useQuery<ProjektRead[]>({
+    queryKey: ["projekt"],
+    queryFn: async () => unwrap(await apiClient.GET("/api/projekt", {})) as ProjektRead[],
+  });
+
+  const agMap = new Map((auftraggeber ?? []).map((ag) => [ag.id, ag.name]));
+  const projMap = new Map((projekte ?? []).map((p) => [p.id, p.name]));
+
+  let displayed: AngebotRead[] = [...((angebote as AngebotRead[]) ?? [])];
+  if (search.trim()) {
+    const q = search.toLowerCase();
+    displayed = displayed.filter(
+      (a) =>
+        (a.angebotsnummer ?? "").toLowerCase().includes(q) ||
+        (agMap.get(a.auftraggeber_id) ?? "").toLowerCase().includes(q) ||
+        (a.projekt_id ? (projMap.get(a.projekt_id) ?? "") : "").toLowerCase().includes(q),
+    );
+  }
+  displayed.sort((a, b) => {
+    let av: string | number = "";
+    let bv: string | number = "";
+    if (sortCol === "auftraggeber") {
+      av = agMap.get(a.auftraggeber_id) ?? "";
+      bv = agMap.get(b.auftraggeber_id) ?? "";
+    } else if (sortCol === "projekt") {
+      av = a.projekt_id ? (projMap.get(a.projekt_id) ?? "") : "";
+      bv = b.projekt_id ? (projMap.get(b.projekt_id) ?? "") : "";
+    } else if (sortCol === "angebotsnummer") {
+      av = a.angebotsnummer ?? "";
+      bv = b.angebotsnummer ?? "";
+    } else if (sortCol === "status") {
+      av = a.status;
+      bv = b.status;
+    } else if (sortCol === "summe_brutto") {
+      av = parseFloat(a.summe_brutto ?? "0");
+      bv = parseFloat(b.summe_brutto ?? "0");
+    } else {
+      av = a.created_at;
+      bv = b.created_at;
+    }
+    if (av < bv) return sortDir === "asc" ? -1 : 1;
+    if (av > bv) return sortDir === "asc" ? 1 : -1;
+    return 0;
   });
 
   if (isLoading) {
     return (
       <div className="p-6 space-y-3">
         <Skeleton className="h-8 w-48" />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full" />
-        ))}
+        {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
       </div>
     );
   }
@@ -283,17 +301,13 @@ export function AngebotList() {
     return (
       <div className="p-6">
         <p className="text-sm text-destructive">
-          Fehler beim Laden der Angebote:{" "}
-          {error instanceof Error ? error.message : String(error)}
+          Fehler beim Laden: {error instanceof Error ? error.message : String(error)}
         </p>
       </div>
     );
   }
 
-  const sorted = [...(angebote ?? [])].sort(
-    (a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-  );
+  const total = (angebote as AngebotRead[] | undefined)?.length ?? 0;
 
   return (
     <div className="p-6 space-y-4">
@@ -301,89 +315,100 @@ export function AngebotList() {
         <div className="flex items-center gap-2">
           <FileText className="h-5 w-5 text-muted-foreground" />
           <h1 className="text-lg font-semibold">Angebote</h1>
-          {angebote && (
-            <span className="text-sm text-muted-foreground">
-              ({angebote.length})
-            </span>
-          )}
+          <span className="text-sm text-muted-foreground">
+            ({search ? `${displayed.length} / ${total}` : total})
+          </span>
         </div>
-        <Button size="sm" onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-1" />
-          Neues Angebot
-        </Button>
-      </div>
-
-      {sorted.length === 0 ? (
-        <div className="border rounded-lg p-12 text-center space-y-3">
-          <p className="text-muted-foreground text-sm">Noch keine Angebote.</p>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Suchen…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-8 pl-8 w-52 text-sm"
+            />
+          </div>
           <Button size="sm" onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4 mr-1" />
-            Neues Angebot erstellen
+            Neues Angebot
           </Button>
+        </div>
+      </div>
+
+      {displayed.length === 0 ? (
+        <div className="border rounded-lg p-12 text-center space-y-3">
+          <p className="text-muted-foreground text-sm">
+            {search ? "Keine Angebote gefunden." : "Noch keine Angebote."}
+          </p>
+          {!search && (
+            <Button size="sm" onClick={() => setShowCreate(true)}>
+              <Plus className="h-4 w-4 mr-1" />Neues Angebot erstellen
+            </Button>
+          )}
         </div>
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Angebotsnummer</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Version</TableHead>
-                <TableHead>Erstellt</TableHead>
-                <TableHead className="text-right">Brutto</TableHead>
+                <SortHead col="auftraggeber" label="Auftraggeber" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
+                <SortHead col="projekt" label="Projekt" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
+                <SortHead col="angebotsnummer" label="Angebotsnr." sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
+                <SortHead col="status" label="Status" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} className="w-28" />
+                <SortHead col="created_at" label="Erstellt" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} className="w-28" />
+                <SortHead col="summe_brutto" label="Brutto" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} className="w-36" align="end" />
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sorted.map((a) => (
-                <AngebotRow key={a.id} angebot={a} />
+              {displayed.map((a) => (
+                <TableRow
+                  key={a.id}
+                  className="cursor-pointer"
+                  onClick={() => navigate(`/office/angebote/${a.id}/review`)}
+                >
+                  <TableCell className="font-medium">
+                    {agMap.get(a.auftraggeber_id) ?? <span className="text-muted-foreground">—</span>}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {a.projekt_id ? (projMap.get(a.projekt_id) ?? "—") : "—"}
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">
+                    {a.angebotsnummer ?? (
+                      <span className="italic text-muted-foreground">Entwurf</span>
+                    )}
+                  </TableCell>
+                  <TableCell>{statusBadge(a.status)}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {new Date(a.created_at).toLocaleDateString("de-DE")}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-sm">
+                    {a.summe_brutto
+                      ? new Intl.NumberFormat("de-DE", {
+                          style: "currency",
+                          currency: a.waehrung ?? "EUR",
+                        }).format(parseFloat(a.summe_brutto))
+                      : "—"}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/office/angebote/${a.id}/review`); }}
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
       )}
 
-      <CreateAngebotDialog
-        open={showCreate}
-        onClose={() => setShowCreate(false)}
-      />
+      <CreateAngebotDialog open={showCreate} onClose={() => setShowCreate(false)} />
     </div>
-  );
-}
-
-function AngebotRow({ angebot }: { angebot: AngebotRead }) {
-  const navigate = useNavigate();
-  const to = `/office/angebote/${angebot.id}/review`;
-
-  return (
-    <TableRow className="cursor-pointer" onClick={() => navigate(to)}>
-      <TableCell className="font-mono text-sm">
-        {angebot.angebotsnummer ?? (
-          <span className="text-muted-foreground italic">nicht ausgestellt</span>
-        )}
-      </TableCell>
-      <TableCell>{statusBadge(angebot.status)}</TableCell>
-      <TableCell className="text-muted-foreground text-sm">
-        v{angebot.version_no}
-      </TableCell>
-      <TableCell className="text-muted-foreground text-sm">
-        {new Date(angebot.created_at).toLocaleDateString("de-DE")}
-      </TableCell>
-      <TableCell className="text-right font-mono text-sm">
-        {angebot.summe_brutto
-          ? new Intl.NumberFormat("de-DE", {
-              style: "currency",
-              currency: angebot.waehrung ?? "EUR",
-            }).format(parseFloat(angebot.summe_brutto))
-          : "—"}
-      </TableCell>
-      <TableCell>
-        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-          <Link to={to} title="Öffnen" onClick={(e) => e.stopPropagation()}>
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Button>
-      </TableCell>
-    </TableRow>
   );
 }
