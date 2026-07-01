@@ -3,6 +3,16 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-07-01 (ab): Per-column filters on all four list tables. Replaced the
+  global search box with a filter row (second `<TableRow>` in `<TableHeader>`):
+  `ColFilter` (text input) for text columns, `ColSelect` (native `<select>`)
+  for enum columns. Status dropdowns show German labels (Entwurf, Ausgestellt)
+  mapping to English DB values — the root of the bug with the global search.
+  Auftraggeber Typ filter added. Status Combobox removed from Projekte and
+  Rechnungen headers (redundant). "Filter zurücksetzen" link appears when any
+  filter is active. Shared components in
+  `web/src/components/ui/table-filters.tsx`.
+  See notes/ui/2026-07-01-workflow-ux-improvements.md.
 - 2026-07-01 (aa): List tables — sort, search, Auftraggeber/Projekt columns.
   All four main lists (Angebote, Auftraggeber, Projekte, Rechnungen) now have:
   column-header sort (click for asc, again for desc, ↕ when unsorted) and a

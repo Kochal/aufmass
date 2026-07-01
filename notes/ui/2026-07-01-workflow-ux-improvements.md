@@ -111,3 +111,31 @@ column dropped from the list (still visible in detail page).
 
 Default sort: Angebote by `created_at` desc, Auftraggeber by `name` asc,
 Projekte by `name` asc, Rechnungen by `rechnungsdatum` desc.
+
+## Per-column filters (replaced global search)
+
+The global search box was replaced with a **filter row** — a second `<TableRow>`
+inside `<TableHeader>`, with a filter control under each filterable column.
+
+**Root cause of the global search failure**: status values are stored in
+English (`"issued"`, `"draft"`) but displayed in German (`"Ausgestellt"`,
+`"Entwurf"`). A text search on the raw data could never match the German terms
+the user typed.
+
+**ColFilter** (`ColFilter` component, `table-filters.tsx`): a plain text input
+(`h-6 text-xs`) for substring filtering on string columns.
+
+**ColSelect** (`ColSelect` component, `table-filters.tsx`): a native `<select>`
+with an "Alle" default option and German labels mapping to English DB values.
+Used for:
+- Angebote Status: Entwurf/Ausgestellt/Beauftragt/Storniert → draft/issued/awarded/voided
+- Auftraggeber Typ: Privat/Gewerblich/Öffentlich → privat/gewerblich/oeffentlich
+- Projekte Status: all 10 values, labels from `STATUS_LABELS`
+- Rechnungen Status: Entwurf/Ausgestellt/Storniert → draft/issued/storniert
+
+**State**: each list has `filters: Record<string, string>` and a `setFilter(col, val)`
+helper. `hasFilter = Object.values(filters).some(v => !!v)` drives the count badge
+and the "Filter zurücksetzen" link.
+
+**Removed**: global search `<Input>` in header; status `<Combobox>` from
+Projekte and Rechnungen headers (superseded by column filter).
