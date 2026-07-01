@@ -236,15 +236,16 @@ def build_xrechnung(
 
     # ── BG-22 Document totals (LegalMonetaryTotal) ─────────────────────────
     lmt = _cac(inv, "LegalMonetaryTotal")
-    _cbc(lmt, "LineExtensionAmount", _fmt(line_ext), currencyID=currency)  # BT-106
     nachlass = Decimal(str(rechnung.get("nachlass_betrag") or 0))
     zuschlag = Decimal(str(rechnung.get("zuschlag_betrag") or 0))
+    # UBL 2.1 sequence: LineExtension → TaxExclusive → TaxInclusive → Allowance → Charge → Payable
+    _cbc(lmt, "LineExtensionAmount", _fmt(line_ext), currencyID=currency)      # BT-106
+    _cbc(lmt, "TaxExclusiveAmount", _fmt(summe_netto), currencyID=currency)    # BT-109
+    _cbc(lmt, "TaxInclusiveAmount", _fmt(summe_brutto), currencyID=currency)   # BT-112
     if nachlass:
-        _cbc(lmt, "AllowanceTotalAmount", _fmt(nachlass), currencyID=currency)  # BT-107
+        _cbc(lmt, "AllowanceTotalAmount", _fmt(nachlass), currencyID=currency) # BT-107
     if zuschlag:
-        _cbc(lmt, "ChargeTotalAmount", _fmt(zuschlag), currencyID=currency)  # BT-108
-    _cbc(lmt, "TaxExclusiveAmount", _fmt(summe_netto), currencyID=currency)  # BT-109
-    _cbc(lmt, "TaxInclusiveAmount", _fmt(summe_brutto), currencyID=currency)  # BT-112
+        _cbc(lmt, "ChargeTotalAmount", _fmt(zuschlag), currencyID=currency)    # BT-108
     _cbc(lmt, "PayableAmount", _fmt(summe_brutto), currencyID=currency)        # BT-115
 
     # ── BG-25 Invoice lines ────────────────────────────────────────────────
