@@ -183,7 +183,10 @@ function EditPositionDialog({
           einheitspreis: form.einheitspreis || undefined,
           matched_leistung_id,
           match_confidence: matched_leistung_id ? "1.00" : null,
-          match_status: "review",
+          match_status:
+            (matched_leistung_id && matched_leistung_id !== position.matched_leistung_id) || saveToKatalog
+              ? "confirmed"
+              : position.match_status,
           source: position.source,
           position_nr: position.position_nr,
         },
@@ -423,7 +426,7 @@ function AddPositionDialog({
           matched_leistung_id: selectedLeistungId || undefined,
           match_confidence: selectedLeistungId ? "1.00" : undefined,
           source: "manual",
-          match_status: selectedLeistungId ? "confirmed" : "review",
+          match_status: "confirmed",
         },
       });
       return unwrap(res);
