@@ -112,6 +112,37 @@ column dropped from the list (still visible in detail page).
 Default sort: Angebote by `created_at` desc, Auftraggeber by `name` asc,
 Projekte by `name` asc, Rechnungen by `rechnungsdatum` desc.
 
+## Rechnung: positions imported from Angebot (2026-07-01 session 2)
+
+### Backend
+Migration 0027 adds `rechnung.angebot_id uuid references angebot(id)`.
+`RechnungCreate` gains `angebot_id: UUID | None`. On create with `angebot_id`:
+- look up the Angebot's `auftraggeber_id` / `projekt_id` (overrides client values)
+- bulk-copy all `lv_position` rows (across all LVs of the Angebot) into
+  `rechnung_position`, setting `lv_position_id` for traceability, `menge_tender`
+  = `menge` = LV quantity, `einheitspreis` = LV EP, `bezeichnung` = `kurztext`.
+Direktrechnung (no `angebot_id`) path unchanged: manual AG/Projekt pickers,
+no position import.
+
+### CreateDialog (RechnungList.tsx)
+Angebot is now the primary picker (shows all active Angebote; label includes AG
+name + Projekt + Angebotsnummer). Once selected, AG and Projekt are shown as
+derived info (read-only). Direktrechnung checkbox switches back to manual
+AG/Projekt pickers. Anlegen is disabled until an Angebot is selected (or
+Direktrechnung is checked).
+
+### RechnungDetail.tsx
+- Linked Angebot shown below the subtitle as a link to `/review`.
+- Edit button (pencil icon) per position row → `EditPositionDialog` with
+  `bezeichnung`, `einheit`, `menge`, `einheitspreis` fields. Dialog shows
+  `menge_tender` as a hint below the Menge input if set. On save, preserves
+  all FK fields (`lv_position_id`, `leistung_id`, `menge_tender`,
+  `menge_aufmass`, `position_nr`, `vob_2_3_flag`) so traceability is not
+  lost through editing.
+- Amber diff indicator in the Menge column when `menge ≠ menge_tender`
+  (i.e., the billed quantity was changed vs what was quoted). The Angebot
+  quantity is shown in a sub-line.
+
 ## Per-column filters (replaced global search)
 
 The global search box was replaced with a **filter row** — a second `<TableRow>`

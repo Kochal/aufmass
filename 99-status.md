@@ -3,6 +3,17 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-07-01 (ac): Rechnung positions imported from Angebot on creation.
+  Migration 0027 adds `rechnung.angebot_id` FK. On create with an
+  `angebot_id`, all LV positions are bulk-copied into `rechnung_position`,
+  preserving `lv_position_id` traceability and `menge_tender` (quoted
+  quantity). CreateDialog redesigned: Angebot is now the primary picker;
+  Auftraggeber and Projekt are derived automatically. Direktrechnung checkbox
+  switches to manual pickers. RechnungDetail gains inline position editing
+  (pencil → dialog, preserves all FK fields), amber diff indicator when
+  billed `menge` differs from `menge_tender`, and a linked Angebot header
+  reference with link to /review. TypeScript clean (tsc -b --noEmit).
+  See notes/ui/2026-07-01-workflow-ux-improvements.md.
 - 2026-07-01 (ab): Per-column filters on all four list tables. Replaced the
   global search box with a filter row (second `<TableRow>` in `<TableHeader>`):
   `ColFilter` (text input) for text columns, `ColSelect` (native `<select>`)
