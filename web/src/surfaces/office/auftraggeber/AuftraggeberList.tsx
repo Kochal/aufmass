@@ -1,20 +1,21 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Users, Search } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
   TableCell,
+  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { SortHead } from "@/components/ui/sort-head";
+import { ColFilter, ColSelect } from "@/components/ui/table-filters";
 import type { components } from "@/api/schema";
-import { useState } from "react";
 
 type AuftraggeberRead = components["schemas"]["AuftraggeberRead"];
 type AuftraggeberTyp = "privat" | "gewerblich" | "oeffentlich";
@@ -25,13 +26,20 @@ const TYP_LABELS: Record<AuftraggeberTyp, string> = {
   oeffentlich: "Öffentlich",
 };
 
+const TYP_OPTIONS = (Object.entries(TYP_LABELS) as [AuftraggeberTyp, string][]).map(
+  ([v, label]) => ({ value: v, label }),
+);
+
 export function AuftraggeberList() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortCol, setSortCol] = useState("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
+  function setFilter(col: string, val: string) {
+    setFilters((f) => ({ ...f, [col]: val }));
+  }
   function toggleSort(col: string) {
     if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortCol(col); setSortDir("asc"); }
@@ -39,10 +47,7 @@ export function AuftraggeberList() {
 
   const { data: auftraggeber, isLoading } = useQuery<AuftraggeberRead[]>({
     queryKey: ["auftraggeber"],
-    queryFn: async () => {
-      const res = await apiClient.GET("/api/auftraggeber");
-      return unwrap(res) as AuftraggeberRead[];
-    },
+    queryFn: async () => unwrap(await apiClient.GET("/api/auftraggeber")) as AuftraggeberRead[],
   });
 
   const createAndOpen = useMutation({
@@ -59,14 +64,20 @@ export function AuftraggeberList() {
   });
 
   let displayed = [...(auftraggeber ?? [])];
-  if (search.trim()) {
-    const q = search.toLowerCase();
-    displayed = displayed.filter(
-      (ag) =>
-        ag.name.toLowerCase().includes(q) ||
-        (ag.kundennummer ?? "").toLowerCase().includes(q) ||
-        (ag.leitweg_id ?? "").toLowerCase().includes(q),
-    );
+  if (filters.kundennummer) {
+    const q = filters.kundennummer.toLowerCase();
+    displayed = displayed.filter((ag) => (ag.kundennummer ?? "").toLowerCase().includes(q));
+  }
+  if (filters.name) {
+    const q = filters.name.toLowerCase();
+    displayed = displayed.filter((ag) => ag.name.toLowerCase().includes(q));
+  }
+  if (filters.typ) {
+    displayed = displayed.filter((ag) => ag.typ === filters.typ);
+  }
+  if (filters.leitweg_id) {
+    const q = filters.leitweg_id.toLowerCase();
+    displayed = displayed.filter((ag) => (ag.leitweg_id ?? "").toLowerCase().includes(q));
   }
   displayed.sort((a, b) => {
     let av = "";
@@ -81,6 +92,7 @@ export function AuftraggeberList() {
   });
 
   const total = auftraggeber?.length ?? 0;
+  const hasFilter = Object.values(filters).some((v) => !!v);
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -89,24 +101,18 @@ export function AuftraggeberList() {
           <Users className="h-5 w-5 text-muted-foreground" />
           <h1 className="text-xl font-semibold">Auftraggeber</h1>
           <span className="text-sm text-muted-foreground">
-            ({search ? `${displayed.length} / ${total}` : total})
+            ({hasFilter ? `${displayed.length} / ${total}` : total})
           </span>
+          {hasFilter && (
+            <button type="button" onClick={() => setFilters({})} className="text-xs text-muted-foreground hover:text-foreground underline">
+              Filter zurücksetzen
+            </button>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="Suchen…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8 w-48 text-sm"
-            />
-          </div>
-          <Button size="sm" disabled={createAndOpen.isPending} onClick={() => createAndOpen.mutate()}>
-            <Plus className="h-4 w-4 mr-1" />
-            Neu anlegen
-          </Button>
-        </div>
+        <Button size="sm" disabled={createAndOpen.isPending} onClick={() => createAndOpen.mutate()}>
+          <Plus className="h-4 w-4 mr-1" />
+          Neu anlegen
+        </Button>
       </div>
 
       {isLoading ? (
@@ -118,13 +124,8 @@ export function AuftraggeberList() {
           <Users className="h-10 w-10 text-muted-foreground/40" />
           <p className="text-muted-foreground">Noch keine Auftraggeber angelegt.</p>
           <Button variant="outline" size="sm" disabled={createAndOpen.isPending} onClick={() => createAndOpen.mutate()}>
-            <Plus className="h-4 w-4 mr-1" />
-            Ersten Auftraggeber anlegen
+            <Plus className="h-4 w-4 mr-1" />Ersten Auftraggeber anlegen
           </Button>
-        </div>
-      ) : displayed.length === 0 ? (
-        <div className="border rounded-md p-12 text-center">
-          <p className="text-muted-foreground text-sm">Keine Auftraggeber gefunden.</p>
         </div>
       ) : (
         <div className="border rounded-md">
@@ -136,9 +137,29 @@ export function AuftraggeberList() {
                 <SortHead col="typ" label="Typ" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} className="w-28" />
                 <SortHead col="leitweg_id" label="Leitweg-ID" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} />
               </TableRow>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColFilter value={filters.kundennummer ?? ""} onChange={(v) => setFilter("kundennummer", v)} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColFilter value={filters.name ?? ""} onChange={(v) => setFilter("name", v)} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColSelect value={filters.typ ?? ""} onChange={(v) => setFilter("typ", v)} options={TYP_OPTIONS} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColFilter value={filters.leitweg_id ?? ""} onChange={(v) => setFilter("leitweg_id", v)} />
+                </TableHead>
+              </TableRow>
             </TableHeader>
             <TableBody>
-              {displayed.map((ag) => (
+              {displayed.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="py-12 text-center text-sm text-muted-foreground">
+                    Keine Auftraggeber gefunden.
+                  </TableCell>
+                </TableRow>
+              ) : displayed.map((ag) => (
                 <TableRow
                   key={ag.id}
                   className="cursor-pointer hover:bg-accent/50"

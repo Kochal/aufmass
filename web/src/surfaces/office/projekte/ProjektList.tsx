@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, FolderOpen, Search } from "lucide-react";
+import { Plus, FolderOpen } from "lucide-react";
 import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,10 +18,12 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { SortHead } from "@/components/ui/sort-head";
+import { ColFilter, ColSelect } from "@/components/ui/table-filters";
 import type { components } from "@/api/schema";
 
 type ProjektRead = components["schemas"]["ProjektRead"];
@@ -54,6 +56,10 @@ const STATUS_COLORS: Record<ProjektStatus, string> = {
   storniert: "bg-red-100 text-red-700",
 };
 
+const STATUS_OPTIONS = (Object.entries(STATUS_LABELS) as [ProjektStatus, string][]).map(
+  ([v, label]) => ({ value: v, label }),
+);
+
 function StatusBadge({ status }: { status: ProjektStatus }) {
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[status]}`}>
@@ -74,15 +80,12 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: () => void })
 
   const create = useMutation({
     mutationFn: async () => {
-      const res = await apiClient.POST("/api/projekt", {
-        body: { name, auftraggeber_id: auftraggeberId },
-      });
+      const res = await apiClient.POST("/api/projekt", { body: { name, auftraggeber_id: auftraggeberId } });
       return unwrap(res);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["projekt"] });
-      setName("");
-      setAuftraggeberId("");
+      setName(""); setAuftraggeberId("");
       onClose();
     },
   });
@@ -146,11 +149,13 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: () => void })
 export function ProjektList() {
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ProjektStatus | "">("");
+  const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortCol, setSortCol] = useState("name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
+  function setFilter(col: string, val: string) {
+    setFilters((f) => ({ ...f, [col]: val }));
+  }
   function toggleSort(col: string) {
     if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortCol(col); setSortDir("asc"); }
@@ -169,15 +174,20 @@ export function ProjektList() {
   const agMap = new Map((auftraggeber ?? []).map((ag) => [ag.id, ag.name]));
 
   let displayed = [...(projekte ?? [])];
-  if (statusFilter) displayed = displayed.filter((p) => p.status === statusFilter);
-  if (search.trim()) {
-    const q = search.toLowerCase();
-    displayed = displayed.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        (p.nummer ?? "").toLowerCase().includes(q) ||
-        (agMap.get(p.auftraggeber_id) ?? "").toLowerCase().includes(q),
-    );
+  if (filters.nummer) {
+    const q = filters.nummer.toLowerCase();
+    displayed = displayed.filter((p) => (p.nummer ?? "").toLowerCase().includes(q));
+  }
+  if (filters.name) {
+    const q = filters.name.toLowerCase();
+    displayed = displayed.filter((p) => p.name.toLowerCase().includes(q));
+  }
+  if (filters.auftraggeber) {
+    const q = filters.auftraggeber.toLowerCase();
+    displayed = displayed.filter((p) => (agMap.get(p.auftraggeber_id) ?? "").toLowerCase().includes(q));
+  }
+  if (filters.status) {
+    displayed = displayed.filter((p) => p.status === filters.status);
   }
   displayed.sort((a, b) => {
     let av = "";
@@ -194,6 +204,7 @@ export function ProjektList() {
   });
 
   const total = projekte?.length ?? 0;
+  const hasFilter = Object.values(filters).some((v) => !!v);
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -202,32 +213,18 @@ export function ProjektList() {
           <FolderOpen className="h-5 w-5 text-muted-foreground" />
           <h1 className="text-xl font-semibold">Projekte</h1>
           <span className="text-sm text-muted-foreground">
-            ({(search || statusFilter) ? `${displayed.length} / ${total}` : total})
+            ({hasFilter ? `${displayed.length} / ${total}` : total})
           </span>
+          {hasFilter && (
+            <button type="button" onClick={() => setFilters({})} className="text-xs text-muted-foreground hover:text-foreground underline">
+              Filter zurücksetzen
+            </button>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="Suchen…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8 w-48 text-sm"
-            />
-          </div>
-          <Combobox
-            className="w-44"
-            options={(Object.keys(STATUS_LABELS) as ProjektStatus[]).map((s) => ({ value: s, label: STATUS_LABELS[s] }))}
-            value={statusFilter}
-            onChange={(v) => setStatusFilter(v as ProjektStatus | "")}
-            placeholder="Alle Status"
-            allowClear
-          />
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            Neues Projekt
-          </Button>
-        </div>
+        <Button size="sm" onClick={() => setShowCreate(true)}>
+          <Plus className="h-4 w-4 mr-1" />
+          Neues Projekt
+        </Button>
       </div>
 
       {isLoading ? (
@@ -242,10 +239,6 @@ export function ProjektList() {
             <Plus className="h-4 w-4 mr-1" />Erstes Projekt anlegen
           </Button>
         </div>
-      ) : displayed.length === 0 ? (
-        <div className="border rounded-md p-12 text-center">
-          <p className="text-muted-foreground text-sm">Keine Projekte gefunden.</p>
-        </div>
       ) : (
         <div className="border rounded-md">
           <Table>
@@ -258,21 +251,39 @@ export function ProjektList() {
                 <SortHead col="start_datum" label="Start" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} className="w-24" />
                 <SortHead col="end_datum" label="Ende" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} className="w-24" />
               </TableRow>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColFilter value={filters.nummer ?? ""} onChange={(v) => setFilter("nummer", v)} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColFilter value={filters.name ?? ""} onChange={(v) => setFilter("name", v)} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColFilter value={filters.auftraggeber ?? ""} onChange={(v) => setFilter("auftraggeber", v)} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColSelect value={filters.status ?? ""} onChange={(v) => setFilter("status", v)} options={STATUS_OPTIONS} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3" />
+                <TableHead className="py-1.5 px-3" />
+              </TableRow>
             </TableHeader>
             <TableBody>
-              {displayed.map((p) => (
+              {displayed.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">
+                    Keine Projekte gefunden.
+                  </TableCell>
+                </TableRow>
+              ) : displayed.map((p) => (
                 <TableRow
                   key={p.id}
                   className="cursor-pointer hover:bg-accent/50"
                   onClick={() => navigate(`/office/projekte/${p.id}`)}
                 >
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {p.nummer ?? "—"}
-                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{p.nummer ?? "—"}</TableCell>
                   <TableCell className="font-medium">{p.name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {agMap.get(p.auftraggeber_id) ?? "—"}
-                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{agMap.get(p.auftraggeber_id) ?? "—"}</TableCell>
                   <TableCell><StatusBadge status={p.status} /></TableCell>
                   <TableCell className="text-sm text-muted-foreground">{p.start_datum ?? "—"}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{p.end_datum ?? "—"}</TableCell>

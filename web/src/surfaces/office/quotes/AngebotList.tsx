@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus, FileText, Search, ArrowRight } from "lucide-react";
+import { Plus, FileText, ArrowRight } from "lucide-react";
 import { apiClient, unwrap } from "@/lib/api";
 import {
   Table,
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Combobox } from "@/components/ui/combobox";
 import { SortHead } from "@/components/ui/sort-head";
+import { ColFilter, ColSelect } from "@/components/ui/table-filters";
 import type { components } from "@/api/schema";
 
 type AngebotRead = components["schemas"]["AngebotRead"];
@@ -31,11 +32,13 @@ type AuftraggeberRead = components["schemas"]["AuftraggeberRead"];
 type ProjektRead = components["schemas"]["ProjektRead"];
 
 const STATUS_CFG: Record<string, { label: string; variant: string }> = {
-  draft: { label: "Entwurf", variant: "secondary" },
-  issued: { label: "Ausgestellt", variant: "confidence-high" },
-  awarded: { label: "Beauftragt", variant: "default" },
-  voided: { label: "Storniert", variant: "destructive" },
+  draft:   { label: "Entwurf",      variant: "secondary" },
+  issued:  { label: "Ausgestellt",  variant: "confidence-high" },
+  awarded: { label: "Beauftragt",   variant: "default" },
+  voided:  { label: "Storniert",    variant: "destructive" },
 };
+
+const STATUS_OPTIONS = Object.entries(STATUS_CFG).map(([v, c]) => ({ value: v, label: c.label }));
 
 function statusBadge(status: string) {
   const cfg = STATUS_CFG[status] ?? { label: status, variant: "outline" };
@@ -57,15 +60,13 @@ function CreateAngebotDialog({ open, onClose }: { open: boolean; onClose: () => 
 
   const { data: auftraggeber } = useQuery<AuftraggeberRead[]>({
     queryKey: ["auftraggeber"],
-    queryFn: async () =>
-      unwrap(await apiClient.GET("/api/auftraggeber", {})) as AuftraggeberRead[],
+    queryFn: async () => unwrap(await apiClient.GET("/api/auftraggeber", {})) as AuftraggeberRead[],
     enabled: open,
   });
 
   const { data: projekte } = useQuery<ProjektRead[]>({
     queryKey: ["projekt"],
-    queryFn: async () =>
-      unwrap(await apiClient.GET("/api/projekt", {})) as ProjektRead[],
+    queryFn: async () => unwrap(await apiClient.GET("/api/projekt", {})) as ProjektRead[],
     enabled: open,
   });
 
@@ -224,10 +225,13 @@ function CreateAngebotDialog({ open, onClose }: { open: boolean; onClose: () => 
 export function AngebotList() {
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
-  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortCol, setSortCol] = useState("created_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
+  function setFilter(col: string, val: string) {
+    setFilters((f) => ({ ...f, [col]: val }));
+  }
   function toggleSort(col: string) {
     if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortCol(col); setSortDir("asc"); }
@@ -252,41 +256,39 @@ export function AngebotList() {
   const projMap = new Map((projekte ?? []).map((p) => [p.id, p.name]));
 
   let displayed: AngebotRead[] = [...((angebote as AngebotRead[]) ?? [])];
-  if (search.trim()) {
-    const q = search.toLowerCase();
-    displayed = displayed.filter(
-      (a) =>
-        (a.angebotsnummer ?? "").toLowerCase().includes(q) ||
-        (agMap.get(a.auftraggeber_id) ?? "").toLowerCase().includes(q) ||
-        (a.projekt_id ? (projMap.get(a.projekt_id) ?? "") : "").toLowerCase().includes(q),
+  if (filters.auftraggeber) {
+    const q = filters.auftraggeber.toLowerCase();
+    displayed = displayed.filter((a) => (agMap.get(a.auftraggeber_id) ?? "").toLowerCase().includes(q));
+  }
+  if (filters.projekt) {
+    const q = filters.projekt.toLowerCase();
+    displayed = displayed.filter((a) =>
+      (a.projekt_id ? (projMap.get(a.projekt_id) ?? "") : "").toLowerCase().includes(q),
     );
+  }
+  if (filters.angebotsnummer) {
+    const q = filters.angebotsnummer.toLowerCase();
+    displayed = displayed.filter((a) => (a.angebotsnummer ?? "").toLowerCase().includes(q));
+  }
+  if (filters.status) {
+    displayed = displayed.filter((a) => a.status === filters.status);
   }
   displayed.sort((a, b) => {
     let av: string | number = "";
     let bv: string | number = "";
-    if (sortCol === "auftraggeber") {
-      av = agMap.get(a.auftraggeber_id) ?? "";
-      bv = agMap.get(b.auftraggeber_id) ?? "";
-    } else if (sortCol === "projekt") {
-      av = a.projekt_id ? (projMap.get(a.projekt_id) ?? "") : "";
-      bv = b.projekt_id ? (projMap.get(b.projekt_id) ?? "") : "";
-    } else if (sortCol === "angebotsnummer") {
-      av = a.angebotsnummer ?? "";
-      bv = b.angebotsnummer ?? "";
-    } else if (sortCol === "status") {
-      av = a.status;
-      bv = b.status;
-    } else if (sortCol === "summe_brutto") {
-      av = parseFloat(a.summe_brutto ?? "0");
-      bv = parseFloat(b.summe_brutto ?? "0");
-    } else {
-      av = a.created_at;
-      bv = b.created_at;
-    }
+    if (sortCol === "auftraggeber") { av = agMap.get(a.auftraggeber_id) ?? ""; bv = agMap.get(b.auftraggeber_id) ?? ""; }
+    else if (sortCol === "projekt") { av = a.projekt_id ? (projMap.get(a.projekt_id) ?? "") : ""; bv = b.projekt_id ? (projMap.get(b.projekt_id) ?? "") : ""; }
+    else if (sortCol === "angebotsnummer") { av = a.angebotsnummer ?? ""; bv = b.angebotsnummer ?? ""; }
+    else if (sortCol === "status") { av = a.status; bv = b.status; }
+    else if (sortCol === "summe_brutto") { av = parseFloat(a.summe_brutto ?? "0"); bv = parseFloat(b.summe_brutto ?? "0"); }
+    else { av = a.created_at; bv = b.created_at; }
     if (av < bv) return sortDir === "asc" ? -1 : 1;
     if (av > bv) return sortDir === "asc" ? 1 : -1;
     return 0;
   });
+
+  const total = (angebote as AngebotRead[] | undefined)?.length ?? 0;
+  const hasFilter = Object.values(filters).some((v) => !!v);
 
   if (isLoading) {
     return (
@@ -296,7 +298,6 @@ export function AngebotList() {
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="p-6">
@@ -307,8 +308,6 @@ export function AngebotList() {
     );
   }
 
-  const total = (angebote as AngebotRead[] | undefined)?.length ?? 0;
-
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -316,36 +315,30 @@ export function AngebotList() {
           <FileText className="h-5 w-5 text-muted-foreground" />
           <h1 className="text-lg font-semibold">Angebote</h1>
           <span className="text-sm text-muted-foreground">
-            ({search ? `${displayed.length} / ${total}` : total})
+            ({hasFilter ? `${displayed.length} / ${total}` : total})
           </span>
+          {hasFilter && (
+            <button
+              type="button"
+              onClick={() => setFilters({})}
+              className="text-xs text-muted-foreground hover:text-foreground underline"
+            >
+              Filter zurücksetzen
+            </button>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="Suchen…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8 w-52 text-sm"
-            />
-          </div>
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            Neues Angebot
-          </Button>
-        </div>
+        <Button size="sm" onClick={() => setShowCreate(true)}>
+          <Plus className="h-4 w-4 mr-1" />
+          Neues Angebot
+        </Button>
       </div>
 
-      {displayed.length === 0 ? (
+      {(angebote as AngebotRead[] | undefined)?.length === 0 ? (
         <div className="border rounded-lg p-12 text-center space-y-3">
-          <p className="text-muted-foreground text-sm">
-            {search ? "Keine Angebote gefunden." : "Noch keine Angebote."}
-          </p>
-          {!search && (
-            <Button size="sm" onClick={() => setShowCreate(true)}>
-              <Plus className="h-4 w-4 mr-1" />Neues Angebot erstellen
-            </Button>
-          )}
+          <p className="text-muted-foreground text-sm">Noch keine Angebote.</p>
+          <Button size="sm" onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4 mr-1" />Neues Angebot erstellen
+          </Button>
         </div>
       ) : (
         <div className="border rounded-lg overflow-hidden">
@@ -360,9 +353,32 @@ export function AngebotList() {
                 <SortHead col="summe_brutto" label="Brutto" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} className="w-36" align="end" />
                 <TableHead className="w-10" />
               </TableRow>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColFilter value={filters.auftraggeber ?? ""} onChange={(v) => setFilter("auftraggeber", v)} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColFilter value={filters.projekt ?? ""} onChange={(v) => setFilter("projekt", v)} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColFilter value={filters.angebotsnummer ?? ""} onChange={(v) => setFilter("angebotsnummer", v)} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColSelect value={filters.status ?? ""} onChange={(v) => setFilter("status", v)} options={STATUS_OPTIONS} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3" />
+                <TableHead className="py-1.5 px-3" />
+                <TableHead className="py-1.5 px-3" />
+              </TableRow>
             </TableHeader>
             <TableBody>
-              {displayed.map((a) => (
+              {displayed.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-12 text-center text-sm text-muted-foreground">
+                    Keine Angebote gefunden.
+                  </TableCell>
+                </TableRow>
+              ) : displayed.map((a) => (
                 <TableRow
                   key={a.id}
                   className="cursor-pointer"
@@ -375,9 +391,7 @@ export function AngebotList() {
                     {a.projekt_id ? (projMap.get(a.projekt_id) ?? "—") : "—"}
                   </TableCell>
                   <TableCell className="font-mono text-sm">
-                    {a.angebotsnummer ?? (
-                      <span className="italic text-muted-foreground">Entwurf</span>
-                    )}
+                    {a.angebotsnummer ?? <span className="italic text-muted-foreground">Entwurf</span>}
                   </TableCell>
                   <TableCell>{statusBadge(a.status)}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">
@@ -385,10 +399,7 @@ export function AngebotList() {
                   </TableCell>
                   <TableCell className="text-right font-mono text-sm">
                     {a.summe_brutto
-                      ? new Intl.NumberFormat("de-DE", {
-                          style: "currency",
-                          currency: a.waehrung ?? "EUR",
-                        }).format(parseFloat(a.summe_brutto))
+                      ? new Intl.NumberFormat("de-DE", { style: "currency", currency: a.waehrung ?? "EUR" }).format(parseFloat(a.summe_brutto))
                       : "—"}
                   </TableCell>
                   <TableCell>

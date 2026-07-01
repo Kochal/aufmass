@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Receipt, Search } from "lucide-react";
+import { Plus, Receipt } from "lucide-react";
 import { apiClient, unwrap } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
 import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
@@ -18,10 +17,12 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { SortHead } from "@/components/ui/sort-head";
+import { ColFilter, ColSelect } from "@/components/ui/table-filters";
 import type { components } from "@/api/schema";
 
 type RechnungRead = components["schemas"]["RechnungRead"];
@@ -39,6 +40,7 @@ const STATUS_COLORS: Record<string, string> = {
   issued: "bg-green-100 text-green-800",
   storniert: "bg-red-100 text-red-700",
 };
+const STATUS_OPTIONS = Object.entries(STATUS_LABELS).map(([v, label]) => ({ value: v, label }));
 
 function StatusBadge({ status }: { status: string }) {
   return (
@@ -88,20 +90,12 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string)
     ? (projekte ?? []).filter((p) => !auftraggeberId || p.auftraggeber_id === auftraggeberId).map((p) => ({ value: p.id, label: p.name }))
     : (projekte ?? []).filter((p) => allowedProjIds.has(p.id)).map((p) => ({ value: p.id, label: p.name }));
 
-  function reset() {
-    setDirektrechnung(false);
-    setAuftraggeberId("");
-    setProjektId("");
-  }
+  function reset() { setDirektrechnung(false); setAuftraggeberId(""); setProjektId(""); }
 
   const create = useMutation({
     mutationFn: async () => {
       const res = await apiClient.POST("/api/rechnung", {
-        body: {
-          auftraggeber_id: auftraggeberId || null,
-          projekt_id: projektId || null,
-          waehrung: "EUR",
-        },
+        body: { auftraggeber_id: auftraggeberId || null, projekt_id: projektId || null, waehrung: "EUR" },
       });
       return unwrap(res) as RechnungRead;
     },
@@ -119,25 +113,11 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string)
         <div className="space-y-4 py-2">
           <div>
             <label className="text-sm font-medium">Auftraggeber</label>
-            <Combobox
-              className="mt-1"
-              options={agOptions}
-              value={auftraggeberId}
-              onChange={(v) => { setAuftraggeberId(v); setProjektId(""); }}
-              placeholder="Auftraggeber auswählen …"
-              allowClear
-            />
+            <Combobox className="mt-1" options={agOptions} value={auftraggeberId} onChange={(v) => { setAuftraggeberId(v); setProjektId(""); }} placeholder="Auftraggeber auswählen …" allowClear />
           </div>
           <div>
             <label className="text-sm font-medium">Projekt</label>
-            <Combobox
-              className="mt-1"
-              options={projOptions}
-              value={projektId}
-              onChange={setProjektId}
-              placeholder="— kein —"
-              allowClear
-            />
+            <Combobox className="mt-1" options={projOptions} value={projektId} onChange={setProjektId} placeholder="— kein —" allowClear />
           </div>
           <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
             <input
@@ -154,9 +134,7 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string)
           <Button disabled={create.isPending} onClick={() => create.mutate()}>Anlegen</Button>
         </DialogFooter>
         {create.isError && (
-          <p className="text-sm text-destructive mt-2">
-            {(create.error as Error)?.message ?? "Fehler"}
-          </p>
+          <p className="text-sm text-destructive mt-2">{(create.error as Error)?.message ?? "Fehler"}</p>
         )}
       </DialogContent>
     </Dialog>
@@ -166,11 +144,13 @@ function CreateDialog({ open, onClose }: { open: boolean; onClose: (id?: string)
 export function RechnungList() {
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortCol, setSortCol] = useState("rechnungsdatum");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
+  function setFilter(col: string, val: string) {
+    setFilters((f) => ({ ...f, [col]: val }));
+  }
   function toggleSort(col: string) {
     if (sortCol === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortCol(col); setSortDir("asc"); }
@@ -194,42 +174,45 @@ export function RechnungList() {
   const projMap = new Map(projekte?.map((p) => [p.id, p.name]) ?? []);
 
   let displayed = [...(rechnungen ?? [])];
-  if (statusFilter) displayed = displayed.filter((r) => r.status === statusFilter);
-  if (search.trim()) {
-    const q = search.toLowerCase();
-    displayed = displayed.filter(
-      (r) =>
-        (r.rechnungsnummer ?? "").toLowerCase().includes(q) ||
-        (r.auftraggeber_id ? (agMap.get(r.auftraggeber_id) ?? "") : "").toLowerCase().includes(q) ||
-        (r.projekt_id ? (projMap.get(r.projekt_id) ?? "") : "").toLowerCase().includes(q),
+  if (filters.rechnungsnummer) {
+    const q = filters.rechnungsnummer.toLowerCase();
+    displayed = displayed.filter((r) => (r.rechnungsnummer ?? "").toLowerCase().includes(q));
+  }
+  if (filters.auftraggeber) {
+    const q = filters.auftraggeber.toLowerCase();
+    displayed = displayed.filter((r) =>
+      (r.auftraggeber_id ? (agMap.get(r.auftraggeber_id) ?? "") : "").toLowerCase().includes(q),
     );
   }
+  if (filters.projekt) {
+    const q = filters.projekt.toLowerCase();
+    displayed = displayed.filter((r) =>
+      (r.projekt_id ? (projMap.get(r.projekt_id) ?? "") : "").toLowerCase().includes(q),
+    );
+  }
+  if (filters.status) {
+    displayed = displayed.filter((r) => r.status === filters.status);
+  }
   displayed.sort((a, b) => {
-    let av = "";
-    let bv = "";
-    if (sortCol === "auftraggeber") {
-      av = a.auftraggeber_id ? (agMap.get(a.auftraggeber_id) ?? "") : "";
-      bv = b.auftraggeber_id ? (agMap.get(b.auftraggeber_id) ?? "") : "";
-    } else if (sortCol === "projekt") {
-      av = a.projekt_id ? (projMap.get(a.projekt_id) ?? "") : "";
-      bv = b.projekt_id ? (projMap.get(b.projekt_id) ?? "") : "";
-    } else if (sortCol === "summe_brutto") {
+    if (sortCol === "summe_brutto") {
       const an = parseFloat(a.summe_brutto ?? "0");
       const bn = parseFloat(b.summe_brutto ?? "0");
       return sortDir === "asc" ? an - bn : bn - an;
-    } else if (sortCol === "status") {
-      av = a.status; bv = b.status;
-    } else if (sortCol === "rechnungsnummer") {
-      av = a.rechnungsnummer ?? ""; bv = b.rechnungsnummer ?? "";
-    } else {
-      av = a.rechnungsdatum ?? ""; bv = b.rechnungsdatum ?? "";
     }
+    let av = "";
+    let bv = "";
+    if (sortCol === "auftraggeber") { av = a.auftraggeber_id ? (agMap.get(a.auftraggeber_id) ?? "") : ""; bv = b.auftraggeber_id ? (agMap.get(b.auftraggeber_id) ?? "") : ""; }
+    else if (sortCol === "projekt") { av = a.projekt_id ? (projMap.get(a.projekt_id) ?? "") : ""; bv = b.projekt_id ? (projMap.get(b.projekt_id) ?? "") : ""; }
+    else if (sortCol === "status") { av = a.status; bv = b.status; }
+    else if (sortCol === "rechnungsnummer") { av = a.rechnungsnummer ?? ""; bv = b.rechnungsnummer ?? ""; }
+    else { av = a.rechnungsdatum ?? ""; bv = b.rechnungsdatum ?? ""; }
     if (av < bv) return sortDir === "asc" ? -1 : 1;
     if (av > bv) return sortDir === "asc" ? 1 : -1;
     return 0;
   });
 
   const total = rechnungen?.length ?? 0;
+  const hasFilter = Object.values(filters).some((v) => !!v);
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -238,35 +221,18 @@ export function RechnungList() {
           <Receipt className="h-5 w-5 text-muted-foreground" />
           <h1 className="text-xl font-semibold">Rechnungen</h1>
           <span className="text-sm text-muted-foreground">
-            ({(search || statusFilter) ? `${displayed.length} / ${total}` : total})
+            ({hasFilter ? `${displayed.length} / ${total}` : total})
           </span>
+          {hasFilter && (
+            <button type="button" onClick={() => setFilters({})} className="text-xs text-muted-foreground hover:text-foreground underline">
+              Filter zurücksetzen
+            </button>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="Suchen…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8 w-48 text-sm"
-            />
-          </div>
-          <Combobox
-            className="w-40"
-            options={[
-              { value: "draft", label: "Entwurf" },
-              { value: "issued", label: "Ausgestellt" },
-            ]}
-            value={statusFilter}
-            onChange={(v) => setStatusFilter(v)}
-            placeholder="Alle Status"
-            allowClear
-          />
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            Neue Rechnung
-          </Button>
-        </div>
+        <Button size="sm" onClick={() => setShowCreate(true)}>
+          <Plus className="h-4 w-4 mr-1" />
+          Neue Rechnung
+        </Button>
       </div>
 
       {isLoading ? (
@@ -281,10 +247,6 @@ export function RechnungList() {
             <Plus className="h-4 w-4 mr-1" />Erste Rechnung anlegen
           </Button>
         </div>
-      ) : displayed.length === 0 ? (
-        <div className="border rounded-md p-12 text-center">
-          <p className="text-muted-foreground text-sm">Keine Rechnungen gefunden.</p>
-        </div>
       ) : (
         <div className="border rounded-md">
           <Table>
@@ -297,32 +259,44 @@ export function RechnungList() {
                 <SortHead col="status" label="Status" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} className="w-28" />
                 <SortHead col="rechnungsdatum" label="Datum" sortCol={sortCol} sortDir={sortDir} onSort={toggleSort} className="w-24" />
               </TableRow>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColFilter value={filters.rechnungsnummer ?? ""} onChange={(v) => setFilter("rechnungsnummer", v)} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColFilter value={filters.auftraggeber ?? ""} onChange={(v) => setFilter("auftraggeber", v)} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColFilter value={filters.projekt ?? ""} onChange={(v) => setFilter("projekt", v)} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3" />
+                <TableHead className="py-1.5 px-3 font-normal">
+                  <ColSelect value={filters.status ?? ""} onChange={(v) => setFilter("status", v)} options={STATUS_OPTIONS} />
+                </TableHead>
+                <TableHead className="py-1.5 px-3" />
+              </TableRow>
             </TableHeader>
             <TableBody>
-              {displayed.map((r) => (
+              {displayed.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-12 text-center text-sm text-muted-foreground">
+                    Keine Rechnungen gefunden.
+                  </TableCell>
+                </TableRow>
+              ) : displayed.map((r) => (
                 <TableRow
                   key={r.id}
                   className="cursor-pointer hover:bg-accent/50"
                   onClick={() => navigate(`/office/rechnungen/${r.id}`)}
                 >
-                  <TableCell className="font-mono text-xs">
-                    {r.rechnungsnummer ?? "Entwurf"}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {r.auftraggeber_id ? (agMap.get(r.auftraggeber_id) ?? "—") : "—"}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {r.projekt_id ? (projMap.get(r.projekt_id) ?? "—") : "—"}
-                  </TableCell>
+                  <TableCell className="font-mono text-xs">{r.rechnungsnummer ?? "Entwurf"}</TableCell>
+                  <TableCell className="text-sm">{r.auftraggeber_id ? (agMap.get(r.auftraggeber_id) ?? "—") : "—"}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{r.projekt_id ? (projMap.get(r.projekt_id) ?? "—") : "—"}</TableCell>
                   <TableCell className="text-right font-mono text-sm">
-                    {r.summe_brutto
-                      ? `${parseFloat(r.summe_brutto).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €`
-                      : "—"}
+                    {r.summe_brutto ? `${parseFloat(r.summe_brutto).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €` : "—"}
                   </TableCell>
                   <TableCell><StatusBadge status={r.status} /></TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {r.rechnungsdatum ?? "—"}
-                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{r.rechnungsdatum ?? "—"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
