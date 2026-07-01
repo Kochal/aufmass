@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 from datetime import date
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from .units import map_einheit
 
@@ -51,11 +51,26 @@ _VAT_EXEMPT_REASON_TEXT = (
     "Umsatzsteuerbefreiung gemäß § 19 UStG (Kleinunternehmerregelung)"
 )
 
+_CENT = Decimal("0.01")
+
+
+def _q(d: Decimal) -> Decimal:
+    return d.quantize(_CENT, rounding=ROUND_HALF_UP)
+
 
 def _cbc(parent: ET.Element, name: str, text: str, **attribs: str) -> ET.Element:
+    """Add a CBC child element.  text MUST be non-empty — EN 16931 forbids empty elements."""
+    assert text, f"UBL builder: empty value for cbc:{name} is not allowed by EN 16931"
     el = ET.SubElement(parent, f"{{{_CBC}}}{name}", attribs)
     el.text = text
     return el
+
+
+def _cbc_if(parent: ET.Element, name: str, text: str | None, **attribs: str) -> ET.Element | None:
+    """Add a CBC child element only when text is non-empty (optional elements)."""
+    if text:
+        return _cbc(parent, name, text, **attribs)
+    return None
 
 
 def _cac(parent: ET.Element, name: str) -> ET.Element:
@@ -91,15 +106,23 @@ def build_xrechnung(
     leistungsdatum:  BT-72 actual delivery date (optional)
     """
     currency = rechnung.get("waehrung") or "EUR"
+
+    # summe_netto stored on rechnung = Σ gesamtpreise (line extension sum, before doc adjustments).
     summe_netto = Decimal(str(rechnung.get("summe_netto") or 0))
     summe_brutto = Decimal(str(rechnung.get("summe_brutto") or 0))
-    tax_amount = summe_brutto - summe_netto
+    nachlass = _q(Decimal(str(rechnung.get("nachlass_betrag") or 0)))
+    zuschlag = _q(Decimal(str(rechnung.get("zuschlag_betrag") or 0)))
+
+    # EN 16931 BT-109 / BT-116 = taxable amount = line-extension - allowances + charges.
+    netto_adj = summe_netto - nachlass + zuschlag
+    # BT-117 = tax amount on the adjusted taxable base.
+    tax_amount = summe_brutto - netto_adj
 
     is_klein = bool(seller.get("kleinunternehmer"))
     ust_satz = Decimal(str(seller.get("ust_satz") or 0))
     vat_cat = "E" if is_klein else "S"
 
-    # Line extension amount = sum of gesamtpreise (before doc-level discount/surcharge)
+    # Line extension amount = sum of gesamtpreise (before doc-level discount/surcharge).
     line_ext = sum(
         Decimal(str(p.get("gesamtpreis") or 0))
         for p in positions
@@ -117,7 +140,12 @@ def build_xrechnung(
     _cbc(inv, "DueDate", faelligkeitsdatum.isoformat())  # BT-9
     _cbc(inv, "InvoiceTypeCode", "380")              # BT-3 commercial invoice
     _cbc(inv, "DocumentCurrencyCode", currency)      # BT-5
-    _cbc(inv, "BuyerReference", buyer.get("leitweg_id") or "")  # BT-10 (mandatory XRechnung)
+
+    # BT-10 BuyerReference: mandatory in XRechnung (BR-DE-15).
+    # Use Leitweg-ID if present; fall back to buyer name as routing reference.
+    buyer_ref = buyer.get("leitweg_id") or buyer.get("buyer_name")
+    if buyer_ref:
+        _cbc(inv, "BuyerReference", buyer_ref)
 
     # NOTE: cac:Delivery (BT-72) must appear AFTER AccountingCustomerParty in
     # the UBL 2.1 XSD sequence.  It is added below, between BG-7 and PaymentMeans.
@@ -127,22 +155,22 @@ def build_xrechnung(
     seller_party = _cac(asp, "Party")
 
     # BT-34 Seller electronic address + BT-34-1 scheme
-    _cbc(
-        seller_party, "EndpointID", seller.get("seller_elektronische_adresse") or "",
-        schemeID=seller.get("seller_eas_scheme") or "EM",
-    )
+    seller_endpoint = seller.get("seller_elektronische_adresse")
+    if seller_endpoint:
+        _cbc(
+            seller_party, "EndpointID", seller_endpoint,
+            schemeID=seller.get("seller_eas_scheme") or "EM",
+        )
 
     pn = _cac(seller_party, "PartyName")
-    _cbc(pn, "Name", seller.get("tenant_name") or "")  # BT-27
+    _cbc(pn, "Name", seller.get("tenant_name") or "—")  # BT-27
 
     # BT-35..BT-37 Seller postal address (BG-5)
     pa = _cac(seller_party, "PostalAddress")
-    if seller.get("seller_strasse"):
-        _cbc(pa, "StreetName", seller["seller_strasse"])   # BT-35
-    if seller.get("seller_adresszusatz"):
-        _cbc(pa, "AdditionalStreetName", seller["seller_adresszusatz"])
-    _cbc(pa, "CityName", seller.get("seller_ort") or "")  # BT-37
-    _cbc(pa, "PostalZone", seller.get("seller_plz") or "")  # BT-38
+    _cbc_if(pa, "StreetName", seller.get("seller_strasse"))          # BT-35
+    _cbc_if(pa, "AdditionalStreetName", seller.get("seller_adresszusatz"))
+    _cbc_if(pa, "CityName", seller.get("seller_ort"))                # BT-37
+    _cbc_if(pa, "PostalZone", seller.get("seller_plz"))              # BT-38
     country = _cac(pa, "Country")
     _cbc(country, "IdentificationCode", seller.get("seller_land") or "DE")  # BT-40
 
@@ -156,46 +184,45 @@ def build_xrechnung(
 
     # BG-6 Seller legal entity
     ple = _cac(seller_party, "PartyLegalEntity")
-    _cbc(ple, "RegistrationName", seller.get("tenant_name") or "")  # BT-27
+    _cbc(ple, "RegistrationName", seller.get("tenant_name") or "—")  # BT-27
 
     # BG-6 Contact (optional; included when data is present)
     if seller.get("kontakt_name") or seller.get("kontakt_email"):
         contact = _cac(seller_party, "Contact")
-        if seller.get("kontakt_name"):
-            _cbc(contact, "Name", seller["kontakt_name"])
-        if seller.get("kontakt_tel"):
-            _cbc(contact, "Telephone", seller["kontakt_tel"])
-        if seller.get("kontakt_email"):
-            _cbc(contact, "ElectronicMail", seller["kontakt_email"])
+        _cbc_if(contact, "Name", seller.get("kontakt_name"))
+        _cbc_if(contact, "Telephone", seller.get("kontakt_tel"))
+        _cbc_if(contact, "ElectronicMail", seller.get("kontakt_email"))
 
     # ── BG-7 Buyer (AccountingCustomerParty) ───────────────────────────────
     acp = _cac(inv, "AccountingCustomerParty")
     buyer_party = _cac(acp, "Party")
 
-    # BT-49 Buyer electronic address + BT-49-1 scheme (optional)
-    if buyer.get("buyer_elektronische_adresse"):
-        _cbc(
-            buyer_party, "EndpointID", buyer["buyer_elektronische_adresse"],
-            schemeID=buyer.get("buyer_eas_scheme") or "EM",
-        )
+    # BT-49 Buyer electronic address + BT-49-1 scheme.
+    # XRechnung requires an endpoint. Use buyer_elektronische_adresse if set,
+    # else fall back to Leitweg-ID (schemeID 0204 = Leitweg-ID Germany).
+    buyer_endpoint = buyer.get("buyer_elektronische_adresse")
+    buyer_ep_scheme = buyer.get("buyer_eas_scheme") or "EM"
+    if not buyer_endpoint and buyer.get("leitweg_id"):
+        buyer_endpoint = buyer["leitweg_id"]
+        buyer_ep_scheme = "0204"
+    if buyer_endpoint:
+        _cbc(buyer_party, "EndpointID", buyer_endpoint, schemeID=buyer_ep_scheme)
 
     bpn = _cac(buyer_party, "PartyName")
-    _cbc(bpn, "Name", buyer.get("buyer_name") or "")  # BT-44
+    _cbc(bpn, "Name", buyer.get("buyer_name") or "—")  # BT-44
 
     # BT-50..BT-53 Buyer postal address (BG-8)
     bpa = _cac(buyer_party, "PostalAddress")
-    if buyer.get("buyer_strasse"):
-        _cbc(bpa, "StreetName", buyer["buyer_strasse"])
-    if buyer.get("buyer_adresszusatz"):
-        _cbc(bpa, "AdditionalStreetName", buyer["buyer_adresszusatz"])
-    _cbc(bpa, "CityName", buyer.get("buyer_ort") or "")
-    _cbc(bpa, "PostalZone", buyer.get("buyer_plz") or "")
+    _cbc_if(bpa, "StreetName", buyer.get("buyer_strasse"))
+    _cbc_if(bpa, "AdditionalStreetName", buyer.get("buyer_adresszusatz"))
+    _cbc_if(bpa, "CityName", buyer.get("buyer_ort"))
+    _cbc_if(bpa, "PostalZone", buyer.get("buyer_plz"))
     bcountry = _cac(bpa, "Country")
     _cbc(bcountry, "IdentificationCode", buyer.get("buyer_land") or "DE")  # BT-55
 
     # BG-8 Buyer legal entity
     bple = _cac(buyer_party, "PartyLegalEntity")
-    _cbc(bple, "RegistrationName", buyer.get("buyer_name") or "")
+    _cbc(bple, "RegistrationName", buyer.get("buyer_name") or "—")
 
     # ── cac:Delivery (BT-72 ActualDeliveryDate) ────────────────────────────
     # Must appear AFTER AccountingCustomerParty in the UBL 2.1 XSD sequence.
@@ -209,22 +236,47 @@ def build_xrechnung(
     if seller.get("iban"):
         pfa = _cac(pm, "PayeeFinancialAccount")
         _cbc(pfa, "ID", seller["iban"])  # BT-84 IBAN
-        if seller.get("bv_inhaber"):
-            _cbc(pfa, "Name", seller["bv_inhaber"])
+        _cbc_if(pfa, "Name", seller.get("bv_inhaber"))
         if seller.get("bic"):
             fib = _cac(pfa, "FinancialInstitutionBranch")
             _cbc(fib, "ID", seller["bic"])
 
+    # ── Document-level AllowanceCharge (BG-20/BG-21) ───────────────────────
+    # Must appear BEFORE TaxTotal in UBL 2.1 sequence.
+    # BR-CO-12: ChargeTotalAmount (BT-108) = Σ AllowanceCharge.Amount where ChargeIndicator=true.
+    # BR-CO-11: AllowanceTotalAmount (BT-107) = Σ AllowanceCharge.Amount where ChargeIndicator=false.
+    if nachlass:
+        ac_all = _cac(inv, "AllowanceCharge")
+        _cbc(ac_all, "ChargeIndicator", "false")                           # mandatory flag
+        _cbc(ac_all, "Amount", _fmt(nachlass), currencyID=currency)        # BT-92
+        ac_all_tc = _cac(ac_all, "TaxCategory")
+        _cbc(ac_all_tc, "ID", vat_cat)
+        if not is_klein:
+            _cbc(ac_all_tc, "Percent", _fmt(ust_satz))
+        ac_all_ts = _cac(ac_all_tc, "TaxScheme")
+        _cbc(ac_all_ts, "ID", "VAT")
+
+    if zuschlag:
+        ac_chg = _cac(inv, "AllowanceCharge")
+        _cbc(ac_chg, "ChargeIndicator", "true")                            # mandatory flag
+        _cbc(ac_chg, "Amount", _fmt(zuschlag), currencyID=currency)        # BT-99
+        ac_chg_tc = _cac(ac_chg, "TaxCategory")
+        _cbc(ac_chg_tc, "ID", vat_cat)
+        if not is_klein:
+            _cbc(ac_chg_tc, "Percent", _fmt(ust_satz))
+        ac_chg_ts = _cac(ac_chg_tc, "TaxScheme")
+        _cbc(ac_chg_ts, "ID", "VAT")
+
     # ── BG-23 VAT breakdown + BG-22 total tax ──────────────────────────────
     tt = _cac(inv, "TaxTotal")
-    _cbc(tt, "TaxAmount", _fmt(tax_amount), currencyID=currency)  # BT-110
+    _cbc(tt, "TaxAmount", _fmt(tax_amount), currencyID=currency)    # BT-110
     tst = _cac(tt, "TaxSubtotal")
-    _cbc(tst, "TaxableAmount", _fmt(summe_netto), currencyID=currency)  # BT-116
-    _cbc(tst, "TaxAmount", _fmt(tax_amount), currencyID=currency)  # BT-117
+    _cbc(tst, "TaxableAmount", _fmt(netto_adj), currencyID=currency) # BT-116 = adjusted net
+    _cbc(tst, "TaxAmount", _fmt(tax_amount), currencyID=currency)    # BT-117
     tc = _cac(tst, "TaxCategory")
-    _cbc(tc, "ID", vat_cat)  # BT-118
+    _cbc(tc, "ID", vat_cat)                                          # BT-118
     if not is_klein:
-        _cbc(tc, "Percent", _fmt(ust_satz))  # BT-119
+        _cbc(tc, "Percent", _fmt(ust_satz))                          # BT-119
     else:
         # STEUERBERATER FLAG: exemption reason code for §19 UStG. Using VATEX-EU-O
         # (Not subject to VAT per national law); confirm with tax advisor before
@@ -236,11 +288,9 @@ def build_xrechnung(
 
     # ── BG-22 Document totals (LegalMonetaryTotal) ─────────────────────────
     lmt = _cac(inv, "LegalMonetaryTotal")
-    nachlass = Decimal(str(rechnung.get("nachlass_betrag") or 0))
-    zuschlag = Decimal(str(rechnung.get("zuschlag_betrag") or 0))
     # UBL 2.1 sequence: LineExtension → TaxExclusive → TaxInclusive → Allowance → Charge → Payable
     _cbc(lmt, "LineExtensionAmount", _fmt(line_ext), currencyID=currency)      # BT-106
-    _cbc(lmt, "TaxExclusiveAmount", _fmt(summe_netto), currencyID=currency)    # BT-109
+    _cbc(lmt, "TaxExclusiveAmount", _fmt(netto_adj), currencyID=currency)      # BT-109 = adjusted net
     _cbc(lmt, "TaxInclusiveAmount", _fmt(summe_brutto), currencyID=currency)   # BT-112
     if nachlass:
         _cbc(lmt, "AllowanceTotalAmount", _fmt(nachlass), currencyID=currency) # BT-107
@@ -263,7 +313,7 @@ def build_xrechnung(
         _cbc(il, "LineExtensionAmount", _fmt(gesamtpreis), currencyID=currency)  # BT-131
 
         item = _cac(il, "Item")
-        _cbc(item, "Description", bezeichnung)           # BT-154 (optional)
+        _cbc_if(item, "Description", bezeichnung)        # BT-154 (optional)
         _cbc(item, "Name", bezeichnung)                  # BT-153 (mandatory)
         ctc = _cac(item, "ClassifiedTaxCategory")
         _cbc(ctc, "ID", vat_cat)                         # BT-151

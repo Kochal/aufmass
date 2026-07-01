@@ -105,6 +105,13 @@ def _missing_einvoice_fields(
     if buyer:
         if not buyer.get("buyer_plz"):
             missing.append("buyer postal address (adresse) not configured on auftraggeber")
+        # BT-10 BuyerReference falls back to buyer name — always satisfiable.
+        # BT-49 Buyer electronic address: needed for routing. Use leitweg_id as fallback.
+        if not buyer.get("buyer_elektronische_adresse") and not buyer.get("leitweg_id"):
+            missing.append(
+                "buyer electronic address (BT-49) or Leitweg-ID (BT-10/BT-49 fallback) "
+                "not configured on auftraggeber"
+            )
         # Leitweg-ID is mandatory for B2G invoices (public buyers).
         if buyer.get("typ") == "oeffentlich" and not buyer.get("leitweg_id"):
             missing.append("leitweg_id (BT-10) required for public (B2G) buyers")
