@@ -44,6 +44,7 @@ Organised by area, newest first within each area.
 
 ## ui
 | Date | File | Summary |
+| 2026-07-01 | [workflow-ux-improvements](ui/2026-07-01-workflow-ux-improvements.md) | Nav reorder; inline Ag/Proj creation in Neues Angebot; Auftraggeber create-and-navigate; Neue Rechnung filter by active Angebote + Direktrechnung; match_status fix for manual entries |
 | 2026-06-30 | [menge-calculator](ui/2026-06-30-menge-calculator.md) | Free-text arithmetic calculator for Menge (calc.ts safe parser, MengeInput component, migration 0026 menge_formel, formula + result persisted) |
 | 2026-06-30 | [angebot-position-editing](ui/2026-06-30-angebot-position-editing.md) | Manual Angebot + position workflow (two sessions): delete on card, Leistung search in both dialogs, catalog save, row sum preview, bulk accept, stale_row_version fix, unit warnings (m1/m3/mismatch) |
 | 2026-06-29 | [mangel-fotos](ui/2026-06-29-mangel-fotos.md) | Round 2: mangel_foto table + router (upload/list/image-serve/soft-delete); useImageObjectUrl hook; FotoThumbnail inline delete; MangelFotoDialog per row; upload via native fetch+FormData |

@@ -3,6 +3,27 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-07-01 (z): match_status fix — manual entries always confirmed; edits
+  preserve status. `AddPositionDialog` changed from `selectedLeistungId ?
+  "confirmed" : "review"` to always `"confirmed"` (source=manual, user wrote
+  it intentionally). `EditPositionDialog` save changed from always `"review"`
+  to `position.match_status`, except when a new catalog assignment fires
+  (different leistung_id or saveToKatalog) → `"confirmed"`. "Annehmen" is
+  semantically for confirming system-suggested GAEB/OCR matches only.
+  See notes/ui/2026-07-01-workflow-ux-improvements.md.
+- 2026-07-01 (y): Workflow UX: nav reorder, inline creation, Auftraggeber
+  create-and-navigate. Sidebar order is now Auftraggeber → Projekte → Angebote
+  → Rechnungen → Katalog (workflow order). "Neues Angebot" dialog has inline
+  "Neu" buttons for Auftraggeber and Projekt (inline name input, auto-select on
+  success, Escape to cancel; Projekt picker filtered by selected Auftraggeber).
+  Auftraggeber "Neu anlegen" now POSTs immediately with placeholder name and
+  navigates directly to the full AuftraggeberDetail page — no 2-field dialog.
+  See notes/ui/2026-07-01-workflow-ux-improvements.md.
+- 2026-07-01 (x): Neue Rechnung dialog — filter pickers by active Angebote.
+  Auftraggeber picker shows only companies with an active (non-cancelled,
+  non-superseded) Angebot. Projekt picker shows only projects with an active
+  Angebot under the selected Auftraggeber. Direktrechnung checkbox removes both
+  filters. See notes/ui/2026-07-01-workflow-ux-improvements.md.
 - 2026-06-30 (w): Auto-refresh angebot totals on position save. Added
   `_refresh_angebot_totals(conn, lv_id)` to `lv_position.py`: after every
   INSERT, UPDATE, or soft-DELETE it re-sums position gesamtpreise and rewrites
