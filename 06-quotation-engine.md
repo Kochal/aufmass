@@ -13,6 +13,18 @@ layer.
 Audience: you (Claude Code) and any human contributor.
 
 ## Changelog
+- 2026-07-02: Rechnung-from-Angebot import live. `rechnung.angebot_id` FK
+  (migration 0027). On create, all lv_positions are bulk-copied into
+  rechnung_position preserving lv_position_id traceability and menge_tender.
+  Rechnung create dialog: Auftraggeber → Angebot drill-down; AG/Projekt derived
+  from the Angebot on the backend. Invoicing section below updated accordingly.
+  See `notes/quotation/2026-07-02-rechnung-from-angebot.md`.
+- 2026-07-02: XRechnung UBL serialiser fixed: netto_adj for BT-109/BT-116,
+  AllowanceCharge elements for BR-CO-12, empty-element guard (_cbc assert),
+  buyer endpoint BT-49 fallback to leitweg_id, BT-10 fallback to buyer_name.
+  See `notes/quotation/2026-07-02-xrechnung-ubl-fixes.md`.
+- 2026-06-28: XRechnung UBL 2.1 + KoSIT gate live. See
+  `notes/quotation/2026-06-28-xrechnung-einvoice.md`.
 - 2026-06-22: Initial draft. Ingestion (GAEB/PDF), matching, deterministic
   pricing, sense-check layer, review queue, Angebot and Rechnung output.
 - 2026-06-22: Billing-quantity rule resolved (measured quantity governs under
@@ -193,9 +205,40 @@ results are stored and auditable.
 
 On award and after delivery (and Aufmaß, `07`, for measured quantities):
 
-- Build `rechnung` from the Auftrag and the measured Mengen. Pricing and tax
-  run through the same deterministic engine and sense-check as the Angebot.
-- **E-invoice generation**: produce XRechnung or ZUGFeRD (EN 16931) and
+### Position import from Angebot
+
+A Rechnung is linked to its source Angebot via `rechnung.angebot_id` (FK,
+migration 0027). On creation with an `angebot_id`, all `lv_position` rows
+from every LV of that Angebot are bulk-copied into `rechnung_position`:
+
+- `lv_position_id` preserved → every billed line traces back to the quoted
+  LV position (non-negotiable, `00` §6).
+- `menge_tender` = `lv_position.menge` (the Angebot quantity).
+- `menge` = `menge_tender` initially; overwritten by Aufmaß reconciler (`07`)
+  or manual edit.
+- `menge_aufmass` = null until the Aufmaß reconciler runs.
+
+The `AG` and `Projekt` on the Rechnung are derived from the Angebot
+on the backend — the frontend cannot create a Rechnung with an Angebot
+that belongs to a different AG (prevents silent inconsistency).
+
+A "Direktrechnung" (no linked Angebot) skips the import; AG and Projekt
+are set manually. Positions are added one at a time in this path.
+
+### menge_tender vs menge — VOB §2(3) visibility
+
+The UI shows an amber indicator when `menge ≠ menge_tender`. This is the
+trigger for a VOB §2(3) deviation review: a quantity deviation of more than
+10% from the tendered Mengenansatz may entitle the firm (or the client) to
+an adjusted Einheitspreis for the excess. The engine computes and displays
+the deviation; the price adjustment is a human decision, not auto-applied.
+
+### Pricing and tax
+
+- `berechnen` recomputes `gesamtpreis = menge × einheitspreis` for each
+  position, then document-level totals: `summe_netto`, nachlass/zuschlag if
+  any, and `summe_brutto` with tax. Same deterministic engine as Angebot.
+- **E-invoice generation**: produce XRechnung (EN 16931, UBL 2.1) and
   **validate against EN 16931 before issue**; an invalid invoice does not
   issue. B2G requires XRechnung today (`01`).
 - The structured XML is the original and is archived unaltered (`04`); a PDF
@@ -203,6 +246,24 @@ On award and after delivery (and Aufmaß, `07`, for measured quantities):
 - Rechnungsnummer is allocated gaplessly at issue (`02`). Kleinunternehmer
   tenants get no-VAT invoices with the Section 19 note; all driven by the
   tenant tax profile (`01`).
+
+### UBL serialiser invariants
+
+Code in `api/app/einvoice/ubl.py`. Key correctness constraints:
+
+- `TaxExclusiveAmount (BT-109) = netto_adj = summe_netto - nachlass + zuschlag`
+  (NOT the raw line sum). BR-CO-13 requires this.
+- `TaxableAmount (BT-116) = netto_adj` for the same reason; BR-CO-17.
+- `cac:AllowanceCharge` elements must appear BEFORE `TaxTotal` in the UBL
+  2.1 sequence whenever nachlass or zuschlag are non-zero (BR-CO-12).
+- No empty XML elements — `_cbc()` asserts non-empty; use `_cbc_if()` for
+  optional fields.
+- Buyer electronic address (BT-49): use `elektronische_adresse` if set, else
+  fall back to `leitweg_id` with schemeID `0204`.
+- BuyerReference (BT-10): use `leitweg_id` if set, else fall back to
+  buyer name. Never emit empty.
+- See `notes/quotation/2026-07-02-xrechnung-ubl-fixes.md` for the full bug
+  history and the invariants that must hold.
 
 -----
 

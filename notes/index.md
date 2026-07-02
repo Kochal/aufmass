@@ -20,6 +20,8 @@ Organised by area, newest first within each area.
 ## quotation
 | Date | File | Summary |
 |------|------|---------|
+| 2026-07-02 | [xrechnung-ubl-fixes](quotation/2026-07-02-xrechnung-ubl-fixes.md) | 5 EN 16931 bugs fixed: netto_adj for BT-109/116, AllowanceCharge elements, empty-element guard, buyer BT-49/BT-10 fallbacks |
+| 2026-07-02 | [rechnung-from-angebot](quotation/2026-07-02-rechnung-from-angebot.md) | Position import mechanic: lv_position → rechnung_position, menge_tender traceability, angebot_id FK (migration 0027), dialog design decisions |
 | 2026-06-30 | [inline-gesamtpreis](quotation/2026-06-30-inline-gesamtpreis.md) | gesamtpreis computed inline on position save (menge×EP, Decimal ROUND_HALF_UP); Berechnen still owns Angebot-level totals |
 | 2026-06-29 | [catalog-matching](quotation/2026-06-29-catalog-matching.md) | String-similarity scan (partial): token-Jaccard + SequenceMatcher, auto@0.80/review@0.55; runs on GAEB import + on-demand button; full embedding path deferred (GPU + DPA pending) |
 | 2026-06-28 | [xrechnung-einvoice](quotation/2026-06-28-xrechnung-einvoice.md) | XRechnung UBL 2.1 + KoSIT gate live: issue-flow restructure, party master data (adresse/bankverbindung/billing-profile), unit codes, filesystem write-once store, Steuerberater flags |

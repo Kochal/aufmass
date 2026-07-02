@@ -3,6 +3,25 @@
 Current phase and what is settled versus open. Updated in place.
 
 ## Changelog
+- 2026-07-02 (ae): XRechnung EN 16931 UBL serialiser fixed (5 bugs).
+  (1) `TaxExclusiveAmount`/`TaxableAmount` now use `netto_adj = summe_netto
+  − nachlass + zuschlag` instead of raw `summe_netto` (fixes BR-CO-13,
+  BR-CO-17 when doc-level adjustments present). (2) `cac:AllowanceCharge`
+  elements emitted before `TaxTotal` when zuschlag/nachlass non-zero (fixes
+  BR-CO-12). (3) `_cbc()` now asserts non-empty; optional fields use new
+  `_cbc_if()` (fixes "Document MUST not contain empty elements"). (4) Buyer
+  `EndpointID` (BT-49) falls back to `leitweg_id` with schemeID "0204"
+  when `elektronische_adresse` not set. (5) `BuyerReference` (BT-10) falls
+  back to `buyer_name` when no leitweg_id (fixes BR-DE-15).
+  `_missing_einvoice_fields` now gates on buyer having at least one of
+  leitweg_id / elektronische_adresse.
+  See notes/quotation/2026-07-02-xrechnung-ubl-fixes.md.
+- 2026-07-02 (ad): Neue Rechnung dialog reverted to Auftraggeber → Angebot
+  drill-down. First iteration had Angebot as primary picker (no AG
+  pre-filter); user found it confusing. Now: pick AG first (filtered to
+  companies with active Angebote), then pick Angebot (filtered to that AG).
+  Direktrechnung path shows Projekt picker. Anlegen disabled until both AG
+  and Angebot are selected.
 - 2026-07-01 (ac): Rechnung positions imported from Angebot on creation.
   Migration 0027 adds `rechnung.angebot_id` FK. On create with an
   `angebot_id`, all LV positions are bulk-copied into `rechnung_position`,
